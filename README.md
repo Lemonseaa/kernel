@@ -70,3 +70,8 @@ python -m kernel.cli dryrun --task "预演任务"
 
 V0.2 now covers provider abstraction, memory/context, evaluation gate, notification, and dry run
 simulation on top of the V0.1 workflow kernel.
+
+## Risk Hardening
+
+The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,
+and provider retry/timeout behavior.

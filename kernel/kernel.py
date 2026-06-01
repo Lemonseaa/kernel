@@ -12,7 +12,7 @@ from kernel.evaluation import EvaluationGate, EvaluationRunner
 from kernel.events import AuditLogger, Event, EventBus, EventType
 from kernel.llm import ProviderRegistry
 from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
-from kernel.models import Run, Task, TaskSpec
+from kernel.models import Run, RunState, Task, TaskSpec, TaskState
 from kernel.notification import NotificationManager
 from kernel.observability import MetricsCollector
 from kernel.persistence import SQLiteStore
@@ -93,6 +93,39 @@ class Kernel:
         self.store.save_run(run)
         self.event_bus.emit(EventType.TASK_CREATED, {"run_id": run.id, "task_id": task.id})
         return task
+
+    def recover_run(self, run_id: str) -> Run:
+        """Rebuild a run from persistence and reset interrupted tasks."""
+
+        row = self.store.load_run(run_id)
+        run_state = RunState(row["state"])
+        if run_state == RunState.RUNNING:
+            run_state = RunState.PENDING
+        run = Run(
+            user_request=row["user_request"],
+            id=row["id"],
+            state=run_state,
+            metadata=row["metadata"],
+        )
+        for task_row in self.store.list_tasks(run_id):
+            task_state = TaskState(task_row["state"])
+            if task_state in {TaskState.RUNNING, TaskState.WAITING_APPROVAL, TaskState.RETRYING}:
+                task_state = TaskState.PENDING
+            task = Task(
+                name=task_row["name"],
+                agent_capability=task_row["agent_capability"],
+                input=task_row["input"],
+                id=task_row["id"],
+                run_id=task_row["run_id"],
+                state=task_state,
+                output_artifact_id=task_row["output_artifact_id"],
+                error=task_row["error"],
+                result=task_row["result"],
+                metadata=task_row["metadata"],
+            )
+            run.tasks.append(task)
+        self.event_bus.emit("run:recovered", {"run_id": run.id, "tasks": len(run.tasks)})
+        return run
 
     @overload
     def run(self, run: Run) -> Run:
