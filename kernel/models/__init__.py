@@ -3,7 +3,7 @@
 from kernel.models.agent import Agent, AgentState
 from kernel.models.artifact import Artifact
 from kernel.models.run import Run, RunState
-from kernel.models.task import Task, TaskState
+from kernel.models.task import Task, TaskSpec, TaskState
 
 __all__ = [
     "Agent",
@@ -12,5 +12,6 @@ __all__ = [
     "Run",
     "RunState",
     "Task",
+    "TaskSpec",
     "TaskState",
 ]

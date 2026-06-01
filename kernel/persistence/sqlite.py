@@ -51,10 +51,17 @@ class SQLiteStore(Storage):
                     input TEXT,
                     output_artifact_id TEXT,
                     error TEXT,
+                    result TEXT,
                     metadata TEXT NOT NULL
                 )
                 """
             )
+            columns = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(tasks)").fetchall()
+            }
+            if "result" not in columns:
+                conn.execute("ALTER TABLE tasks ADD COLUMN result TEXT")
 
     def save_run(self, run: Run) -> None:
         """Persist a run and all attached tasks."""
@@ -82,9 +89,9 @@ class SQLiteStore(Storage):
                 """
                 INSERT INTO tasks (
                     id, run_id, name, agent_capability, state, input,
-                    output_artifact_id, error, metadata
+                    output_artifact_id, error, result, metadata
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     run_id=excluded.run_id,
                     name=excluded.name,
@@ -93,6 +100,7 @@ class SQLiteStore(Storage):
                     input=excluded.input,
                     output_artifact_id=excluded.output_artifact_id,
                     error=excluded.error,
+                    result=excluded.result,
                     metadata=excluded.metadata
                 """,
                 (
@@ -104,6 +112,7 @@ class SQLiteStore(Storage):
                     self._to_json(task.input),
                     task.output_artifact_id,
                     task.error,
+                    self._to_json(task.result),
                     self._to_json(task.metadata),
                 ),
             )
@@ -131,6 +140,7 @@ class SQLiteStore(Storage):
         result = dict(row)
         result["metadata"] = json.loads(result["metadata"])
         result["input"] = json.loads(result["input"]) if result["input"] is not None else None
+        result["result"] = json.loads(result["result"]) if result.get("result") is not None else None
         return result
 
     @staticmethod

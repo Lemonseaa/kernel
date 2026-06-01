@@ -8,7 +8,7 @@ from kernel.control import HumanApprovalGate, PolicyDecision, PolicyEngine
 from kernel.events import EventBus
 from kernel.models import Artifact, Run, Task, TaskState
 from kernel.runtime import AgentRegistry, BaseAgent
-from kernel.tools import ToolPermission, ToolRegistry
+from kernel.tools import EchoTool, ToolPermission, ToolRegistry
 from kernel.workflow import TaskExecutor, WorkflowEngine
 
 
@@ -36,6 +36,14 @@ class WorkflowComponentTest(unittest.TestCase):
 
         with self.assertRaises(PermissionError):
             registry.call("missing", {})
+
+    def test_tool_registry_supports_basetool_async_call(self) -> None:
+        registry = ToolRegistry(permission=ToolPermission(allowed_tools={"echo"}))
+        registry.register(EchoTool())
+
+        result = registry.call("echo", {"text": "ok"})
+
+        self.assertEqual(result, "ok")
 
     def test_policy_and_human_gate(self) -> None:
         policy = PolicyEngine(high_risk_keywords={"deploy"})

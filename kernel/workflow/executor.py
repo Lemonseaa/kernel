@@ -26,6 +26,7 @@ class TaskExecutor:
         try:
             artifact = agent.execute(task)
             task.output_artifact_id = artifact.id
+            task.result = artifact.content
             task.transition_to(TaskState.SUCCEEDED)
             self.event_bus.emit(
                 "task.succeeded",

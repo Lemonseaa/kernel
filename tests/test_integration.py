@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 import tempfile
 import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.models import Artifact, Task, TaskState
+from kernel.models import Artifact, Task, TaskSpec, TaskState
 from kernel.persistence import SQLiteStore
-from kernel.runtime import BaseAgent
+from kernel.runtime import BaseAgent, SimpleAgent
+from kernel.tools import EchoTool, FileWriteTool
 
 
 class WriterAgent(BaseAgent):
@@ -57,3 +59,55 @@ class IntegrationTest(unittest.TestCase):
 
             self.assertEqual(loaded_task["state"], TaskState.PENDING.value)
             self.assertIn("path", loaded_task["input"])
+
+    def test_kernel_async_run_executes_task_specs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
+
+            async def run_kernel() -> object:
+                return await kernel.run(
+                    "测试Run",
+                    [TaskSpec(description="说hello"), TaskSpec(description="再说一次")],
+                )
+
+            run = asyncio.run(run_kernel())
+
+            self.assertEqual(run.state.value, "succeeded")
+            self.assertEqual(len(run.tasks), 2)
+            self.assertEqual(run.tasks[0].result, "说hello")
+            self.assertEqual(run.tasks[1].result, "再说一次")
+
+    def test_simple_agent_can_call_builtin_tools(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            output_path = Path(tmp) / "out.txt"
+            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
+            kernel.tool_registry.register(EchoTool())
+            kernel.tool_registry.register(FileWriteTool(root_dir=tmp))
+
+            async def run_kernel() -> object:
+                return await kernel.run(
+                    "工具测试",
+                    [
+                        TaskSpec(description="hello", tool_names=["echo"]),
+                        TaskSpec(
+                            description="写文件",
+                            tool_names=["file_write"],
+                            input={"path": "out.txt", "content": "saved"},
+                        ),
+                    ],
+                )
+
+            run = asyncio.run(run_kernel())
+
+            self.assertEqual(run.state.value, "succeeded")
+            self.assertEqual(run.tasks[0].result, "hello")
+            self.assertEqual(output_path.read_text(encoding="utf-8"), "saved")
+            self.assertIn("out.txt", run.tasks[1].result["path"])
+
+    def test_simple_agent_is_directly_executable(self) -> None:
+        agent = SimpleAgent()
+        task = Task(name="say", agent_capability="simple.execute", input="hello")
+
+        artifact = agent.execute(task)
+
+        self.assertEqual(artifact.content, "hello")

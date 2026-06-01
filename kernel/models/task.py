@@ -49,6 +49,7 @@ class Task:
     state: TaskState = TaskState.PENDING
     output_artifact_id: str | None = None
     error: str | None = None
+    result: Any = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def transition_to(self, next_state: TaskState) -> None:
@@ -59,3 +60,30 @@ class Task:
         if next_state not in ALLOWED_TASK_TRANSITIONS[self.state]:
             raise ValueError(f"Invalid task transition: {self.state.value} -> {next_state.value}")
         self.state = next_state
+
+
+@dataclass(slots=True)
+class TaskSpec:
+    """User-facing task creation spec."""
+
+    description: str
+    assigned_agent: str | None = None
+    agent: str | None = None
+    requires_approval: bool = False
+    tool_names: list[str] = field(default_factory=list)
+    input: Any = None
+    capability: str = "simple.execute"
+
+    def to_task(self) -> Task:
+        """Convert this spec into an executable task."""
+
+        return Task(
+            name=self.description,
+            agent_capability=self.capability,
+            input=self.input if self.input is not None else self.description,
+            metadata={
+                "assigned_agent": self.assigned_agent or self.agent,
+                "requires_approval": self.requires_approval,
+                "tool_names": list(self.tool_names),
+            },
+        )
