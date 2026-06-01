@@ -11,6 +11,7 @@ from kernel.models import Run, Task, TaskSpec
 from kernel.observability import MetricsCollector
 from kernel.persistence import SQLiteStore
 from kernel.runtime import AgentRegistry, SimpleAgent
+from kernel.scheduler import Job, JobType, Scheduler
 from kernel.tools import EchoTool, FileWriteTool, ToolPermission, ToolRegistry
 from kernel.workflow import WorkflowEngine
 
@@ -24,6 +25,7 @@ class Kernel:
         self.event_bus = EventBus()
         self.audit_logger = AuditLogger()
         self.metrics = MetricsCollector()
+        self.scheduler = Scheduler()
         self.event_bus.subscribe(self.audit_logger.log)
         self.event_bus.subscribe(self.metrics.record)
         self.agent_registry = AgentRegistry()
@@ -128,3 +130,42 @@ class Kernel:
         """Subscribe to kernel events."""
 
         self.event_bus.subscribe(event_type_or_handler, handler)
+
+    def schedule(
+        self,
+        name: str,
+        tasks: list[TaskSpec],
+        interval_seconds: int | None = None,
+        cron: str | None = None,
+    ) -> Job:
+        """Schedule a workflow for later execution."""
+
+        if interval_seconds is not None:
+            job_type = JobType.INTERVAL
+        elif cron is not None:
+            job_type = JobType.CRON
+        else:
+            raise ValueError("schedule requires interval_seconds or cron.")
+        job = Job(
+            name=name,
+            job_type=job_type,
+            task_specs=tasks,
+            interval_seconds=interval_seconds,
+            cron=cron,
+        )
+        self.scheduler.add_job(job)
+        self.event_bus.emit("schedule:created", {"job_id": job.id, "name": job.name})
+        return job
+
+    async def run_scheduled(self) -> int:
+        """Run due scheduled jobs."""
+
+        async def run_job(job: Job) -> None:
+            await self.run(job.user_request or job.name, job.task_specs)
+
+        count = 0
+        for job in self.scheduler.due_jobs():
+            await run_job(job)
+            job.mark_ran()
+            count += 1
+        return count
