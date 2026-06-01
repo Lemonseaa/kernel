@@ -12,10 +12,11 @@ from kernel.tools.permission import ToolPermission
 class ToolRegistry:
     """Register and call external tools through permission checks."""
 
-    def __init__(self, permission: ToolPermission | None = None) -> None:
+    def __init__(self, permission: ToolPermission | None = None, dry_run: bool = False) -> None:
         """Create a tool registry."""
 
         self.permission = permission or ToolPermission()
+        self.dry_run = dry_run
         self._tools: dict[str, Callable[..., Any] | BaseTool] = {}
 
     def register(
@@ -40,6 +41,10 @@ class ToolRegistry:
             raise PermissionError(f"Tool is not registered: {name}")
         if not self.permission.check(name):
             raise PermissionError(f"Tool is not allowed: {name}")
+        if self.dry_run:
+            from kernel.dryrun import DryRunTool
+
+            return DryRunTool(name).run(**arguments)
         tool = self._tools[name]
         if isinstance(tool, BaseTool):
             return tool.run(**arguments)

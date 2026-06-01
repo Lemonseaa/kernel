@@ -7,6 +7,7 @@ from typing import Callable, overload
 
 from kernel.config import KernelConfig
 from kernel.control import HumanApprovalGate, PolicyEngine
+from kernel.dryrun import DryRunContext, DryRunProvider
 from kernel.evaluation import EvaluationGate, EvaluationRunner
 from kernel.events import AuditLogger, Event, EventBus, EventType
 from kernel.llm import ProviderRegistry
@@ -28,6 +29,7 @@ class Kernel:
         """Create kernel services and wire their dependencies."""
 
         self.config = config or KernelConfig()
+        self.dry_run_enabled = self.config.dry_run
         self.event_bus = EventBus()
         self.audit_logger = AuditLogger()
         self.metrics = MetricsCollector()
@@ -38,7 +40,7 @@ class Kernel:
         self.event_bus.subscribe(self.audit_logger.log)
         self.event_bus.subscribe(self.metrics.record)
         self.agent_registry = AgentRegistry()
-        self.tool_registry = ToolRegistry(permission=ToolPermission())
+        self.tool_registry = ToolRegistry(permission=ToolPermission(), dry_run=self.dry_run_enabled)
         self.tool_registry.register(EchoTool())
         self.tool_registry.register(FileWriteTool(root_dir=Path.cwd()))
         self.policy_engine = PolicyEngine()
@@ -56,6 +58,24 @@ class Kernel:
             evaluation_gate=self.evaluation_gate,
         )
         self.agent_registry.register_agent_class(SimpleAgent)
+
+    def set_dry_run(self, enabled: bool) -> None:
+        """Enable or disable dry run simulation."""
+
+        self.dry_run_enabled = enabled
+        self.tool_registry.dry_run = enabled
+        if enabled:
+            provider = DryRunProvider(model="dryrun")
+            self.llm_provider = provider
+            self.provider_registry.register(provider, default=True)
+        else:
+            self.llm_provider = self.config.llm_provider
+            self.provider_registry.register(self.llm_provider, default=True)
+
+    def dry_run(self) -> DryRunContext:
+        """Return a context manager that temporarily enables dry run mode."""
+
+        return DryRunContext(self)
 
     def create_run(self, user_request: str) -> Run:
         """Create and persist a run."""

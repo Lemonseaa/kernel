@@ -59,3 +59,14 @@ requests can trigger notifications through the manager.
 ```bash
 python -m kernel.cli notify --title "需要审批" --body "有任务等待处理"
 ```
+
+## Dry Run
+
+Dry run mode previews LLM and tool behavior without external API calls or side effects:
+
+```bash
+python -m kernel.cli dryrun --task "预演任务"
+```
+
+V0.2 now covers provider abstraction, memory/context, evaluation gate, notification, and dry run
+simulation on top of the V0.1 workflow kernel.
