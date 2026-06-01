@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import overload
+from typing import Callable, overload
 
 from kernel.control import HumanApprovalGate, PolicyEngine
-from kernel.events import AuditLogger, EventBus
+from kernel.events import AuditLogger, Event, EventBus, EventType
 from kernel.models import Run, Task, TaskSpec
 from kernel.persistence import SQLiteStore
 from kernel.runtime import AgentRegistry, SimpleAgent
@@ -28,7 +28,7 @@ class Kernel:
         self.tool_registry.register(EchoTool())
         self.tool_registry.register(FileWriteTool(root_dir=Path.cwd()))
         self.policy_engine = PolicyEngine()
-        self.human_gate = HumanApprovalGate()
+        self.human_gate = HumanApprovalGate(event_bus=self.event_bus)
         self.store = SQLiteStore(sqlite_path)
         self.workflow = WorkflowEngine(
             agent_registry=self.agent_registry,
@@ -43,7 +43,7 @@ class Kernel:
 
         run = Run(user_request=user_request)
         self.store.save_run(run)
-        self.event_bus.emit("run.created", {"run_id": run.id, "user_request": user_request})
+        self.event_bus.emit(EventType.RUN_CREATED, {"run_id": run.id, "user_request": user_request})
         return run
 
     def create_task(self, run: Run, name: str, agent_capability: str, input: object = None) -> Task:
@@ -52,7 +52,7 @@ class Kernel:
         task = Task(name=name, agent_capability=agent_capability, input=input)
         run.add_task(task)
         self.store.save_run(run)
-        self.event_bus.emit("task.created", {"run_id": run.id, "task_id": task.id})
+        self.event_bus.emit(EventType.TASK_CREATED, {"run_id": run.id, "task_id": task.id})
         return task
 
     @overload
@@ -86,7 +86,7 @@ class Kernel:
         for spec in tasks:
             task = spec.to_task()
             run.add_task(task)
-            self.event_bus.emit("task.created", {"run_id": run.id, "task_id": task.id})
+            self.event_bus.emit(EventType.TASK_CREATED, {"run_id": run.id, "task_id": task.id})
             for tool_name in spec.tool_names:
                 result = await self.tool_registry.acall(tool_name, self._tool_arguments(tool_name, spec, task))
                 task.input = result
@@ -115,3 +115,12 @@ class Kernel:
             "events": len(self.event_bus.events),
             "audit_records": len(self.audit_logger.records),
         }
+
+    def on(
+        self,
+        event_type_or_handler: str | EventType | Callable[[Event], None],
+        handler: Callable[[Event], None] | None = None,
+    ) -> None:
+        """Subscribe to kernel events."""
+
+        self.event_bus.subscribe(event_type_or_handler, handler)

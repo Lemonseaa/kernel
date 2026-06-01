@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kernel.events import EventBus
+from kernel.events import EventBus, EventType
 from kernel.models import AgentState, Artifact, Task, TaskState
 from kernel.runtime import BaseAgent
 
@@ -18,7 +18,7 @@ class TaskExecutor:
     def execute(self, task: Task, agent: BaseAgent) -> Artifact:
         """Run a task through an agent and update state."""
 
-        self.event_bus.emit("task.started", {"task_id": task.id, "agent": agent.name})
+        self.event_bus.emit(EventType.TASK_STARTED, {"task_id": task.id, "agent": agent.name})
         task.transition_to(TaskState.RUNNING)
         agent_model = agent.to_model()
         agent_model.state = AgentState.BUSY
@@ -29,14 +29,14 @@ class TaskExecutor:
             task.result = artifact.content
             task.transition_to(TaskState.SUCCEEDED)
             self.event_bus.emit(
-                "task.succeeded",
+                EventType.TASK_COMPLETED,
                 {"task_id": task.id, "artifact_id": artifact.id, "agent": agent.name},
             )
             return artifact
         except Exception as exc:
             task.error = str(exc)
             task.transition_to(TaskState.FAILED)
-            self.event_bus.emit("task.failed", {"task_id": task.id, "error": str(exc)})
+            self.event_bus.emit(EventType.TASK_FAILED, {"task_id": task.id, "error": str(exc)})
             raise
         finally:
             agent_model.state = AgentState.IDLE

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -26,10 +28,21 @@ class SQLiteStore(Storage):
 
         return sqlite3.connect(self.path)
 
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        """Open a SQLite connection and close it after use."""
+
+        conn = self._connect()
+        try:
+            yield conn
+            conn.commit()
+        finally:
+            conn.close()
+
     def _init_schema(self) -> None:
         """Create tables if they do not exist."""
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS runs (
@@ -66,7 +79,7 @@ class SQLiteStore(Storage):
     def save_run(self, run: Run) -> None:
         """Persist a run and all attached tasks."""
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 INSERT INTO runs (id, user_request, state, metadata)
@@ -84,7 +97,7 @@ class SQLiteStore(Storage):
     def save_task(self, task: Task) -> None:
         """Persist a task."""
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 INSERT INTO tasks (
@@ -120,7 +133,7 @@ class SQLiteStore(Storage):
     def load_run(self, run_id: str) -> dict[str, Any]:
         """Load a run row as a dict."""
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.row_factory = sqlite3.Row
             row = conn.execute("SELECT * FROM runs WHERE id = ?", (run_id,)).fetchone()
         if row is None:
@@ -132,7 +145,7 @@ class SQLiteStore(Storage):
     def load_task(self, task_id: str) -> dict[str, Any]:
         """Load a task row as a dict."""
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.row_factory = sqlite3.Row
             row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
         if row is None:

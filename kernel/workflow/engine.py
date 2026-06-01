@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from kernel.control import HumanApprovalGate, PolicyEngine
-from kernel.events import EventBus
+from kernel.events import EventBus, EventType
 from kernel.models import Run, Task, TaskState
 from kernel.runtime import AgentRegistry
 from kernel.workflow.executor import TaskExecutor
@@ -26,6 +26,8 @@ class WorkflowEngine:
         self.event_bus = event_bus or EventBus()
         self.policy_engine = policy_engine or PolicyEngine()
         self.human_gate = human_gate or HumanApprovalGate()
+        if self.human_gate.event_bus is None:
+            self.human_gate.event_bus = self.event_bus
         self.executor = TaskExecutor(event_bus=self.event_bus)
         self.queue = TaskQueue()
 
@@ -35,13 +37,13 @@ class WorkflowEngine:
         for task in run.tasks:
             if task.state == TaskState.PENDING:
                 self.queue.push(task)
-                self.event_bus.emit("task.scheduled", {"run_id": run.id, "task_id": task.id})
+                self.event_bus.emit(EventType.TASK_SCHEDULED, {"run_id": run.id, "task_id": task.id})
 
     def run(self, run: Run) -> Run:
         """Execute scheduled tasks until the queue is empty."""
 
         run.mark_running()
-        self.event_bus.emit("run.started", {"run_id": run.id})
+        self.event_bus.emit(EventType.RUN_STARTED, {"run_id": run.id})
         self.schedule(run)
         while len(self.queue):
             task = self.queue.pop()
@@ -49,17 +51,24 @@ class WorkflowEngine:
                 break
             if task.state != TaskState.PENDING:
                 self.event_bus.emit(
-                    "task.skipped",
+                    EventType.TASK_SKIPPED,
                     {"task_id": task.id, "state": task.state.value},
                 )
                 continue
             policy = self.policy_engine.evaluate_action(task.name)
-            if policy.requires_approval:
+            if policy.requires_approval or bool(task.metadata.get("requires_approval")):
                 task.transition_to(TaskState.RUNNING)
                 task.transition_to(TaskState.WAITING_APPROVAL)
-                self.event_bus.emit("approval.requested", {"task_id": task.id, "policy_id": policy.id})
-                if not self.human_gate.request_approval(policy):
+                if not self.human_gate.request_approval(
+                    policy,
+                    message=f"Task needs approval: {task.name}",
+                    subject=task,
+                ):
                     task.transition_to(TaskState.FAILED)
+                    self.event_bus.emit(
+                        EventType.TASK_FAILED,
+                        {"task_id": task.id, "error": "Approval rejected."},
+                    )
                     continue
                 task.transition_to(TaskState.RUNNING)
             agent = self.agent_registry.create_agent_for_capability(task.agent_capability)
@@ -67,9 +76,9 @@ class WorkflowEngine:
                 task.transition_to(TaskState.RUNNING)
                 task.error = f"No agent for capability: {task.agent_capability}"
                 task.transition_to(TaskState.FAILED)
-                self.event_bus.emit("task.failed", {"task_id": task.id, "error": task.error})
+                self.event_bus.emit(EventType.TASK_FAILED, {"task_id": task.id, "error": task.error})
                 continue
             self.executor.execute(task, agent)
         run.mark_completed_if_done()
-        self.event_bus.emit("run.completed", {"run_id": run.id, "state": run.state.value})
+        self.event_bus.emit(EventType.RUN_COMPLETED, {"run_id": run.id, "state": run.state.value})
         return run

@@ -104,6 +104,21 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(output_path.read_text(encoding="utf-8"), "saved")
             self.assertIn("out.txt", run.tasks[1].result["path"])
 
+    def test_kernel_on_subscribes_to_typed_events(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
+            events = []
+            kernel.on("task:completed", lambda event: events.append(event))
+
+            async def run_kernel() -> object:
+                return await kernel.run("测试", [TaskSpec(description="hello")])
+
+            run = asyncio.run(run_kernel())
+
+            self.assertEqual(run.state.value, "succeeded")
+            self.assertEqual(len(events), 1)
+            self.assertEqual(events[0].payload["task_id"], run.tasks[0].id)
+
     def test_simple_agent_is_directly_executable(self) -> None:
         agent = SimpleAgent()
         task = Task(name="say", agent_capability="simple.execute", input="hello")

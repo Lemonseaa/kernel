@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 
 from kernel.control import HumanApprovalGate, PolicyDecision, PolicyEngine
-from kernel.events import EventBus
+from kernel.events import EventBus, EventType
 from kernel.models import Artifact, Run, Task, TaskState
 from kernel.runtime import AgentRegistry, BaseAgent
 from kernel.tools import EchoTool, ToolPermission, ToolRegistry
@@ -54,6 +54,18 @@ class WorkflowComponentTest(unittest.TestCase):
         self.assertEqual(decision.decision, PolicyDecision.REVIEW)
         self.assertFalse(gate.request_approval(decision))
 
+    def test_human_gate_tracks_pending_requests_until_resolved(self) -> None:
+        policy = PolicyEngine(high_risk_keywords={"deploy"}).evaluate_action("deploy production")
+        gate = HumanApprovalGate(auto_approve=None)
+
+        request = gate.create_request(policy, message="Deploy needs approval")
+
+        self.assertEqual(len(gate.pending_requests()), 1)
+        self.assertEqual(request.message, "Deploy needs approval")
+        self.assertTrue(gate.approve(request.id))
+        self.assertTrue(gate.wait_for_approval(request.id))
+        self.assertEqual(len(gate.pending_requests()), 0)
+
     def test_executor_runs_agent_and_emits_events(self) -> None:
         bus = EventBus()
         executor = TaskExecutor(event_bus=bus)
@@ -93,3 +105,40 @@ class WorkflowComponentTest(unittest.TestCase):
         self.assertEqual(event.type, "task.started")
         self.assertEqual(len(bus.events), 1)
         self.assertEqual(len(bus.subscriber_errors), 1)
+
+    def test_event_bus_supports_event_type_subscribers(self) -> None:
+        bus = EventBus()
+        completed_events = []
+        all_events = []
+
+        bus.subscribe(lambda event: all_events.append(event))
+        bus.subscribe("task:completed", lambda event: completed_events.append(event))
+
+        bus.emit(EventType.TASK_STARTED, {"task_id": "task-1"})
+        bus.emit(EventType.TASK_COMPLETED, {"task_id": "task-1"})
+
+        self.assertEqual(len(all_events), 2)
+        self.assertEqual(len(completed_events), 1)
+        self.assertEqual(completed_events[0].type, "task:completed")
+
+    def test_workflow_uses_task_approval_metadata_before_execution(self) -> None:
+        registry = AgentRegistry()
+        registry.register_agent_class(EchoAgent)
+        gate = HumanApprovalGate(auto_approve=False)
+        bus = EventBus()
+        engine = WorkflowEngine(agent_registry=registry, event_bus=bus, human_gate=gate)
+        run = Run(user_request="review")
+        task = Task(
+            name="safe task",
+            agent_capability="echo",
+            input="hello",
+            metadata={"requires_approval": True},
+        )
+        run.add_task(task)
+
+        result = engine.run(run)
+
+        self.assertEqual(result.state.value, "failed")
+        self.assertEqual(task.state, TaskState.FAILED)
+        self.assertEqual(len(gate.requests), 1)
+        self.assertIn("approval:rejected", [event.type for event in bus.events])
