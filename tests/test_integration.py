@@ -60,6 +60,25 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(loaded_task["state"], TaskState.PENDING.value)
             self.assertIn("path", loaded_task["input"])
 
+    def test_sqlite_store_lists_runs_and_tasks_for_recovery(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "kernel.db"
+            kernel = Kernel(sqlite_path=db_path)
+
+            async def run_kernel() -> object:
+                return await kernel.run("恢复测试", [TaskSpec(description="hello")])
+
+            run = asyncio.run(run_kernel())
+            store = SQLiteStore(db_path)
+
+            runs = store.list_runs()
+            tasks = store.list_tasks(run.id)
+
+            self.assertEqual(len(runs), 1)
+            self.assertEqual(runs[0]["id"], run.id)
+            self.assertEqual(len(tasks), 1)
+            self.assertEqual(tasks[0]["run_id"], run.id)
+
     def test_kernel_async_run_executes_task_specs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")

@@ -8,6 +8,7 @@ from typing import Callable, overload
 from kernel.control import HumanApprovalGate, PolicyEngine
 from kernel.events import AuditLogger, Event, EventBus, EventType
 from kernel.models import Run, Task, TaskSpec
+from kernel.observability import MetricsCollector
 from kernel.persistence import SQLiteStore
 from kernel.runtime import AgentRegistry, SimpleAgent
 from kernel.tools import EchoTool, FileWriteTool, ToolPermission, ToolRegistry
@@ -22,7 +23,9 @@ class Kernel:
 
         self.event_bus = EventBus()
         self.audit_logger = AuditLogger()
+        self.metrics = MetricsCollector()
         self.event_bus.subscribe(self.audit_logger.log)
+        self.event_bus.subscribe(self.metrics.record)
         self.agent_registry = AgentRegistry()
         self.tool_registry = ToolRegistry(permission=ToolPermission())
         self.tool_registry.register(EchoTool())
@@ -114,6 +117,7 @@ class Kernel:
         return {
             "events": len(self.event_bus.events),
             "audit_records": len(self.audit_logger.records),
+            "metrics": self.metrics.get_summary(),
         }
 
     def on(

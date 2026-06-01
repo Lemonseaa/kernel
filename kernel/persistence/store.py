@@ -26,3 +26,11 @@ class Storage(ABC):
     @abstractmethod
     def load_task(self, task_id: str) -> dict[str, Any]:
         """Load a task by id."""
+
+    @abstractmethod
+    def list_runs(self) -> list[dict[str, Any]]:
+        """List persisted runs."""
+
+    @abstractmethod
+    def list_tasks(self, run_id: str | None = None) -> list[dict[str, Any]]:
+        """List persisted tasks, optionally for one run."""

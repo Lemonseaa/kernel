@@ -156,6 +156,43 @@ class SQLiteStore(Storage):
         result["result"] = json.loads(result["result"]) if result.get("result") is not None else None
         return result
 
+    def list_runs(self) -> list[dict[str, Any]]:
+        """List persisted runs ordered by insertion row id."""
+
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("SELECT * FROM runs ORDER BY rowid").fetchall()
+        results = []
+        for row in rows:
+            item = dict(row)
+            item["metadata"] = json.loads(item["metadata"])
+            results.append(item)
+        return results
+
+    def list_tasks(self, run_id: str | None = None) -> list[dict[str, Any]]:
+        """List persisted tasks ordered by insertion row id."""
+
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            if run_id is None:
+                rows = conn.execute("SELECT * FROM tasks ORDER BY rowid").fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM tasks WHERE run_id = ? ORDER BY rowid",
+                    (run_id,),
+                ).fetchall()
+        return [self._task_row_to_dict(row) for row in rows]
+
+    @staticmethod
+    def _task_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+        """Convert a SQLite task row into a typed dict."""
+
+        result = dict(row)
+        result["metadata"] = json.loads(result["metadata"])
+        result["input"] = json.loads(result["input"]) if result["input"] is not None else None
+        result["result"] = json.loads(result["result"]) if result.get("result") is not None else None
+        return result
+
     @staticmethod
     def _to_json(value: Any) -> str:
         """Serialize values safely for SQLite JSON text fields."""
