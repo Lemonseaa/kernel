@@ -6,10 +6,10 @@ import unittest
 
 from kernel.control import HumanApprovalGate, PolicyDecision, PolicyEngine
 from kernel.events import EventBus
-from kernel.models import Artifact, Task, TaskState
-from kernel.runtime import BaseAgent
+from kernel.models import Artifact, Run, Task, TaskState
+from kernel.runtime import AgentRegistry, BaseAgent
 from kernel.tools import ToolPermission, ToolRegistry
-from kernel.workflow import TaskExecutor
+from kernel.workflow import TaskExecutor, WorkflowEngine
 
 
 class EchoAgent(BaseAgent):
@@ -57,3 +57,31 @@ class WorkflowComponentTest(unittest.TestCase):
         self.assertEqual(task.state, TaskState.SUCCEEDED)
         self.assertEqual(artifact.content, "hello")
         self.assertTrue(bus.events)
+
+    def test_workflow_schedule_is_idempotent(self) -> None:
+        registry = AgentRegistry()
+        registry.register_agent_class(EchoAgent)
+        engine = WorkflowEngine(agent_registry=registry)
+        run = Run(user_request="echo")
+        task = Task(name="echo", agent_capability="echo", input="hello")
+        run.add_task(task)
+
+        engine.schedule(run)
+        engine.schedule(run)
+        result = engine.run(run)
+
+        self.assertEqual(result.state.value, "succeeded")
+        self.assertEqual(task.state, TaskState.SUCCEEDED)
+
+    def test_event_bus_isolates_subscriber_failures(self) -> None:
+        bus = EventBus()
+
+        def broken_handler(_event: object) -> None:
+            raise RuntimeError("audit sink unavailable")
+
+        bus.subscribe(broken_handler)
+        event = bus.emit("task.started", {"task_id": "task-1"})
+
+        self.assertEqual(event.type, "task.started")
+        self.assertEqual(len(bus.events), 1)
+        self.assertEqual(len(bus.subscriber_errors), 1)

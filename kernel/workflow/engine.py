@@ -47,6 +47,12 @@ class WorkflowEngine:
             task = self.queue.pop()
             if task is None:
                 break
+            if task.state != TaskState.PENDING:
+                self.event_bus.emit(
+                    "task.skipped",
+                    {"task_id": task.id, "state": task.state.value},
+                )
+                continue
             policy = self.policy_engine.evaluate_action(task.name)
             if policy.requires_approval:
                 task.transition_to(TaskState.RUNNING)

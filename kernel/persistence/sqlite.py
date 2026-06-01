@@ -18,6 +18,7 @@ class SQLiteStore(Storage):
         """Create or open a SQLite store."""
 
         self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         self._init_schema()
 
     def _connect(self) -> sqlite3.Connection:
@@ -68,7 +69,7 @@ class SQLiteStore(Storage):
                     state=excluded.state,
                     metadata=excluded.metadata
                 """,
-                (run.id, run.user_request, run.state.value, json.dumps(run.metadata)),
+                (run.id, run.user_request, run.state.value, self._to_json(run.metadata)),
             )
         for task in run.tasks:
             self.save_task(task)
@@ -100,10 +101,10 @@ class SQLiteStore(Storage):
                     task.name,
                     task.agent_capability,
                     task.state.value,
-                    json.dumps(task.input),
+                    self._to_json(task.input),
                     task.output_artifact_id,
                     task.error,
-                    json.dumps(task.metadata),
+                    self._to_json(task.metadata),
                 ),
             )
 
@@ -131,3 +132,9 @@ class SQLiteStore(Storage):
         result["metadata"] = json.loads(result["metadata"])
         result["input"] = json.loads(result["input"]) if result["input"] is not None else None
         return result
+
+    @staticmethod
+    def _to_json(value: Any) -> str:
+        """Serialize values safely for SQLite JSON text fields."""
+
+        return json.dumps(value, default=str, ensure_ascii=False)

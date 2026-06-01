@@ -8,6 +8,7 @@ from pathlib import Path
 
 from kernel import Kernel
 from kernel.models import Artifact, Task, TaskState
+from kernel.persistence import SQLiteStore
 from kernel.runtime import BaseAgent
 
 
@@ -44,3 +45,15 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(loaded_run["state"], "succeeded")
             self.assertEqual(loaded_task["state"], TaskState.SUCCEEDED.value)
             self.assertTrue(kernel.event_bus.events)
+
+    def test_sqlite_store_creates_parent_directory_and_handles_non_json_input(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "nested" / "kernel.db"
+            store = SQLiteStore(db_path)
+            task = Task(name="write", agent_capability="content.write", input={"path": Path(tmp)})
+
+            store.save_task(task)
+            loaded_task = store.load_task(task.id)
+
+            self.assertEqual(loaded_task["state"], TaskState.PENDING.value)
+            self.assertIn("path", loaded_task["input"])
