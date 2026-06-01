@@ -9,6 +9,7 @@ from kernel.config import KernelConfig
 from kernel.control import HumanApprovalGate, PolicyEngine
 from kernel.events import AuditLogger, Event, EventBus, EventType
 from kernel.llm import ProviderRegistry
+from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
 from kernel.models import Run, Task, TaskSpec
 from kernel.observability import MetricsCollector
 from kernel.persistence import SQLiteStore
@@ -41,6 +42,7 @@ class Kernel:
         self.policy_engine = PolicyEngine()
         self.human_gate = HumanApprovalGate(event_bus=self.event_bus)
         self.store = SQLiteStore(sqlite_path)
+        self.memory = ContextManager(WorkingMemory(), PersistentMemory(self.store))
         self.workflow = WorkflowEngine(
             agent_registry=self.agent_registry,
             event_bus=self.event_bus,
@@ -87,6 +89,7 @@ class Kernel:
         """Execute and persist an existing run."""
 
         result = self.workflow.run(run)
+        self._record_run_memory(result)
         self.store.save_run(result)
         return result
 
@@ -118,6 +121,13 @@ class Kernel:
             arguments.setdefault("content", spec.description)
         arguments.setdefault("task_id", task.id)
         return arguments
+
+    def _record_run_memory(self, run: Run) -> None:
+        """Record completed task results into context memory."""
+
+        for task in run.tasks:
+            if task.result is not None:
+                self.memory.add(run.id, task.id, task.result)
 
     def report(self) -> dict[str, object]:
         """Return an in-memory operational report."""

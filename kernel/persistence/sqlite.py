@@ -75,6 +75,16 @@ class SQLiteStore(Storage):
             }
             if "result" not in columns:
                 conn.execute("ALTER TABLE tasks ADD COLUMN result TEXT")
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS memory (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    run_id TEXT NOT NULL,
+                    task_id TEXT NOT NULL,
+                    content TEXT NOT NULL
+                )
+                """
+            )
 
     def save_run(self, run: Run) -> None:
         """Persist a run and all attached tasks."""
@@ -182,6 +192,36 @@ class SQLiteStore(Storage):
                     (run_id,),
                 ).fetchall()
         return [self._task_row_to_dict(row) for row in rows]
+
+    def save_memory(self, run_id: str, task_id: str, content: Any) -> None:
+        """Persist one memory item."""
+
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO memory (run_id, task_id, content)
+                VALUES (?, ?, ?)
+                """,
+                (run_id, task_id, self._to_json(content)),
+            )
+
+    def list_memory(self, run_id: str) -> list[dict[str, Any]]:
+        """List memory items for one run."""
+
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                "SELECT run_id, task_id, content FROM memory WHERE run_id = ? ORDER BY id",
+                (run_id,),
+            ).fetchall()
+        return [
+            {
+                "run_id": row["run_id"],
+                "task_id": row["task_id"],
+                "content": json.loads(row["content"]),
+            }
+            for row in rows
+        ]
 
     @staticmethod
     def _task_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
