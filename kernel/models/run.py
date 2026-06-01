@@ -48,7 +48,7 @@ class Run:
 
         if not self.tasks:
             return
-        if any(task.state == TaskState.FAILED for task in self.tasks):
+        if any(task.state in {TaskState.FAILED, TaskState.EVALUATION_FAILED} for task in self.tasks):
             self.state = RunState.FAILED
             return
         if any(task.state == TaskState.CANCELLED for task in self.tasks):

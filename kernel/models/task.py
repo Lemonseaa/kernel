@@ -16,6 +16,7 @@ class TaskState(str, Enum):
     WAITING_APPROVAL = "waiting_approval"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+    EVALUATION_FAILED = "evaluation_failed"
     CANCELLED = "cancelled"
     RETRYING = "retrying"
 
@@ -26,6 +27,7 @@ ALLOWED_TASK_TRANSITIONS: dict[TaskState, set[TaskState]] = {
         TaskState.WAITING_APPROVAL,
         TaskState.SUCCEEDED,
         TaskState.FAILED,
+        TaskState.EVALUATION_FAILED,
         TaskState.RETRYING,
         TaskState.CANCELLED,
     },
@@ -33,6 +35,7 @@ ALLOWED_TASK_TRANSITIONS: dict[TaskState, set[TaskState]] = {
     TaskState.RETRYING: {TaskState.RUNNING, TaskState.FAILED, TaskState.CANCELLED},
     TaskState.SUCCEEDED: set(),
     TaskState.FAILED: {TaskState.RETRYING},
+    TaskState.EVALUATION_FAILED: {TaskState.RETRYING},
     TaskState.CANCELLED: set(),
 }
 
@@ -70,6 +73,9 @@ class TaskSpec:
     assigned_agent: str | None = None
     agent: str | None = None
     requires_approval: bool = False
+    evaluation_required: bool = False
+    evaluation_platform: str = "public"
+    min_score: float = 70.0
     tool_names: list[str] = field(default_factory=list)
     input: Any = None
     capability: str = "simple.execute"
@@ -84,6 +90,9 @@ class TaskSpec:
             metadata={
                 "assigned_agent": self.assigned_agent or self.agent,
                 "requires_approval": self.requires_approval,
+                "evaluation_required": self.evaluation_required,
+                "evaluation_platform": self.evaluation_platform,
+                "min_score": self.min_score,
                 "tool_names": list(self.tool_names),
             },
         )

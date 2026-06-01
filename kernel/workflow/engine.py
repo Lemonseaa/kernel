@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from kernel.control import HumanApprovalGate, PolicyEngine
+from kernel.evaluation import EvaluationGate
 from kernel.events import EventBus, EventType
 from kernel.models import Run, Task, TaskState
 from kernel.runtime import AgentRegistry
@@ -19,6 +20,7 @@ class WorkflowEngine:
         event_bus: EventBus | None = None,
         policy_engine: PolicyEngine | None = None,
         human_gate: HumanApprovalGate | None = None,
+        evaluation_gate: EvaluationGate | None = None,
     ) -> None:
         """Create a workflow engine."""
 
@@ -26,9 +28,10 @@ class WorkflowEngine:
         self.event_bus = event_bus or EventBus()
         self.policy_engine = policy_engine or PolicyEngine()
         self.human_gate = human_gate or HumanApprovalGate()
+        self.evaluation_gate = evaluation_gate
         if self.human_gate.event_bus is None:
             self.human_gate.event_bus = self.event_bus
-        self.executor = TaskExecutor(event_bus=self.event_bus)
+        self.executor = TaskExecutor(event_bus=self.event_bus, evaluation_gate=self.evaluation_gate)
         self.queue = TaskQueue()
 
     def schedule(self, run: Run) -> None:

@@ -7,6 +7,7 @@ from typing import Callable, overload
 
 from kernel.config import KernelConfig
 from kernel.control import HumanApprovalGate, PolicyEngine
+from kernel.evaluation import EvaluationGate, EvaluationRunner
 from kernel.events import AuditLogger, Event, EventBus, EventType
 from kernel.llm import ProviderRegistry
 from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
@@ -41,6 +42,8 @@ class Kernel:
         self.tool_registry.register(FileWriteTool(root_dir=Path.cwd()))
         self.policy_engine = PolicyEngine()
         self.human_gate = HumanApprovalGate(event_bus=self.event_bus)
+        self.evaluation_runner = EvaluationRunner()
+        self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(sqlite_path)
         self.memory = ContextManager(WorkingMemory(), PersistentMemory(self.store))
         self.workflow = WorkflowEngine(
@@ -48,6 +51,7 @@ class Kernel:
             event_bus=self.event_bus,
             policy_engine=self.policy_engine,
             human_gate=self.human_gate,
+            evaluation_gate=self.evaluation_gate,
         )
         self.agent_registry.register_agent_class(SimpleAgent)
 

@@ -34,3 +34,19 @@ python -c "from kernel import Kernel; print('kernel OK')"
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## Evaluation Gate
+
+Tasks can opt into generated-content quality checks:
+
+```python
+TaskSpec(
+    description="生成小红书内容",
+    evaluation_required=True,
+    evaluation_platform="xiaohongshu",
+    min_score=70.0,
+)
+```
+
+The default gate runs readability, SEO, and platform-fit evaluators. A failing gate marks the task as
+`evaluation_failed` and records suggestions in `task.result`.
