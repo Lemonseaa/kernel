@@ -5,8 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, overload
 
+from kernel.config import KernelConfig
 from kernel.control import HumanApprovalGate, PolicyEngine
 from kernel.events import AuditLogger, Event, EventBus, EventType
+from kernel.llm import ProviderRegistry
 from kernel.models import Run, Task, TaskSpec
 from kernel.observability import MetricsCollector
 from kernel.persistence import SQLiteStore
@@ -19,13 +21,17 @@ from kernel.workflow import WorkflowEngine
 class Kernel:
     """V0.1 Agent Workflow Kernel facade."""
 
-    def __init__(self, sqlite_path: str | Path = "kernel.db") -> None:
+    def __init__(self, sqlite_path: str | Path = "kernel.db", config: KernelConfig | None = None) -> None:
         """Create kernel services and wire their dependencies."""
 
+        self.config = config or KernelConfig()
         self.event_bus = EventBus()
         self.audit_logger = AuditLogger()
         self.metrics = MetricsCollector()
         self.scheduler = Scheduler()
+        self.llm_provider = self.config.llm_provider
+        self.provider_registry = ProviderRegistry()
+        self.provider_registry.register(self.llm_provider, default=True)
         self.event_bus.subscribe(self.audit_logger.log)
         self.event_bus.subscribe(self.metrics.record)
         self.agent_registry = AgentRegistry()
