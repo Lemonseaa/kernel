@@ -12,6 +12,7 @@ from kernel.events import AuditLogger, Event, EventBus, EventType
 from kernel.llm import ProviderRegistry
 from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
 from kernel.models import Run, Task, TaskSpec
+from kernel.notification import NotificationManager
 from kernel.observability import MetricsCollector
 from kernel.persistence import SQLiteStore
 from kernel.runtime import AgentRegistry, SimpleAgent
@@ -41,7 +42,8 @@ class Kernel:
         self.tool_registry.register(EchoTool())
         self.tool_registry.register(FileWriteTool(root_dir=Path.cwd()))
         self.policy_engine = PolicyEngine()
-        self.human_gate = HumanApprovalGate(event_bus=self.event_bus)
+        self.notification_manager = NotificationManager()
+        self.human_gate = HumanApprovalGate(event_bus=self.event_bus, notification_manager=self.notification_manager)
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(sqlite_path)

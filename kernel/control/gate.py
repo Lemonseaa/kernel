@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from kernel.control.policy import PolicyEvaluation
 from kernel.events import EventBus, EventType
+from kernel.notification import NotificationManager
 
 
 class ApprovalState(str, Enum):
@@ -33,11 +34,17 @@ class ApprovalRequest:
 class HumanApprovalGate:
     """Optional human approval gate."""
 
-    def __init__(self, auto_approve: bool | None = True, event_bus: EventBus | None = None) -> None:
+    def __init__(
+        self,
+        auto_approve: bool | None = True,
+        event_bus: EventBus | None = None,
+        notification_manager: NotificationManager | None = None,
+    ) -> None:
         """Create a gate with optional auto approval."""
 
         self.auto_approve = auto_approve
         self.event_bus = event_bus
+        self.notification_manager = notification_manager
         self.requests: list[ApprovalRequest] = []
 
     def create_request(
@@ -51,6 +58,8 @@ class HumanApprovalGate:
         request = ApprovalRequest(policy=policy, message=message, subject=subject)
         self.requests.append(request)
         self._emit(EventType.APPROVAL_REQUESTED, request)
+        if self.notification_manager is not None and subject is not None:
+            self.notification_manager.notify_approval_required(subject, reason=policy.reason or message)
         return request
 
     def request_approval(

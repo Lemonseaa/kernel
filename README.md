@@ -50,3 +50,12 @@ TaskSpec(
 
 The default gate runs readability, SEO, and platform-fit evaluators. A failing gate marks the task as
 `evaluation_failed` and records suggestions in `task.result`.
+
+## Notifications
+
+The kernel includes a notification manager with console, webhook, and email channels. Human approval
+requests can trigger notifications through the manager.
+
+```bash
+python -m kernel.cli notify --title "需要审批" --body "有任务等待处理"
+```
