@@ -2,8 +2,72 @@
 name = "kernel"
 version = "1.0.0"
 description = "Agent Workflow Kernel for a general multi-agent operating system."
+readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+license = { text = "MIT" }
+authors = [
+    { name = "Lemonsea", email = "lemonsea@example.com" }
+]
+keywords = [
+    "multi-agent",
+    "agent-framework",
+    "ai-agents",
+    "workflow",
+    "human-in-the-loop",
+    "OPC",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "fastapi>=0.100",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+all = [
+    "pydantic>=2.0",
+    "fastapi>=0.100",
+    "pytest>=8.0",
+    "ruff>=0.1",
+    "mypy>=1.0",
+]
+
+[project.scripts]
+kernel-cli = "kernel.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"
 
 [tool.ruff]
 line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
