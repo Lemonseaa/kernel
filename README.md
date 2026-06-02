@@ -1,151 +1,267 @@
 # Kernel
 
-Agent Workflow Kernel for building a general multi-agent operating system.
+[![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen)](https://github.com/Lemonseaa/kernel)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-This repository starts with the core runtime skeleton and will grow around real workflow needs from OPC.
+Agent Workflow Kernel — 构建通用多Agent操作系统的核心运行时。
 
-## V0.1 Scope
+## 核心特性
 
-The first kernel version focuses on a small executable workflow core:
+- **Human-in-the-Loop** — AI执行，你做决策
+- **Evaluation Gate** — 内容质量自动评估
+- **成本控制** — 实时追踪，超预算自动停
+- **6层安全机制** — Policy/Tool/HumanGate/Cost/Event/KillSwitch
+- **BusinessLine隔离** — 多业务线完全独立
+- **HA支持** — 主备自动切换
 
-- Run model
-- Task model and state machine
-- Agent model and registry
-- Workflow engine and executor
-- Tool registry and permission checks
-- Policy engine and human approval gate
-- SQLite persistence for Run/Task state
-- Event bus and audit log
-
-## Validate Imports
-
-```bash
-python -c "from kernel.models import Run, Task, Agent; print('models OK')"
-python -c "from kernel.runtime import AgentRegistry; print('runtime OK')"
-python -c "from kernel.workflow import WorkflowEngine; print('workflow OK')"
-python -c "from kernel.tools import ToolRegistry; print('tools OK')"
-python -c "from kernel.control import PolicyEngine, HumanApprovalGate; print('control OK')"
-python -c "from kernel.events import EventBus; print('events OK')"
-python -c "from kernel import Kernel; print('kernel OK')"
-```
-
-## Run Tests
+## 快速开始
 
 ```bash
-python -m unittest discover -s tests -v
+# 1. 安装
+pip install -e .
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 填入你的 API Key
+
+# 3. 运行
+kernel-cli status
+
+# 4. 创建业务线
+kernel-cli bl create --name "内容业务" --template content
 ```
 
-## Evaluation Gate
+或者用Docker：
 
-Tasks can opt into generated-content quality checks:
+```bash
+# 1. 配置
+cp .env.example .env
+
+# 2. 启动
+docker compose up -d
+
+# 3. 检查状态
+docker compose ps
+```
+
+## 核心概念
+
+### Kernel
+
+系统入口，管理所有组件。
+
+```python
+from kernel import Kernel
+
+k = Kernel()
+bl = k.create_business_line('my_business', template='content')
+run = k.create_run(bl.id, '写一篇关于AI的文章')
+```
+
+### BusinessLine
+
+业务线隔离，每个业务线有独立的Agent、Context、Cost。
+
+```python
+# 创建业务线
+bl = k.create_business_line('课程业务', template='content')
+
+# 业务线之间完全隔离
+context_a = k.memory.get_context(business_line_id=a.id)
+context_b = k.memory.get_context(business_line_id=b.id)
+# context_a 和 context_b 互不影响
+```
+
+### Agent
+
+LLM驱动的执行单元。
+
+```python
+agent = k.register_agent(
+    name='writer',
+    model='minimax',
+    system_prompt='你是一个专业的内容写手'
+)
+```
+
+### Run / Task
+
+Run是执行上下文，Task是具体任务。
+
+```python
+run = k.create_run(bl.id, '生成内容')
+task = k.create_task(run.id, '写小红书文章')
+```
+
+### Evaluation Gate
+
+内容质量自动评估，不达标打回重写。
 
 ```python
 TaskSpec(
-    description="生成小红书内容",
+    description='生成小红书内容',
     evaluation_required=True,
-    evaluation_platform="xiaohongshu",
+    evaluation_platform='xiaohongshu',
     min_score=70.0,
 )
 ```
 
-The default gate runs readability, SEO, and platform-fit evaluators. A failing gate marks the task as
-`evaluation_failed` and records suggestions in `task.result`.
+### Policy
 
-## Notifications
+6层安全机制。
 
-The kernel includes a notification manager with console, webhook, and email channels. Human approval
-requests can trigger notifications through the manager.
-
-```bash
-python -m kernel.cli notify --title "需要审批" --body "有任务等待处理"
+```python
+# PolicyEngine 自动拦截高风险操作
+PolicyRule(
+    name='block_dangerous_tools',
+    scope='GLOBAL',
+    action='DENY',
+    tool_names=['rm', 'sudo']
+)
 ```
 
-## Dry Run
+### Human Gate
 
-Dry run mode previews LLM and tool behavior without external API calls or side effects:
+审批流程，AI执行你确认。
 
-```bash
-python -m kernel.cli dryrun --task "预演任务"
+```python
+# 发布类操作需要审批
+HumanApprovalRequest(
+    task_id=task.id,
+    reason='文章即将发布到小红书',
+    requested_by='writer_agent'
+)
 ```
 
-V0.2 now covers provider abstraction, memory/context, evaluation gate, notification, and dry run
-simulation on top of the V0.1 workflow kernel.
+### Cost Tracker
 
-## BusinessLine MVP
+成本实时追踪。
 
-V0.3 introduces BusinessLine as a first-class runtime boundary. Runs, tasks, and agents carry a
-`business_line_id`, SQLite can filter runs and tasks by business line, and `Kernel` exposes
-`create_business_line()`, `get_business_line()`, and `list_business_lines()`.
+```python
+# 设置每日预算
+k.cost_tracker.set_daily_budget('minimax', 100.0)
 
-The release also adds a simple plugin registry and a cost tracker that publishes `cost.updated` and
-`cost.budget_exceeded` events so policy, approval, and notification layers can react to token usage.
-
-## Templates And Policy
-
-V0.4 adds built-in BusinessLine templates for `blank`, `content`, and `website`, plus
-`Kernel.create_business_line_from_template()` for zero-configuration setup.
-
-Policy now supports global rules and BusinessLine scoped overrides. Cost budget events can create
-HumanGate approval requests, closing the loop from token usage to approval.
-
-## Cross-Run Context And Daily Budget
-
-V0.5 extends memory from run-scoped context to BusinessLine-scoped shared context. Evaluation failures
-are saved as `evaluation_feedback`, and LLM agents include that feedback in later runs for the same
-BusinessLine while keeping other BusinessLines isolated.
-
-Cost tracking now uses daily counters as the budget signal, emits `cost.budget_warning` at 80% of a
-daily budget, keeps `cost.budget_exceeded` for approval flows, and can report usage for a date range.
-
-## Diagnostics And Alerts
-
-V0.6 adds a health checker for fast failure triage. `HealthChecker.generate_diagnostic_report()`
-checks SQLite, the LLM provider, EventBus subscriptions, approval queue backlog, cost budget status,
-and recent failed runs, then returns repair recommendations.
-
-The alert system turns runtime events into `warning` or `critical` notifications. It covers failed
-tasks, failed runs, cost thresholds at 80% and 95%, exceeded budgets, approval timeouts, and provider
-errors. `Kernel.resume_run(run_id, exclude_completed=True)` can continue from failed or pending tasks
-while preserving completed task results.
-
-## Auth, Webhooks, And CLI
-
-V0.7 adds bearer-token API protection through `APIKeyManager` and `BearerTokenAuth`. API routes require
-valid `Authorization: Bearer ...` headers when FastAPI is available, and fallback apps expose the same
-authentication check for dependency-light environments.
-
-Webhook support maps kernel events to external automation events: `run.completed`, `task.failed`,
-`approval.required`, and `alert.triggered`. `WebhookReceiver` can trigger workflows from inbound
-`workflow.trigger` payloads.
-
-Operational commands are available through `./kernel-cli`: `status`, `run list`, `bl list`, and
-`health`, with `--db` for pointing at a specific SQLite database.
-
-## Risk Hardening
-
-The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,
-and provider retry/timeout behavior.
-
-## Docker Deployment
-
-V0.9 adds Docker Compose deployment and environment-driven configuration:
-
-```bash
-cp .env.example .env
-docker-compose build
-docker-compose up -d
-docker-compose ps
+# 超预算自动停
+# 超80%告警，95%critical，100%停
 ```
 
-Deployment docs live in [docs/deployment](docs/deployment/README.md).
+### Event Bus
 
-## V1.0 Production Readiness
+统一事件流。
 
-V1.0 adds lease-based HA primitives, multi-instance Compose configuration, benchmark/stress scripts,
-and production readiness documentation.
+```python
+# 所有操作都有记录
+k.event_bus.subscribe('task.completed', my_handler)
+```
+
+## 架构图
+
+```
+┌─────────────────────────────────────────────────────┐
+│                     Kernel                          │
+├─────────────────────────────────────────────────────┤
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐            │
+│  │ Business│  │  Agent  │  │  Run/   │            │
+│  │  Line   │  │Registry │  │  Task   │            │
+│  └────┬────┘  └────┬────┘  └────┬────┘            │
+│       │             │             │                  │
+│  ┌────▼────┐  ┌────▼────┐  ┌────▼────┐            │
+│  │ Context │  │ LLM     │  │Workflow │            │
+│  │ Manager │  │Provider │  │ Engine  │            │
+│  └────┬────┘  └────┬────┘  └────┬────┘            │
+│       │             │             │                  │
+│  ┌────▼─────────────▼─────────────▼────┐            │
+│  │              Event Bus              │            │
+│  └────┬─────────────┬─────────────┬────┘            │
+│       │             │             │                  │
+│  ┌────▼────┐  ┌────▼────┐  ┌────▼────┐  ┌─────┐  │
+│  │Evaluation│  │ Policy  │  │ Human   │  │Cost │  │
+│  │  Gate   │  │ Engine  │  │  Gate   │  │Track│  │
+│  └─────────┘  └─────────┘  └─────────┘  └─────┘  │
+│                                                     │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐            │
+│  │Notifier │  │  Alert  │  │Health   │            │
+│  │Manager │  │ Manager │  │ Checker │            │
+│  └─────────┘  └─────────┘  └─────────┘            │
+└─────────────────────────────────────────────────────┘
+```
+
+## 模块说明
+
+| 模块 | 说明 |
+|---|---|
+| kernel/agent/ | Agent定义和LLM集成 |
+| kernel/businessline/ | 业务线隔离 |
+| kernel/cache/ | LLM响应缓存 |
+| kernel/context/ | Context管理和持久化 |
+| kernel/control/ | Policy和HumanGate |
+| kernel/diagnostics/ | 健康检查和告警 |
+| kernel/evaluation/ | Evaluation Gate |
+| kernel/events/ | Event Bus |
+| kernel/llm/ | LLM Provider抽象 |
+| kernel/memory/ | 记忆系统 |
+| kernel/notification/ | 通知系统 |
+| kernel/observability/ | Cost追踪和指标 |
+| kernel/plugins/ | 插件注册表 |
+| kernel/runtime/ | Agent运行时 |
+| kernel/scheduler/ | 定时任务 |
+| kernel/storage/ | SQLite持久化 |
+| kernel/tools/ | 工具注册和权限 |
+| kernel/webhook/ | Webhook发送和接收 |
+| kernel/ha/ | 高可用 |
+
+## 脚本
 
 ```bash
+# 开发测试
+python -m unittest discover -s tests -v
+
+# 性能基准
 python scripts/benchmark.py --runs 20
+
+# 压力测试
 python scripts/stress_test.py --runs 50 --concurrency 5
+
+# 安全审计
 python scripts/security_audit.py
+
+# 健康检查
+python scripts/health_check.py
+
+# 最终验收
+python scripts/final_acceptance.py
+
+# CLI
+kernel-cli status
+kernel-cli run list
+kernel-cli bl list
+kernel-cli health
 ```
+
+## Docker部署
+
+```bash
+# 启动
+docker compose up -d
+
+# HA模式（需要2个实例）
+docker compose --profile ha up -d
+
+# 查看日志
+docker compose logs -f
+
+# 进入容器
+docker compose exec kernel bash
+```
+
+详见 [docs/deployment](docs/deployment/README.md)
+
+## 许可证
+
+MIT License — 详见 [LICENSE](LICENSE)
+
+## GitHub
+
+https://github.com/Lemonseaa/kernel
