@@ -88,6 +88,7 @@ class CostTracker:
         daily_counter.input_tokens += input_tokens
         daily_counter.output_tokens += output_tokens
         current = self._estimate_daily_cost(provider, business_line_id, day)
+        budget = self._budgets.get(key)
         self._emit(
             "cost.updated",
             {
@@ -101,9 +102,9 @@ class CostTracker:
                 "daily_output_tokens": daily_counter.output_tokens,
                 "daily_total_tokens": daily_counter.total_tokens,
                 "current": current,
+                "budget": budget,
             },
         )
-        budget = self._budgets.get(key)
         if budget is not None:
             self._emit_budget_events(provider, business_line_id, day, budget, current)
 

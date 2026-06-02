@@ -73,6 +73,28 @@ class RiskHardeningTest(unittest.TestCase):
             self.assertEqual(result.state.value, "succeeded")
             self.assertEqual(result.tasks[0].result, "resume")
 
+    def test_resume_run_skips_completed_tasks_and_reruns_failed_tasks(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "kernel.db"
+            kernel = Kernel(sqlite_path=db_path)
+            run = kernel.create_run("resume failed point")
+            completed = kernel.create_task(run, name="completed", agent_capability="simple.execute", input="done")
+            completed.transition_to(TaskState.RUNNING)
+            completed.result = "finished result"
+            completed.transition_to(TaskState.SUCCEEDED)
+            failed = kernel.create_task(run, name="failed", agent_capability="simple.execute", input="retry me")
+            failed.transition_to(TaskState.RUNNING)
+            failed.error = "old error"
+            failed.transition_to(TaskState.FAILED)
+            kernel.store.save_run(run)
+
+            resumed = Kernel(sqlite_path=db_path).resume_run(run.id, exclude_completed=True)
+
+            self.assertEqual(resumed.tasks[0].state, TaskState.SUCCEEDED)
+            self.assertEqual(resumed.tasks[0].result, "finished result")
+            self.assertEqual(resumed.tasks[1].state, TaskState.SUCCEEDED)
+            self.assertEqual(resumed.tasks[1].result, "retry me")
+
     def test_high_risk_tool_is_blocked_by_permission(self) -> None:
         registry = ToolRegistry(permission=ToolPermission(allowed_tools={"publish"}, risk_levels={"publish": "high"}))
         registry.register("publish", lambda: "published")

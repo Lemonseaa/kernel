@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -30,6 +31,7 @@ class ApprovalRequest:
     subject: Any = None
     state: ApprovalState = ApprovalState.REQUESTED
     id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: float = field(default_factory=time.time)
 
 
 class HumanApprovalGate:

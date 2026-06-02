@@ -97,6 +97,17 @@ BusinessLine while keeping other BusinessLines isolated.
 Cost tracking now uses daily counters as the budget signal, emits `cost.budget_warning` at 80% of a
 daily budget, keeps `cost.budget_exceeded` for approval flows, and can report usage for a date range.
 
+## Diagnostics And Alerts
+
+V0.6 adds a health checker for fast failure triage. `HealthChecker.generate_diagnostic_report()`
+checks SQLite, the LLM provider, EventBus subscriptions, approval queue backlog, cost budget status,
+and recent failed runs, then returns repair recommendations.
+
+The alert system turns runtime events into `warning` or `critical` notifications. It covers failed
+tasks, failed runs, cost thresholds at 80% and 95%, exceeded budgets, approval timeouts, and provider
+errors. `Kernel.resume_run(run_id, exclude_completed=True)` can continue from failed or pending tasks
+while preserving completed task results.
+
 ## Risk Hardening
 
 The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,

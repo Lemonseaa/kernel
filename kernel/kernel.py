@@ -5,10 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, overload
 
+from kernel.alerts import AlertManager
 from kernel.businessline import BusinessLine, BusinessLineConfig, BusinessLineRegistry, BusinessLineStatus
 from kernel.config import KernelConfig
 from kernel.control.defaults import builtin_policies
 from kernel.control import HumanApprovalGate, PolicyEngine
+from kernel.diagnostics import HealthChecker
 from kernel.dryrun import DryRunContext, DryRunProvider
 from kernel.evaluation import EvaluationGate, EvaluationRunner
 from kernel.events import AuditLogger, Event, EventBus, EventType
@@ -53,9 +55,11 @@ class Kernel:
         self.notification_manager = NotificationManager()
         self.human_gate = HumanApprovalGate(event_bus=self.event_bus, notification_manager=self.notification_manager)
         self.human_gate.subscribe_to_cost_events()
+        self.alert_manager = AlertManager(self.event_bus, self.notification_manager)
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(sqlite_path)
+        self.health_checker = HealthChecker(kernel=self)
         self.business_lines = BusinessLineRegistry(self.store)
         self.plugins = PluginRegistry()
         self.templates = TemplateRegistry(builtin_templates())
@@ -203,6 +207,31 @@ class Kernel:
             run.tasks.append(task)
         self.event_bus.emit("run:recovered", {"run_id": run.id, "tasks": len(run.tasks)})
         return run
+
+    def resume_run(self, run_id: str, exclude_completed: bool = True) -> Run:
+        """Recover a run and continue from failed or unexecuted tasks."""
+
+        run = self.recover_run(run_id)
+        run.state = RunState.PENDING
+        for task in run.tasks:
+            if exclude_completed and task.state == TaskState.SUCCEEDED:
+                continue
+            if task.state in {
+                TaskState.FAILED,
+                TaskState.EVALUATION_FAILED,
+                TaskState.CANCELLED,
+                TaskState.SUCCEEDED,
+            }:
+                task.state = TaskState.PENDING
+                task.error = None
+                if not (exclude_completed and task.result is not None):
+                    task.result = None
+                    task.output_artifact_id = None
+        self.event_bus.emit(
+            "run:resumed",
+            {"run_id": run.id, "exclude_completed": exclude_completed},
+        )
+        return self._execute_run(run)
 
     @overload
     def run(self, run: Run) -> Run:
