@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 from kernel.llm.provider import LLMProvider, LLMRequest
 
@@ -20,6 +21,8 @@ class MiniMaxProvider(LLMProvider):
         transport: Callable[[LLMRequest], str] | None = None,
         timeout_seconds: float | None = None,
         max_retries: int = 0,
+        response_cache: Any | None = None,
+        performance_monitor: Any | None = None,
     ) -> None:
         """Create a MiniMax provider."""
 
@@ -30,6 +33,8 @@ class MiniMaxProvider(LLMProvider):
             transport=transport,
             timeout_seconds=timeout_seconds,
             max_retries=max_retries,
+            response_cache=response_cache,
+            performance_monitor=performance_monitor,
         )
 
     def _fallback_output(self, request: LLMRequest) -> str:
@@ -51,6 +56,8 @@ class OpenAIProvider(LLMProvider):
         transport: Callable[[LLMRequest], str] | None = None,
         timeout_seconds: float | None = None,
         max_retries: int = 0,
+        response_cache: Any | None = None,
+        performance_monitor: Any | None = None,
     ) -> None:
         """Create an OpenAI provider."""
 
@@ -61,6 +68,8 @@ class OpenAIProvider(LLMProvider):
             transport=transport,
             timeout_seconds=timeout_seconds,
             max_retries=max_retries,
+            response_cache=response_cache,
+            performance_monitor=performance_monitor,
         )
 
     def _fallback_output(self, request: LLMRequest) -> str:

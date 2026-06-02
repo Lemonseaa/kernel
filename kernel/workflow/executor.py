@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import time
 
 from kernel.evaluation import EvaluationGate
 from kernel.events import EventBus, EventType
 from kernel.memory import ContextManager
 from kernel.models import AgentState, Artifact, Task, TaskState
+from kernel.observability import PerformanceMonitor
 from kernel.runtime import BaseAgent
 
 
@@ -19,12 +21,14 @@ class TaskExecutor:
         event_bus: EventBus | None = None,
         evaluation_gate: EvaluationGate | None = None,
         memory: ContextManager | None = None,
+        performance_monitor: PerformanceMonitor | None = None,
     ) -> None:
         """Create a task executor."""
 
         self.event_bus = event_bus or EventBus()
         self.evaluation_gate = evaluation_gate
         self.memory = memory
+        self.performance_monitor = performance_monitor
 
     def execute(self, task: Task, agent: BaseAgent) -> Artifact:
         """Run a task through an agent and update state."""
@@ -34,6 +38,7 @@ class TaskExecutor:
         agent_model = agent.to_model()
         agent_model.state = AgentState.BUSY
         agent_model.current_task = task.id
+        started_at = time.perf_counter()
         try:
             artifact = agent.execute(task)
             task.output_artifact_id = artifact.id
@@ -87,6 +92,13 @@ class TaskExecutor:
             self.event_bus.emit(EventType.TASK_FAILED, {"task_id": task.id, "error": str(exc)})
             raise
         finally:
+            if self.performance_monitor is not None:
+                self.performance_monitor.record_task(
+                    task_id=task.id,
+                    run_id=task.run_id or "",
+                    agent=agent.name,
+                    duration_seconds=time.perf_counter() - started_at,
+                )
             agent_model.state = AgentState.IDLE
             agent_model.current_task = None
 

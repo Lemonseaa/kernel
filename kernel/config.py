@@ -16,6 +16,11 @@ class KernelConfig:
     providers: dict[str, dict[str, Any]] = field(default_factory=dict)
     default_provider: str = "minimax"
     dry_run: bool = False
+    max_concurrency: int = 1
+    llm_cache_enabled: bool = True
+    llm_cache_max_size: int = 128
+    llm_cache_ttl_seconds: float = 300.0
+    slow_task_threshold_seconds: float = 5.0
 
     @property
     def llm_provider(self) -> LLMProvider:

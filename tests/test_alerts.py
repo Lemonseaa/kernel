@@ -73,6 +73,19 @@ class AlertSystemTest(unittest.TestCase):
         self.assertEqual(manager.alerts[-1].rule_id, "provider_error")
         self.assertEqual(manager.alerts[-1].severity, AlertSeverity.CRITICAL)
 
+    def test_slow_task_event_triggers_warning_alert(self) -> None:
+        bus = EventBus()
+        notifications = NotificationManager()
+        manager = AlertManager(bus, notifications)
+
+        bus.emit(
+            "performance:slow_task",
+            {"task_id": "task-1", "duration_seconds": 6.0, "threshold_seconds": 5.0},
+        )
+
+        self.assertEqual(manager.alerts[-1].rule_id, "slow_task")
+        self.assertEqual(manager.alerts[-1].severity, AlertSeverity.WARNING)
+
 
 if __name__ == "__main__":
     unittest.main()

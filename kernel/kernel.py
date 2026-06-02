@@ -18,7 +18,8 @@ from kernel.llm import ProviderRegistry
 from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
 from kernel.models import Run, RunState, Task, TaskSpec, TaskState
 from kernel.notification import NotificationManager
-from kernel.observability import CostTracker, MetricsCollector
+from kernel.cache import LLMResponseCache
+from kernel.observability import CostTracker, MetricsCollector, PerformanceMonitor
 from kernel.persistence import SQLiteStore
 from kernel.plugins import PluginRegistry
 from kernel.runtime import AgentRegistry, SimpleAgent
@@ -43,6 +44,20 @@ class Kernel:
         self.scheduler = Scheduler()
         self.webhook_sender: WebhookSender | None = None
         self.llm_provider = self.config.llm_provider
+        self.response_cache = (
+            LLMResponseCache(
+                max_size=self.config.llm_cache_max_size,
+                ttl_seconds=self.config.llm_cache_ttl_seconds,
+            )
+            if self.config.llm_cache_enabled
+            else None
+        )
+        self.performance = PerformanceMonitor(
+            slow_task_threshold_seconds=self.config.slow_task_threshold_seconds,
+            event_bus=self.event_bus,
+        )
+        self.llm_provider.response_cache = self.response_cache
+        self.llm_provider.performance_monitor = self.performance
         self.provider_registry = ProviderRegistry()
         self.provider_registry.register(self.llm_provider, default=True)
         self.event_bus.subscribe(self.audit_logger.log)
@@ -75,6 +90,8 @@ class Kernel:
             human_gate=self.human_gate,
             evaluation_gate=self.evaluation_gate,
             memory=self.memory,
+            performance_monitor=self.performance,
+            max_concurrency=self.config.max_concurrency,
         )
         self.agent_registry.register_agent_class(SimpleAgent)
 
@@ -86,9 +103,13 @@ class Kernel:
         if enabled:
             provider = DryRunProvider(model="dryrun")
             self.llm_provider = provider
+            self.llm_provider.performance_monitor = self.performance
+            self.llm_provider.response_cache = self.response_cache
             self.provider_registry.register(provider, default=True)
         else:
             self.llm_provider = self.config.llm_provider
+            self.llm_provider.performance_monitor = self.performance
+            self.llm_provider.response_cache = self.response_cache
             self.provider_registry.register(self.llm_provider, default=True)
 
     def dry_run(self) -> DryRunContext:
@@ -329,6 +350,8 @@ class Kernel:
             "events": len(self.event_bus.events),
             "audit_records": len(self.audit_logger.records),
             "metrics": self.metrics.get_summary(),
+            "performance": self.performance.report(),
+            "cache": self.response_cache.stats() if self.response_cache is not None else None,
         }
 
     def on(

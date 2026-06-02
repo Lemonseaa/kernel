@@ -97,6 +97,7 @@ class AlertManager:
             "cost.updated",
             "cost.budget_exceeded",
             "provider:error",
+            "performance:slow_task",
         }:
             self.event_bus.subscribe(event_type, self._handle_event)
 
@@ -157,6 +158,12 @@ class AlertManager:
                 severity=AlertSeverity.CRITICAL,
                 description="Provider call failed.",
             ),
+            AlertRule(
+                id="slow_task",
+                event_type="performance:slow_task",
+                severity=AlertSeverity.WARNING,
+                description="Task execution exceeded slow-task threshold.",
+            ),
         ]
 
     def _cost_at_least(self, threshold: float, below: float | None = None):
@@ -201,4 +208,10 @@ class AlertManager:
             return f"Approval timed out: {payload.get('approval_id')}"
         if rule.id == "provider_error":
             return f"Provider error: {payload.get('provider')} error={payload.get('error', '')}"
+        if rule.id == "slow_task":
+            return (
+                f"Slow task: {payload.get('task_id')} "
+                f"duration={payload.get('duration_seconds')}s "
+                f"threshold={payload.get('threshold_seconds')}s"
+            )
         return rule.description

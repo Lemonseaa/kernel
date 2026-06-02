@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 from dataclasses import dataclass, field
+import time
 from typing import Any
 
 
@@ -41,6 +42,8 @@ class LLMProvider(ABC):
         transport: Callable[[LLMRequest], str] | None = None,
         timeout_seconds: float | None = None,
         max_retries: int = 0,
+        response_cache: Any | None = None,
+        performance_monitor: Any | None = None,
     ) -> None:
         """Create a provider."""
 
@@ -50,12 +53,25 @@ class LLMProvider(ABC):
         self.transport = transport
         self.timeout_seconds = timeout_seconds
         self.max_retries = max_retries
+        self.response_cache = response_cache
+        self.performance_monitor = performance_monitor
 
     def generate(self, request: LLMRequest) -> LLMResponse:
         """Generate text for a request."""
 
+        if self.response_cache is not None:
+            cached = self.response_cache.get(request.prompt, self.model)
+            if isinstance(cached, LLMResponse):
+                return cached
+        started_at = time.perf_counter()
         output = self._generate_with_retries(request)
-        return LLMResponse(output=output, provider=self.name, model=self.model)
+        duration = time.perf_counter() - started_at
+        response = LLMResponse(output=output, provider=self.name, model=self.model)
+        if self.performance_monitor is not None:
+            self.performance_monitor.record_provider(self.name, self.model, duration)
+        if self.response_cache is not None:
+            self.response_cache.set(request.prompt, self.model, response)
+        return response
 
     def _generate_with_retries(self, request: LLMRequest) -> str:
         """Generate text with retry and timeout handling."""
