@@ -10,6 +10,7 @@ from typing import Any
 from checkpoint_ai.experiment.baseline import BaselineManager
 from checkpoint_ai.experiment.feedback import Feedback, FeedbackCollector, FeedbackSource
 from checkpoint_ai.experiment.ledger import ExperimentLedger
+from checkpoint_ai.experiment.loop_engine import LoopEngine, Tick
 from checkpoint_ai.experiment.models import Experiment, ExperimentStatus
 from checkpoint_ai.experiment.risk_score import ActionRisk, RiskScorer
 
@@ -82,6 +83,23 @@ def register_risk_parser(subparsers: argparse._SubParsersAction[argparse.Argumen
     threshold_parser.add_argument("threshold", type=float)
 
 
+def register_loop_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    """Register loop subcommands."""
+
+    loop_parser = subparsers.add_parser("loop")
+    loop_subparsers = loop_parser.add_subparsers(dest="loop_command")
+    start_parser = loop_subparsers.add_parser("start")
+    start_parser.add_argument("--business-line", default=None)
+    start_parser.add_argument("--tick-interval", type=int, default=60)
+    loop_subparsers.add_parser("stop")
+    loop_subparsers.add_parser("pause")
+    loop_subparsers.add_parser("resume")
+    loop_subparsers.add_parser("status")
+    loop_subparsers.add_parser("last-tick")
+    history_parser = loop_subparsers.add_parser("history")
+    history_parser.add_argument("--limit", type=int, default=10)
+
+
 def handle_experiment_command(args: argparse.Namespace, db_path: str | Path) -> int:
     """Run experiment CLI commands."""
 
@@ -139,6 +157,45 @@ def handle_risk_command(args: argparse.Namespace, db_path: str | Path) -> int:
     if command == "set-threshold":
         scorer.set_threshold(args.threshold)
         print(f"Risk threshold: {scorer.get_threshold()}")
+        return 0
+    return 1
+
+
+def handle_loop_command(args: argparse.Namespace, db_path: str | Path) -> int:
+    """Run loop CLI commands."""
+
+    engine = LoopEngine.default(db_path)
+    command = getattr(args, "loop_command", None)
+    if command == "start":
+        tick = engine.start(business_line_id=args.business_line, tick_interval=args.tick_interval)
+        print(f"Loop started, tick_interval={args.tick_interval}s, tick_id={tick.id}")
+        return 0
+    if command == "stop":
+        engine.stop()
+        print("Loop stopped")
+        return 0
+    if command == "pause":
+        engine.pause()
+        print("Loop paused")
+        return 0
+    if command == "resume":
+        engine.resume()
+        print("Loop resumed")
+        return 0
+    if command == "status":
+        print(json.dumps(engine.get_status(), ensure_ascii=False, indent=2))
+        return 0
+    if command == "last-tick":
+        last_tick = engine.get_last_tick()
+        print("No ticks" if last_tick is None else _tick_json(last_tick))
+        return 0
+    if command == "history":
+        ticks = engine.history(limit=args.limit)
+        if not ticks:
+            print("No ticks")
+            return 0
+        for tick in ticks:
+            print(f"{tick.id}\t{tick.status.value}\t{tick.duration_ms}ms\t{tick.summary}")
         return 0
     return 1
 
@@ -298,3 +355,7 @@ def _parse_metrics(metrics: str) -> dict[str, Any]:
     if not isinstance(parsed, dict):
         raise ValueError("metrics must be a JSON object")
     return parsed
+
+
+def _tick_json(tick: Tick) -> str:
+    return tick.model_dump_json(indent=2)

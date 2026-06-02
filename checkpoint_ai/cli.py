@@ -12,9 +12,11 @@ from checkpoint_ai.dryrun import DryRunValidator
 from checkpoint_ai.experiment.cli import (
     handle_baseline_command,
     handle_experiment_command,
+    handle_loop_command,
     handle_risk_command,
     register_baseline_parser,
     register_experiment_parser,
+    register_loop_parser,
     register_risk_parser,
 )
 from checkpoint_ai.models import Run, TaskSpec
@@ -49,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
     register_experiment_parser(subparsers)
     register_baseline_parser(subparsers)
     register_risk_parser(subparsers)
+    register_loop_parser(subparsers)
     args = parser.parse_args(argv)
 
     if args.command == "status":
@@ -150,6 +153,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "risk":
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
         return handle_risk_command(args, db_path)
+
+    if args.command == "loop":
+        db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
+        return handle_loop_command(args, db_path)
 
     parser.print_help()
     return 0

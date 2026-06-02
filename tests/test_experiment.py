@@ -13,8 +13,10 @@ from checkpoint_ai.experiment import (
     Experiment,
     ExperimentLedger,
     ExperimentStatus,
+    LoopEngine,
     RiskScorer,
     SimpleComparer,
+    TickStatus,
 )
 
 
@@ -412,6 +414,110 @@ class ExperimentLedgerTest(unittest.TestCase):
         self.assertIn('"total": 0.65', high_result.stdout)
         self.assertIn('"requires_human_review": true', high_result.stdout)
         self.assertIn("magnitude_risk", experiment_result.stdout)
+
+    def test_loop_engine_runs_tick_and_persists_history(self) -> None:
+        """LoopEngine runs an explainable tick and stores it in SQLite."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            engine = LoopEngine.default(db_path)
+
+            tick = engine.tick(reason="manual test tick", business_line_id="content")
+            status = engine.get_status("content")
+            last_tick = engine.get_last_tick()
+            history = engine.history(limit=5)
+            experiment = ExperimentLedger(db_path).get(tick.experiment_id)
+
+        self.assertEqual(tick.status, TickStatus.CHECKPOINTED)
+        self.assertGreaterEqual(tick.duration_ms, 0)
+        self.assertIn("manual test tick", tick.summary)
+        self.assertEqual(status["last_tick_id"], tick.id)
+        self.assertIsNotNone(last_tick)
+        self.assertEqual(last_tick.id, tick.id)
+        self.assertEqual(len(history), 1)
+        self.assertIsNotNone(experiment)
+        self.assertIn("loop_tick_id", experiment.metadata)
+
+    def test_loop_engine_pause_resume_stop_and_trigger(self) -> None:
+        """LoopEngine supports lifecycle controls and event-triggered ticks."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            engine = LoopEngine.default(db_path)
+            completed: list[str] = []
+            errors: list[str] = []
+            engine.on_tick_complete(lambda tick: completed.append(tick.id))
+            engine.on_error(lambda error: errors.append(str(error)))
+
+            start_tick = engine.start(tick_interval=5)
+            engine.pause()
+            paused_status = engine.get_status()
+            skipped_tick = engine.trigger("feedback.received", {"value": 1})
+            engine.resume()
+            resumed_tick = engine.trigger("feedback.received", {"value": 2})
+            engine.stop()
+            stopped_status = engine.get_status()
+
+        self.assertEqual(start_tick.status, TickStatus.CHECKPOINTED)
+        self.assertEqual(paused_status["state"], "paused")
+        self.assertIsNone(skipped_tick)
+        self.assertIsNotNone(resumed_tick)
+        self.assertEqual(stopped_status["state"], "stopped")
+        self.assertEqual(len(completed), 2)
+        self.assertEqual(errors, [])
+
+    def test_checkpointai_loop_cli_controls_and_reports_ticks(self) -> None:
+        """CLI exposes loop lifecycle and tick inspection commands."""
+
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            start_result = subprocess.run(
+                ["./checkpointai", "--db", str(db_path), "loop", "start"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            status_result = subprocess.run(
+                ["./checkpointai", "--db", str(db_path), "loop", "status"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            history_result = subprocess.run(
+                ["./checkpointai", "--db", str(db_path), "loop", "history", "--limit", "5"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            last_tick_result = subprocess.run(
+                ["./checkpointai", "--db", str(db_path), "loop", "last-tick"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            stop_result = subprocess.run(
+                ["./checkpointai", "--db", str(db_path), "loop", "stop"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(start_result.returncode, 0, start_result.stderr)
+        self.assertEqual(status_result.returncode, 0, status_result.stderr)
+        self.assertEqual(history_result.returncode, 0, history_result.stderr)
+        self.assertEqual(last_tick_result.returncode, 0, last_tick_result.stderr)
+        self.assertEqual(stop_result.returncode, 0, stop_result.stderr)
+        self.assertIn("Loop started", start_result.stdout)
+        self.assertIn("running", status_result.stdout)
+        self.assertIn("checkpointed", history_result.stdout)
+        self.assertIn("summary", last_tick_result.stdout)
+        self.assertIn("Loop stopped", stop_result.stdout)
 
 
 if __name__ == "__main__":
