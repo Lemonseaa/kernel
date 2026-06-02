@@ -65,9 +65,19 @@ class LLMAgent(BaseAgent):
 
         prompt = str(task.input if task.input is not None else task.name)
         if self.memory is not None and task.run_id:
-            context = self.memory.build_prompt_context(task.run_id)
-            if context:
-                prompt = f"{context}\n\nTask:\n{prompt}"
+            contexts = []
+            run_context = self.memory.build_prompt_context(task.run_id)
+            if run_context:
+                contexts.append(run_context)
+            business_line_context = self.memory.build_business_line_prompt_context(
+                task.business_line_id,
+                kind="evaluation_feedback",
+            )
+            if business_line_context:
+                contexts.append(business_line_context)
+            if contexts:
+                context_text = "\n\n".join(contexts)
+                prompt = f"{context_text}\n\nTask:\n{prompt}"
         response = self.provider.generate(LLMRequest(prompt=prompt, metadata={"task_id": task.id}))
         return Artifact(
             task_id=task.id,

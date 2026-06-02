@@ -6,6 +6,7 @@ from dataclasses import asdict
 
 from kernel.evaluation import EvaluationGate
 from kernel.events import EventBus, EventType
+from kernel.memory import ContextManager
 from kernel.models import AgentState, Artifact, Task, TaskState
 from kernel.runtime import BaseAgent
 
@@ -17,11 +18,13 @@ class TaskExecutor:
         self,
         event_bus: EventBus | None = None,
         evaluation_gate: EvaluationGate | None = None,
+        memory: ContextManager | None = None,
     ) -> None:
         """Create a task executor."""
 
         self.event_bus = event_bus or EventBus()
         self.evaluation_gate = evaluation_gate
+        self.memory = memory
 
     def execute(self, task: Task, agent: BaseAgent) -> Artifact:
         """Run a task through an agent and update state."""
@@ -50,6 +53,7 @@ class TaskExecutor:
                         "evaluation": task.metadata["evaluation"],
                         "suggestions": suggestions,
                     }
+                    self._record_evaluation_feedback(task, suggestions)
                     task.transition_to(TaskState.EVALUATION_FAILED)
                     self.event_bus.emit(
                         "evaluation:failed",
@@ -96,3 +100,20 @@ class TaskExecutor:
             if output is not None:
                 return str(output)
         return str(content)
+
+    def _record_evaluation_feedback(self, task: Task, suggestions: list[str]) -> None:
+        """Persist evaluation failure feedback for future runs in the same BusinessLine."""
+
+        if self.memory is None:
+            return
+        self.memory.add_shared(
+            business_line_id=task.business_line_id,
+            run_id=task.run_id or "",
+            task_id=task.id,
+            kind="evaluation_feedback",
+            content={
+                "evaluation_failed": True,
+                "task_name": task.name,
+                "suggestions": suggestions,
+            },
+        )

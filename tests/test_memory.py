@@ -53,6 +53,40 @@ class MemoryContextTest(unittest.TestCase):
             self.assertIn("task-1", context_text)
             self.assertIn("shared", context_text)
 
+    def test_business_line_context_survives_runs_and_stays_isolated(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "kernel.db"
+            manager = ContextManager(WorkingMemory(), PersistentMemory(SQLiteStore(db_path)))
+
+            manager.add_shared(
+                business_line_id="bl-a",
+                run_id="run-1",
+                task_id="task-1",
+                content={"lesson": "标题太短，下次补充场景"},
+                kind="evaluation_feedback",
+            )
+            manager.add_shared(
+                business_line_id="bl-b",
+                run_id="run-2",
+                task_id="task-2",
+                content={"lesson": "另一个业务线的经验"},
+                kind="evaluation_feedback",
+            )
+
+            reopened = ContextManager(WorkingMemory(), PersistentMemory(SQLiteStore(db_path)))
+            bl_a_text = reopened.build_business_line_prompt_context(
+                "bl-a",
+                kind="evaluation_feedback",
+            )
+            bl_b_items = reopened.get_business_line_context(
+                "bl-b",
+                kind="evaluation_feedback",
+            )
+
+            self.assertIn("标题太短", bl_a_text)
+            self.assertNotIn("另一个业务线", bl_a_text)
+            self.assertEqual(bl_b_items[0]["run_id"], "run-2")
+
     def test_llm_agent_includes_memory_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
@@ -69,6 +103,34 @@ class MemoryContextTest(unittest.TestCase):
 
             self.assertIn("previous result", artifact.content["output"])
             self.assertIn("continue", artifact.content["output"])
+
+    def test_llm_agent_includes_business_line_feedback_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
+            kernel.memory.add_shared(
+                business_line_id="bl-a",
+                run_id="old-run",
+                task_id="old-task",
+                content={"suggestions": ["避免标题过短"]},
+                kind="evaluation_feedback",
+            )
+            agent = LLMAgent(
+                provider=kernel.llm_provider,
+                memory=kernel.memory,
+                transport=lambda request: request.prompt,
+            )
+            task = Task(
+                name="next",
+                agent_capability="llm.generate",
+                business_line_id="bl-a",
+                input="rewrite",
+            )
+            task.run_id = "new-run"
+
+            artifact = agent.execute(task)
+
+            self.assertIn("避免标题过短", artifact.content["output"])
+            self.assertIn("rewrite", artifact.content["output"])
 
     def test_kernel_run_records_task_results_in_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

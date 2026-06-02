@@ -88,6 +88,15 @@ V0.4 adds built-in BusinessLine templates for `blank`, `content`, and `website`,
 Policy now supports global rules and BusinessLine scoped overrides. Cost budget events can create
 HumanGate approval requests, closing the loop from token usage to approval.
 
+## Cross-Run Context And Daily Budget
+
+V0.5 extends memory from run-scoped context to BusinessLine-scoped shared context. Evaluation failures
+are saved as `evaluation_feedback`, and LLM agents include that feedback in later runs for the same
+BusinessLine while keeping other BusinessLines isolated.
+
+Cost tracking now uses daily counters as the budget signal, emits `cost.budget_warning` at 80% of a
+daily budget, keeps `cost.budget_exceeded` for approval flows, and can report usage for a date range.
+
 ## Risk Hardening
 
 The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,

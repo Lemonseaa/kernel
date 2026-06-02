@@ -109,6 +109,18 @@ class SQLiteStore(Storage):
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS context_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    business_line_id TEXT NOT NULL,
+                    run_id TEXT NOT NULL,
+                    task_id TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    content TEXT NOT NULL
+                )
+                """
+            )
 
     def save_run(self, run: Run) -> None:
         """Persist a run and all attached tasks."""
@@ -331,6 +343,69 @@ class SQLiteStore(Storage):
             }
             for row in rows
         ]
+
+    def save_context_item(
+        self,
+        business_line_id: str,
+        run_id: str,
+        task_id: str,
+        kind: str,
+        content: Any,
+    ) -> None:
+        """Persist one BusinessLine-scoped context item."""
+
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO context_items (business_line_id, run_id, task_id, kind, content)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (business_line_id, run_id, task_id, kind, self._to_json(content)),
+            )
+
+    def list_context_items(
+        self,
+        business_line_id: str,
+        kind: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """List BusinessLine-scoped context items ordered from oldest to newest."""
+
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            if kind is None:
+                sql = """
+                    SELECT id, business_line_id, run_id, task_id, kind, content
+                    FROM context_items
+                    WHERE business_line_id = ?
+                    ORDER BY id
+                """
+                params: tuple[object, ...] = (business_line_id,)
+            else:
+                sql = """
+                    SELECT id, business_line_id, run_id, task_id, kind, content
+                    FROM context_items
+                    WHERE business_line_id = ? AND kind = ?
+                    ORDER BY id
+                """
+                params = (business_line_id, kind)
+            if limit is not None:
+                sql = f"SELECT * FROM ({sql}) ORDER BY id DESC LIMIT ?"
+                params = (*params, limit)
+            rows = conn.execute(sql, params).fetchall()
+        items = [
+            {
+                "business_line_id": row["business_line_id"],
+                "run_id": row["run_id"],
+                "task_id": row["task_id"],
+                "kind": row["kind"],
+                "content": json.loads(row["content"]),
+            }
+            for row in rows
+        ]
+        if limit is not None:
+            items.reverse()
+        return items
 
     @staticmethod
     def _task_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:

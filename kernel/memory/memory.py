@@ -61,3 +61,35 @@ class PersistentMemory(Memory):
         """Load persisted context for one run."""
 
         return self.store.list_memory(run_id)
+
+    def add_shared(
+        self,
+        business_line_id: str,
+        run_id: str,
+        task_id: str,
+        content: Any,
+        kind: str = "general",
+    ) -> None:
+        """Persist one BusinessLine-scoped context item."""
+
+        self.store.save_context_item(
+            business_line_id=business_line_id,
+            run_id=run_id,
+            task_id=task_id,
+            kind=kind,
+            content=content,
+        )
+
+    def get_shared(
+        self,
+        business_line_id: str,
+        kind: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """Load BusinessLine-scoped context items across runs."""
+
+        return self.store.list_context_items(
+            business_line_id=business_line_id,
+            kind=kind,
+            limit=limit,
+        )

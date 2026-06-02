@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 import unittest
 
 from kernel.events import EventBus
@@ -64,6 +65,49 @@ class CostTrackingTest(unittest.TestCase):
         request = gate.pending_requests()[0]
         self.assertEqual(request.policy.action, "cost.budget_exceeded")
         self.assertEqual(request.subject["business_line_id"], "bl-a")
+
+    def test_daily_budget_resets_by_date_and_keeps_period_reports(self) -> None:
+        current_day = date(2026, 6, 2)
+        tracker = CostTracker(today_provider=lambda: current_day)
+
+        tracker.track("minimax", 100, 100, business_line_id="bl-a")
+        current_day = date(2026, 6, 3)
+        tracker.track("minimax", 200, 100, business_line_id="bl-a")
+
+        self.assertEqual(
+            tracker.get_daily_cost("minimax", business_line_id="bl-a", day=date(2026, 6, 2)).total_tokens,
+            200,
+        )
+        self.assertEqual(
+            tracker.get_daily_cost("minimax", business_line_id="bl-a", day=date(2026, 6, 3)).total_tokens,
+            300,
+        )
+        self.assertEqual(
+            tracker.report_period(
+                start=date(2026, 6, 2),
+                end=date(2026, 6, 3),
+                business_line_id="bl-a",
+            ).total_tokens,
+            500,
+        )
+
+    def test_budget_warning_publishes_at_eighty_percent_once_per_day(self) -> None:
+        current_day = date(2026, 6, 2)
+        bus = EventBus()
+        warnings = []
+        bus.subscribe("cost.budget_warning", lambda event: warnings.append(event))
+        tracker = CostTracker(event_bus=bus, today_provider=lambda: current_day)
+        tracker.set_budget("minimax", daily_budget=1.0, business_line_id="bl-a")
+
+        tracker.track("minimax", 500, 300, business_line_id="bl-a")
+        tracker.track("minimax", 10, 10, business_line_id="bl-a")
+        current_day = date(2026, 6, 3)
+        tracker.track("minimax", 800, 0, business_line_id="bl-a")
+
+        self.assertEqual(len(warnings), 2)
+        self.assertEqual(warnings[0].payload["threshold"], 0.8)
+        self.assertEqual(warnings[0].payload["day"], "2026-06-02")
+        self.assertEqual(warnings[1].payload["day"], "2026-06-03")
 
 
 if __name__ == "__main__":

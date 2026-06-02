@@ -78,6 +78,31 @@ class EvaluationTest(unittest.TestCase):
             self.assertTrue(task.result["evaluation_failed"])
             self.assertIn("suggestions", task.result)
 
+    def test_evaluation_failure_feedback_is_saved_to_business_line_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            DraftAgent.draft = "短"
+            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
+            kernel.agent_registry.register_agent_class(DraftAgent)
+            run = kernel.create_run("质量反馈测试", business_line_id="bl-a")
+            task = kernel.create_task(run, "写一篇内容", "content.write")
+            task.metadata.update(
+                {
+                    "evaluation_required": True,
+                    "evaluation_platform": "xiaohongshu",
+                    "min_score": 70.0,
+                }
+            )
+
+            kernel.run(run)
+            feedback_text = kernel.memory.build_business_line_prompt_context(
+                "bl-a",
+                kind="evaluation_feedback",
+            )
+
+            self.assertIn("evaluation_failed", feedback_text)
+            self.assertIn(task.id, feedback_text)
+            self.assertIn("suggestions", feedback_text)
+
     def test_workflow_allows_content_that_passes_evaluation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             DraftAgent.draft = (

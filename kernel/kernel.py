@@ -68,6 +68,7 @@ class Kernel:
             policy_engine=self.policy_engine,
             human_gate=self.human_gate,
             evaluation_gate=self.evaluation_gate,
+            memory=self.memory,
         )
         self.agent_registry.register_agent_class(SimpleAgent)
 
