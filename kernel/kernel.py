@@ -14,6 +14,7 @@ from kernel.diagnostics import HealthChecker
 from kernel.dryrun import DryRunContext, DryRunProvider
 from kernel.evaluation import EvaluationGate, EvaluationRunner
 from kernel.events import AuditLogger, Event, EventBus, EventType
+from kernel.ha import HAManager, SQLiteHAStateStore
 from kernel.llm import ProviderRegistry
 from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
 from kernel.models import Run, RunState, Task, TaskSpec, TaskState
@@ -79,6 +80,18 @@ class Kernel:
         self.store = SQLiteStore(active_sqlite_path)
         self.health_checker = HealthChecker(kernel=self)
         self.business_lines = BusinessLineRegistry(self.store)
+        self.ha_manager = (
+            HAManager(
+                instance_id=self.config.instance_id,
+                store=SQLiteHAStateStore(active_sqlite_path),
+                lease_ttl_seconds=self.config.ha_lease_ttl_seconds,
+                event_bus=self.event_bus,
+            )
+            if self.config.ha_enabled
+            else None
+        )
+        if self.ha_manager is not None:
+            self.ha_manager.try_become_primary()
         self.plugins = PluginRegistry()
         self.templates = TemplateRegistry(builtin_templates())
         self.template_applier = TemplateApplier()

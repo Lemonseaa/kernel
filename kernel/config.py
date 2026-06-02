@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import os
 from pathlib import Path
+from uuid import uuid4
 from typing import Any
 
 from kernel.dryrun import DryRunProvider
@@ -24,6 +25,10 @@ class KernelConfig:
     llm_cache_max_size: int = 128
     llm_cache_ttl_seconds: float = 300.0
     slow_task_threshold_seconds: float = 5.0
+    ha_enabled: bool = False
+    instance_id: str = field(default_factory=lambda: f"kernel-{uuid4()}")
+    ha_lease_ttl_seconds: float = 30.0
+    ha_heartbeat_seconds: float = 10.0
 
     @classmethod
     def from_env(cls, env_path: str | Path = ".env") -> KernelConfig:
@@ -54,6 +59,16 @@ class KernelConfig:
             slow_task_threshold_seconds=_float_value(
                 values.get("KERNEL_SLOW_TASK_THRESHOLD_SECONDS"),
                 default=5.0,
+            ),
+            ha_enabled=_bool_value(values.get("KERNEL_HA_ENABLED"), default=False),
+            instance_id=values.get("KERNEL_INSTANCE_ID", f"kernel-{uuid4()}"),
+            ha_lease_ttl_seconds=_float_value(
+                values.get("KERNEL_HA_LEASE_TTL_SECONDS"),
+                default=30.0,
+            ),
+            ha_heartbeat_seconds=_float_value(
+                values.get("KERNEL_HA_HEARTBEAT_SECONDS"),
+                default=10.0,
             ),
         )
 

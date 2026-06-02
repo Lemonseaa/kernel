@@ -138,3 +138,14 @@ docker-compose ps
 ```
 
 Deployment docs live in [docs/deployment](docs/deployment/README.md).
+
+## V1.0 Production Readiness
+
+V1.0 adds lease-based HA primitives, multi-instance Compose configuration, benchmark/stress scripts,
+and production readiness documentation.
+
+```bash
+python scripts/benchmark.py --runs 20
+python scripts/stress_test.py --runs 50 --concurrency 5
+python scripts/security_audit.py
+```

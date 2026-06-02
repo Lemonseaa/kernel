@@ -1,6 +1,6 @@
 [project]
 name = "kernel"
-version = "0.1.0"
+version = "1.0.0"
 description = "Agent Workflow Kernel for a general multi-agent operating system."
 requires-python = ">=3.11"
 dependencies = []

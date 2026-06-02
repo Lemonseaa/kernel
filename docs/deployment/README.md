@@ -39,4 +39,6 @@ Use `docker-compose logs kernel` when health is not green.
 
 - [docker.md](docker.md): Docker build and runtime guide.
 - [config.md](config.md): environment variable reference.
+- [ha.md](ha.md): multi-instance and failover guide.
 - [ops.md](ops.md): operations and troubleshooting.
+- [production-readiness.md](production-readiness.md): final validation checklist.

@@ -36,6 +36,11 @@ calls, configure the selected provider API key.
 | `KERNEL_LLM_CACHE_TTL_SECONDS` | `300` | Cache TTL in seconds. |
 | `KERNEL_SLOW_TASK_THRESHOLD_SECONDS` | `5` | Slow-task alert threshold. |
 | `KERNEL_SERVICE_HEARTBEAT_SECONDS` | `30` | Container heartbeat log interval. |
+| `KERNEL_HA_ENABLED` | `false` | Enable lease-based HA manager. |
+| `KERNEL_INSTANCE_ID` | generated id | Stable instance id for HA leases. |
+| `KERNEL_HA_LEASE_TTL_SECONDS` | `30` | Primary lease TTL. |
+| `KERNEL_HA_HEARTBEAT_SECONDS` | `10` | Heartbeat interval for HA service loops. |
+| `KERNEL_LB_PORT` | `8080` | Optional HA load balancer host port. |
 | `KERNEL_REDIS_PORT` | `6379` | Optional Redis host port when profile is enabled. |
 
 ## Example

@@ -37,8 +37,12 @@ def main() -> int:
         flush=True,
     )
     while running:
+        if kernel.ha_manager is not None:
+            if not kernel.ha_manager.heartbeat():
+                kernel.ha_manager.try_become_primary()
         report = kernel.health_checker.generate_diagnostic_report()
-        print(f"kernel heartbeat status={report.overall_status}", flush=True)
+        ha_status = kernel.ha_manager.status().role if kernel.ha_manager is not None else "disabled"
+        print(f"kernel heartbeat status={report.overall_status} ha={ha_status}", flush=True)
         time.sleep(heartbeat_seconds)
     print("kernel service stopped", flush=True)
     return 0
