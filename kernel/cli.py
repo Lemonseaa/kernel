@@ -17,7 +17,17 @@ def main(argv: list[str] | None = None) -> int:
     """Run the kernel CLI."""
 
     parser = argparse.ArgumentParser(prog="kernel")
+    parser.add_argument("--db", default="kernel.db")
     subparsers = parser.add_subparsers(dest="command")
+    subparsers.add_parser("status")
+    health_parser = subparsers.add_parser("health")
+    health_parser.add_argument("--json", action="store_true", default=True)
+    run_parser = subparsers.add_parser("run")
+    run_subparsers = run_parser.add_subparsers(dest="run_command")
+    run_subparsers.add_parser("list")
+    bl_parser = subparsers.add_parser("bl")
+    bl_subparsers = bl_parser.add_subparsers(dest="bl_command")
+    bl_subparsers.add_parser("list")
     schedule_parser = subparsers.add_parser("schedule")
     schedule_subparsers = schedule_parser.add_subparsers(dest="schedule_command")
     schedule_subparsers.add_parser("list")
@@ -30,8 +40,45 @@ def main(argv: list[str] | None = None) -> int:
     dryrun_parser.add_argument("--task", required=True)
     args = parser.parse_args(argv)
 
+    if args.command == "status":
+        kernel = Kernel(sqlite_path=args.db)
+        status = {
+            "runs": len(kernel.store.list_runs()),
+            "business_lines": len(kernel.business_lines.list()),
+            "events": len(kernel.event_bus.events),
+            "alerts": len(kernel.alert_manager.alerts),
+            "health": kernel.health_checker.generate_diagnostic_report().overall_status,
+        }
+        print(json.dumps(status, ensure_ascii=False))
+        return 0
+
+    if args.command == "run" and args.run_command == "list":
+        kernel = Kernel(sqlite_path=args.db)
+        runs = kernel.store.list_runs()
+        if not runs:
+            print("No runs")
+            return 0
+        for run in runs:
+            print(f"{run['id']}\t{run['state']}\t{run['business_line_id']}\t{run['user_request']}")
+        return 0
+
+    if args.command == "bl" and args.bl_command == "list":
+        kernel = Kernel(sqlite_path=args.db)
+        business_lines = kernel.business_lines.list()
+        if not business_lines:
+            print("No business lines")
+            return 0
+        for business_line in business_lines:
+            print(f"{business_line.id}\t{business_line.status.value}\t{business_line.name}")
+        return 0
+
+    if args.command == "health":
+        kernel = Kernel(sqlite_path=args.db)
+        print(json.dumps(kernel.health_checker.generate_diagnostic_report().to_dict(), ensure_ascii=False))
+        return 0
+
     if args.command == "schedule" and args.schedule_command == "list":
-        kernel = Kernel()
+        kernel = Kernel(sqlite_path=args.db)
         jobs = kernel.scheduler.list_jobs()
         if not jobs:
             print("No scheduled jobs")
@@ -41,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "notify":
-        kernel = Kernel()
+        kernel = Kernel(sqlite_path=args.db)
         kernel.notification_manager.register(ConsoleNotificationChannel())
         kernel.notification_manager.notify(
             NotificationMessage(
@@ -59,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
         if not validation.valid:
             print(json.dumps({"dry_run": True, "valid": False, "errors": validation.errors}, ensure_ascii=False))
             return 1
-        kernel = Kernel(config=KernelConfig(dry_run=True))
+        kernel = Kernel(sqlite_path=args.db, config=KernelConfig(dry_run=True))
         run = asyncio.run(kernel.run("dryrun preview", [spec]))
         print(
             json.dumps(

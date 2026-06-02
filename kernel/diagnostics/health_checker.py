@@ -60,6 +60,7 @@ class HealthChecker:
                     (run_id, "default", "health check", "pending", "{}"),
                 )
                 row = conn.execute("SELECT id FROM runs WHERE id = ?", (run_id,)).fetchone()
+                conn.execute("DELETE FROM runs WHERE id = ?", (run_id,))
             if row is None:
                 return CheckResult("database", "error", "SQLite read/write probe failed.")
             return CheckResult("database", "ok", "SQLite read/write probe succeeded.")

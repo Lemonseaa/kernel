@@ -108,6 +108,19 @@ tasks, failed runs, cost thresholds at 80% and 95%, exceeded budgets, approval t
 errors. `Kernel.resume_run(run_id, exclude_completed=True)` can continue from failed or pending tasks
 while preserving completed task results.
 
+## Auth, Webhooks, And CLI
+
+V0.7 adds bearer-token API protection through `APIKeyManager` and `BearerTokenAuth`. API routes require
+valid `Authorization: Bearer ...` headers when FastAPI is available, and fallback apps expose the same
+authentication check for dependency-light environments.
+
+Webhook support maps kernel events to external automation events: `run.completed`, `task.failed`,
+`approval.required`, and `alert.triggered`. `WebhookReceiver` can trigger workflows from inbound
+`workflow.trigger` payloads.
+
+Operational commands are available through `./kernel-cli`: `status`, `run list`, `bl list`, and
+`health`, with `--db` for pointing at a specific SQLite database.
+
 ## Risk Hardening
 
 The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,

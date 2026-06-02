@@ -25,6 +25,7 @@ from kernel.runtime import AgentRegistry, SimpleAgent
 from kernel.scheduler import Job, JobType, Scheduler
 from kernel.templates import TemplateApplier, TemplateRegistry, builtin_templates
 from kernel.tools import EchoTool, FileWriteTool, ToolPermission, ToolRegistry
+from kernel.webhook import WebhookSender
 from kernel.workflow import WorkflowEngine
 
 
@@ -40,6 +41,7 @@ class Kernel:
         self.audit_logger = AuditLogger()
         self.metrics = MetricsCollector()
         self.scheduler = Scheduler()
+        self.webhook_sender: WebhookSender | None = None
         self.llm_provider = self.config.llm_provider
         self.provider_registry = ProviderRegistry()
         self.provider_registry.register(self.llm_provider, default=True)
@@ -136,6 +138,24 @@ class Kernel:
         """Set a cost budget for one provider and BusinessLine."""
 
         self.cost_tracker.set_budget(provider, daily_budget, business_line_id=business_line_id)
+
+    def configure_webhooks(
+        self,
+        urls: list[str],
+        transport: Callable[[str, dict[str, object], dict[str, str]], object] | None = None,
+        max_retries: int = 2,
+        headers: dict[str, str] | None = None,
+    ) -> WebhookSender:
+        """Configure outbound webhooks for supported kernel events."""
+
+        self.webhook_sender = WebhookSender(
+            event_bus=self.event_bus,
+            urls=urls,
+            transport=transport,
+            max_retries=max_retries,
+            headers=headers,
+        )
+        return self.webhook_sender
 
     def create_run(self, user_request: str, business_line_id: str = "default") -> Run:
         """Create and persist a run."""
