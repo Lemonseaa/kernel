@@ -29,9 +29,14 @@ def register_experiment_parser(subparsers: argparse._SubParsersAction[argparse.A
     feedback_add_parser.add_argument("id")
     feedback_add_parser.add_argument("--source", choices=[source.value for source in FeedbackSource], required=True)
     feedback_add_parser.add_argument("--type", required=True)
-    feedback_add_parser.add_argument("--value", type=float, required=True)
+    feedback_add_parser.add_argument("--value", required=True)
     feedback_list_parser = feedback_subparsers.add_parser("list")
     feedback_list_parser.add_argument("id")
+    quality_parser = experiment_subparsers.add_parser("quality")
+    quality_subparsers = quality_parser.add_subparsers(dest="quality_command")
+    quality_stats_parser = quality_subparsers.add_parser("stats")
+    quality_stats_parser.add_argument("id")
+    quality_subparsers.add_parser("rejected")
     result_parser = experiment_subparsers.add_parser("result")
     result_parser.add_argument("id")
 
@@ -53,6 +58,8 @@ def handle_experiment_command(args: argparse.Namespace, db_path: str | Path) -> 
         return 0
     if command == "feedback":
         return _feedback(args, db_path)
+    if command == "quality":
+        return _quality(args, db_path)
     if command == "result":
         result = FeedbackCollector(db_path).apply_to_experiment(args.id)
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -113,10 +120,13 @@ def _feedback(args: argparse.Namespace, db_path: str | Path) -> int:
             experiment_id=args.id,
             source=FeedbackSource(args.source),
             signal_type=args.type,
-            value=args.value,
+            value=_parse_feedback_value(args.value),
         )
-        feedback_id = collector.add(feedback)
+        feedback_id, quality = collector.add_with_quality(feedback)
         print(f"Feedback ID: {feedback_id}")
+        print(f"status={quality.status.value.upper()}, confidence={quality.confidence_score}")
+        if quality.issues:
+            print("issues=" + "; ".join(quality.issues))
         return 0
     if feedback_command == "list":
         feedback_items = collector.list(experiment_id=args.id)
@@ -130,3 +140,31 @@ def _feedback(args: argparse.Namespace, db_path: str | Path) -> int:
             )
         return 0
     return 1
+
+
+def _quality(args: argparse.Namespace, db_path: str | Path) -> int:
+    collector = FeedbackCollector(db_path)
+    quality_command = getattr(args, "quality_command", None)
+    if quality_command == "stats":
+        print(json.dumps(collector.get_quality_stats(args.id), ensure_ascii=False, indent=2))
+        return 0
+    if quality_command == "rejected":
+        rejected_items = collector.list_rejected_quality()
+        if not rejected_items:
+            print("No rejected feedback")
+            return 0
+        for item in rejected_items:
+            print(
+                f"{item['feedback_id']}\t{item['experiment_id'] or 'default'}\t"
+                f"{item['source']}\t{item['signal_type']}\t{item['raw_value']}\t"
+                f"confidence={item['confidence_score']}\tissues={'; '.join(item['issues'])}"
+            )
+        return 0
+    return 1
+
+
+def _parse_feedback_value(value: str) -> float | str:
+    try:
+        return float(value)
+    except ValueError:
+        return value
