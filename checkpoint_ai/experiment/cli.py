@@ -11,6 +11,7 @@ from checkpoint_ai.experiment.baseline import BaselineManager
 from checkpoint_ai.experiment.feedback import Feedback, FeedbackCollector, FeedbackSource
 from checkpoint_ai.experiment.ledger import ExperimentLedger
 from checkpoint_ai.experiment.models import Experiment, ExperimentStatus
+from checkpoint_ai.experiment.risk_score import ActionRisk, RiskScorer
 
 
 def register_experiment_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -29,6 +30,8 @@ def register_experiment_parser(subparsers: argparse._SubParsersAction[argparse.A
     compare_baseline_parser.add_argument("id")
     promote_parser = experiment_subparsers.add_parser("promote")
     promote_parser.add_argument("id")
+    risk_parser = experiment_subparsers.add_parser("risk")
+    risk_parser.add_argument("risk_args", nargs="+")
     feedback_parser = experiment_subparsers.add_parser("feedback")
     feedback_subparsers = feedback_parser.add_subparsers(dest="feedback_command")
     feedback_add_parser = feedback_subparsers.add_parser("add")
@@ -61,6 +64,24 @@ def register_baseline_parser(subparsers: argparse._SubParsersAction[argparse.Arg
     set_active_parser.add_argument("id")
 
 
+def register_risk_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    """Register risk subcommands."""
+
+    risk_parser = subparsers.add_parser("risk")
+    risk_subparsers = risk_parser.add_subparsers(dest="risk_command")
+    score_parser = risk_subparsers.add_parser("score")
+    score_parser.add_argument("--type", required=True)
+    score_parser.add_argument("--target", required=True)
+    score_parser.add_argument("--magnitude", type=float, required=True)
+    score_parser.add_argument("--blast-radius", type=float, default=None)
+    score_parser.add_argument("--reversibility", type=float, required=True)
+    score_parser.add_argument("--confidence", type=float, required=True)
+    score_parser.add_argument("--policy-compliant", action="store_true", default=True)
+    score_parser.add_argument("--policy-violated", action="store_true", default=False)
+    threshold_parser = risk_subparsers.add_parser("set-threshold")
+    threshold_parser.add_argument("threshold", type=float)
+
+
 def handle_experiment_command(args: argparse.Namespace, db_path: str | Path) -> int:
     """Run experiment CLI commands."""
 
@@ -84,6 +105,8 @@ def handle_experiment_command(args: argparse.Namespace, db_path: str | Path) -> 
         baseline_id = ledger.set_baseline(args.id)
         print(f"Baseline ID: {baseline_id}")
         return 0
+    if command == "risk":
+        return _experiment_risk(args, ledger)
     if command == "feedback":
         return _feedback(args, db_path)
     if command == "quality":
@@ -91,6 +114,31 @@ def handle_experiment_command(args: argparse.Namespace, db_path: str | Path) -> 
     if command == "result":
         result = FeedbackCollector(db_path).apply_to_experiment(args.id)
         print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+    return 1
+
+
+def handle_risk_command(args: argparse.Namespace, db_path: str | Path) -> int:
+    """Run risk CLI commands."""
+
+    scorer = RiskScorer(db_path)
+    command = getattr(args, "risk_command", None)
+    if command == "score":
+        action = ActionRisk(
+            action_type=args.type,
+            target=args.target,
+            magnitude=args.magnitude,
+            blast_radius=args.blast_radius,
+            reversibility=args.reversibility,
+            confidence=args.confidence,
+            policy_compliant=bool(args.policy_compliant and not args.policy_violated),
+        )
+        risk = scorer.score_action(action)
+        print(risk.model_dump_json(indent=2))
+        return 0
+    if command == "set-threshold":
+        scorer.set_threshold(args.threshold)
+        print(f"Risk threshold: {scorer.get_threshold()}")
         return 0
     return 1
 
@@ -198,6 +246,23 @@ def _feedback(args: argparse.Namespace, db_path: str | Path) -> int:
             )
         return 0
     return 1
+
+
+def _experiment_risk(args: argparse.Namespace, ledger: ExperimentLedger) -> int:
+    risk_args = list(args.risk_args)
+    if not risk_args:
+        return 1
+    if risk_args[0] == "detail":
+        if len(risk_args) != 2:
+            return 1
+        risk = ledger.score_risk(risk_args[1])
+        print(risk.model_dump_json(indent=2))
+        return 0
+    if len(risk_args) != 1:
+        return 1
+    risk = ledger.score_risk(risk_args[0])
+    print(risk.model_dump_json(indent=2))
+    return 0
 
 
 def _quality(args: argparse.Namespace, db_path: str | Path) -> int:

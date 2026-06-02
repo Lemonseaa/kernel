@@ -8,10 +8,12 @@ import unittest
 from pathlib import Path
 
 from checkpoint_ai.experiment import (
+    ActionRisk,
     BaselineManager,
     Experiment,
     ExperimentLedger,
     ExperimentStatus,
+    RiskScorer,
     SimpleComparer,
 )
 
@@ -265,6 +267,151 @@ class ExperimentLedgerTest(unittest.TestCase):
         self.assertIn("winner", compare_result.stdout)
         self.assertIn("Baseline ID:", promote_result.stdout)
         self.assertIn("demo-baseline", list_result.stdout)
+
+    def test_risk_scorer_scores_low_and_high_risk_actions(self) -> None:
+        """RiskScorer calculates weighted risk and review requirement."""
+
+        scorer = RiskScorer()
+        low_risk = scorer.score_action(
+            ActionRisk(
+                action_type="parameter_tune",
+                target="timeout",
+                magnitude=0.1,
+                reversibility=0.9,
+                confidence=0.9,
+                policy_compliant=True,
+            )
+        )
+        high_risk = scorer.score_action(
+            ActionRisk(
+                action_type="strategy_switch",
+                target="backtest_strategy",
+                magnitude=0.8,
+                reversibility=0.2,
+                confidence=0.6,
+                policy_compliant=True,
+            )
+        )
+
+        self.assertAlmostEqual(low_risk.total, 0.15)
+        self.assertFalse(low_risk.requires_human_review)
+        self.assertTrue(scorer.should_auto_execute(low_risk))
+        self.assertAlmostEqual(high_risk.total, 0.65)
+        self.assertTrue(high_risk.requires_human_review)
+        self.assertFalse(scorer.should_auto_execute(high_risk))
+        self.assertIn("magnitude", high_risk.report)
+
+    def test_ledger_scores_experiment_risk_from_metadata(self) -> None:
+        """ExperimentLedger can score risk from experiment metadata."""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            ledger = ExperimentLedger(db_path)
+            experiment = Experiment(
+                business_line_id="ops",
+                hypothesis="切换回测策略。",
+                action="strategy_switch: backtest_strategy",
+                before_metrics={"success_rate": 0.9},
+                after_metrics={"success_rate": 0.92},
+                result_summary="策略表现略好。",
+                status=ExperimentStatus.COMPLETED,
+                metadata={
+                    "action_type": "strategy_switch",
+                    "target": "backtest_strategy",
+                    "magnitude": 0.8,
+                    "reversibility": 0.2,
+                    "confidence": 0.6,
+                    "policy_compliant": True,
+                },
+            )
+            experiment_id = ledger.create(experiment)
+
+            risk = ledger.score_risk(experiment_id)
+
+        self.assertAlmostEqual(risk.total, 0.65)
+        self.assertTrue(risk.requires_human_review)
+
+    def test_checkpointai_risk_cli_scores_actions_and_experiments(self) -> None:
+        """CLI exposes action and experiment risk scoring."""
+
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            low_result = subprocess.run(
+                [
+                    "./checkpointai",
+                    "--db",
+                    str(db_path),
+                    "risk",
+                    "score",
+                    "--type",
+                    "parameter_tune",
+                    "--target",
+                    "timeout",
+                    "--magnitude",
+                    "0.1",
+                    "--reversibility",
+                    "0.9",
+                    "--confidence",
+                    "0.9",
+                ],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            high_result = subprocess.run(
+                [
+                    "./checkpointai",
+                    "--db",
+                    str(db_path),
+                    "risk",
+                    "score",
+                    "--type",
+                    "strategy_switch",
+                    "--target",
+                    "backtest_strategy",
+                    "--magnitude",
+                    "0.8",
+                    "--reversibility",
+                    "0.2",
+                    "--confidence",
+                    "0.6",
+                ],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            demo = subprocess.run(
+                ["./checkpointai", "--db", str(db_path), "experiment", "run-demo"],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            ids = [
+                line.split(":", 1)[1].strip()
+                for line in demo.stdout.splitlines()
+                if line.startswith("Experiment ID:")
+            ]
+            experiment_result = subprocess.run(
+                ["./checkpointai", "--db", str(db_path), "experiment", "risk", ids[1]],
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+        self.assertEqual(low_result.returncode, 0, low_result.stderr)
+        self.assertEqual(high_result.returncode, 0, high_result.stderr)
+        self.assertEqual(demo.returncode, 0, demo.stderr)
+        self.assertEqual(experiment_result.returncode, 0, experiment_result.stderr)
+        self.assertIn('"total": 0.15', low_result.stdout)
+        self.assertIn('"requires_human_review": false', low_result.stdout)
+        self.assertIn('"total": 0.65', high_result.stdout)
+        self.assertIn('"requires_human_review": true', high_result.stdout)
+        self.assertIn("magnitude_risk", experiment_result.stdout)
 
 
 if __name__ == "__main__":

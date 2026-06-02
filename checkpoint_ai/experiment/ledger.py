@@ -103,6 +103,13 @@ class ExperimentLedger:
 
         return SimpleComparer(self._storage_path()).compare(experiment_id)
 
+    def score_risk(self, experiment_id: str) -> Any:
+        """评估实验风险。"""
+
+        from checkpoint_ai.experiment.risk_score import RiskScorer
+
+        return RiskScorer(self._storage_path()).score_experiment(experiment_id)
+
     def generate_summary(self, id: str) -> str:
         """生成实验摘要，回答7个问题。"""
 
