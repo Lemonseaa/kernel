@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from kernel.config import KernelConfig
 from kernel.ha import HAManager, HAStateStore, SQLiteHAStateStore
+
+
+def _without_kernel_env() -> dict[str, str]:
+    """Return process env without Kernel-specific overrides."""
+
+    return {key: value for key, value in os.environ.items() if not key.startswith("KERNEL_")}
 
 
 class HATest(unittest.TestCase):
@@ -53,7 +61,8 @@ class HATest(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            config = KernelConfig.from_env(env_path)
+            with patch.dict(os.environ, _without_kernel_env(), clear=True):
+                config = KernelConfig.from_env(env_path)
 
         self.assertTrue(config.ha_enabled)
         self.assertEqual(config.instance_id, "worker-a")

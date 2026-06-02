@@ -11,6 +11,12 @@ from unittest.mock import patch
 from kernel.config import KernelConfig
 
 
+def _without_kernel_env() -> dict[str, str]:
+    """Return process env without Kernel-specific overrides."""
+
+    return {key: value for key, value in os.environ.items() if not key.startswith("KERNEL_")}
+
+
 class EnvConfigTest(unittest.TestCase):
     """Validate zero-code configuration loading."""
 
@@ -32,7 +38,8 @@ class EnvConfigTest(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            config = KernelConfig.from_env(env_path=env_path)
+            with patch.dict(os.environ, _without_kernel_env(), clear=True):
+                config = KernelConfig.from_env(env_path=env_path)
 
         self.assertEqual(config.default_provider, "openai")
         self.assertEqual(config.providers["openai"]["api_key"], "test-openai")
