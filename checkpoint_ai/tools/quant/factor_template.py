@@ -3,10 +3,12 @@
 This template provides a complete factor research workflow using QuantContext tools.
 """
 
-from checkpoint_ai.tools.quant import (
-    ScreenStocksTool,
+from typing import Any, cast
+
+from checkpoint_ai.tools.quant.quant_context import (
     BacktestStrategyTool,
     FactorAnalysisTool,
+    ScreenStocksTool,
 )
 
 
@@ -20,7 +22,7 @@ class FactorResearchTemplate:
     4. Human approval at each stage
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.screen_tool = ScreenStocksTool()
         self.backtest_tool = BacktestStrategyTool()
         self.factor_tool = FactorAnalysisTool()
@@ -30,7 +32,7 @@ class FactorResearchTemplate:
         universe: str = "sp500",
         screen_type: str = "fundamental_screen",
         config: dict | None = None,
-    ) -> dict:
+    ) -> dict[Any, Any]:
         """Screen stocks by factor criteria.
 
         Args:
@@ -45,20 +47,23 @@ class FactorResearchTemplate:
         if config is None:
             config = {}
 
-        return self.screen_tool.run(
-            universe=universe,
-            screen_type=screen_type,
-            config=config,
+        return cast(
+            dict[Any, Any],
+            self.screen_tool.run(
+                universe=universe,
+                screen_type=screen_type,
+                config=config,
+            ),
         )
 
     def backtest(
         self,
-        stages: list[dict],
+        stages: list[dict[Any, Any]],
         universe: str = "sp500",
         rebalance: str = "monthly",
         start_date: str = "2022-01-01",
         end_date: str | None = None,
-    ) -> dict:
+    ) -> dict[Any, Any]:
         """Backtest screening strategy.
 
         Args:
@@ -80,9 +85,9 @@ class FactorResearchTemplate:
         if end_date:
             kwargs["end_date"] = end_date
 
-        return self.backtest_tool.run(**kwargs)
+        return cast(dict[Any, Any], self.backtest_tool.run(**kwargs))
 
-    def analyze_factor(self, equity_curve: list[float]) -> dict:
+    def analyze_factor(self, equity_curve: list[float]) -> dict[Any, Any]:
         """Analyze factor decomposition.
 
         Args:
@@ -91,7 +96,7 @@ class FactorResearchTemplate:
         Returns:
             Factor analysis with alpha and factor loadings
         """
-        return self.factor_tool.run(equity_curve=equity_curve)
+        return cast(dict[Any, Any], self.factor_tool.run(equity_curve=equity_curve))
 
     def full_research(
         self,
@@ -100,7 +105,7 @@ class FactorResearchTemplate:
         config: dict | None = None,
         rebalance: str = "monthly",
         start_date: str = "2022-01-01",
-    ) -> dict:
+    ) -> dict[Any, Any]:
         """Run complete factor research workflow.
 
         Args:

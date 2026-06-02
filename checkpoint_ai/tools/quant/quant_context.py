@@ -14,9 +14,18 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, cast
 
 from checkpoint_ai.tools.base import BaseTool
+
+
+def _loads_dict(result_json: str) -> dict[Any, Any]:
+    """Decode QuantContext JSON into a dictionary."""
+
+    result = json.loads(result_json)
+    if isinstance(result, dict):
+        return cast(dict[Any, Any], result)
+    return {"result": result}
 
 
 class ScreenStocksTool(BaseTool):
@@ -41,7 +50,7 @@ class ScreenStocksTool(BaseTool):
             from quantcontext.server import screen_stocks
 
             result_json = asyncio.run(screen_stocks(**kwargs))
-            return json.loads(result_json)
+            return _loads_dict(result_json)
         except Exception as e:
             return {"error": str(e)}
 
@@ -69,7 +78,7 @@ class BacktestStrategyTool(BaseTool):
             from quantcontext.server import backtest_strategy
 
             result_json = asyncio.run(backtest_strategy(**kwargs))
-            return json.loads(result_json)
+            return _loads_dict(result_json)
         except Exception as e:
             return {"error": str(e)}
 
@@ -93,6 +102,6 @@ class FactorAnalysisTool(BaseTool):
             from quantcontext.server import factor_analysis
 
             result_json = asyncio.run(factor_analysis(**kwargs))
-            return json.loads(result_json)
+            return _loads_dict(result_json)
         except Exception as e:
             return {"error": str(e)}

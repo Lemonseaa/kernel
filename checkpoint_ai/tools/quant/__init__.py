@@ -7,12 +7,12 @@ Provides:
 - FactorResearchTemplate: Complete factor research workflow
 """
 
+from checkpoint_ai.tools.quant.factor_template import FactorResearchTemplate
 from checkpoint_ai.tools.quant.quant_context import (
-    ScreenStocksTool,
     BacktestStrategyTool,
     FactorAnalysisTool,
+    ScreenStocksTool,
 )
-from checkpoint_ai.tools.quant.factor_template import FactorResearchTemplate
 
 __all__ = [
     "ScreenStocksTool",
