@@ -1,4 +1,4 @@
-"""Kernel health checker."""
+"""OPC-OS health checker."""
 
 from __future__ import annotations
 
@@ -15,16 +15,16 @@ from opc_os.persistence import SQLiteStore
 class HealthChecker:
     """Run cheap checks that help locate operational problems quickly."""
 
-    def __init__(self, kernel: object | None = None) -> None:
-        """Create a health checker for one kernel or standalone defaults."""
+    def __init__(self, opc_os: object | None = None) -> None:
+        """Create a health checker for one opc_os or standalone defaults."""
 
         self._tmp_dir: tempfile.TemporaryDirectory[str] | None = None
-        if kernel is None:
+        if opc_os is None:
             self._tmp_dir = tempfile.TemporaryDirectory()
-            from opc_os.kernel import Kernel
+            from opc_os.opc_os import OPCOS
 
-            kernel = Kernel(sqlite_path=Path(self._tmp_dir.name) / "kernel-health.db")
-        self.kernel = kernel
+            opc_os = OPCOS(sqlite_path=Path(self._tmp_dir.name) / "opc_os-health.db")
+        self.opc_os = opc_os
 
     def generate_diagnostic_report(self) -> DiagnosticReport:
         """Run all checks and return an aggregated report."""
@@ -70,7 +70,7 @@ class HealthChecker:
     def _check_provider(self) -> CheckResult:
         """Check whether the configured LLM provider responds."""
 
-        provider = getattr(self.kernel, "llm_provider", None) or MiniMaxProvider()
+        provider = getattr(self.opc_os, "llm_provider", None) or MiniMaxProvider()
         try:
             response = provider.generate(LLMRequest(prompt="health check"))
             return CheckResult(
@@ -85,7 +85,7 @@ class HealthChecker:
     def _check_event_bus(self) -> CheckResult:
         """Check whether events have subscribers."""
 
-        bus = getattr(self.kernel, "event_bus", None)
+        bus = getattr(self.opc_os, "event_bus", None)
         if bus is None:
             return CheckResult("event_bus", "warning", "EventBus is not configured.")
         subscriber_count = len(bus._subscribers) + sum(  # noqa: SLF001 - diagnostics inspect runtime.
@@ -98,7 +98,7 @@ class HealthChecker:
     def _check_approval_queue(self) -> CheckResult:
         """Check unresolved human approvals."""
 
-        gate = getattr(self.kernel, "human_gate", None)
+        gate = getattr(self.opc_os, "human_gate", None)
         pending = gate.pending_requests() if gate is not None else []
         if pending:
             return CheckResult(
@@ -112,7 +112,7 @@ class HealthChecker:
     def _check_cost_budget(self) -> CheckResult:
         """Check cost budget events and configured budgets."""
 
-        tracker = getattr(self.kernel, "cost_tracker", None)
+        tracker = getattr(self.opc_os, "cost_tracker", None)
         if tracker is None:
             return CheckResult("cost_budget", "warning", "CostTracker is not configured.")
         over_budget: list[dict[str, Any]] = []
@@ -138,7 +138,7 @@ class HealthChecker:
     def _check_recent_runs(self) -> CheckResult:
         """Check whether recent persisted runs failed."""
 
-        store = getattr(self.kernel, "store", None)
+        store = getattr(self.opc_os, "store", None)
         if store is None:
             return CheckResult("recent_runs", "warning", "No store is configured for recent run checks.")
         runs = store.list_runs()[-10:]
@@ -153,13 +153,13 @@ class HealthChecker:
         return CheckResult("recent_runs", "ok", "No failed recent runs.", {"checked": len(runs)})
 
     def _store(self) -> SQLiteStore:
-        """Return the kernel store or a temporary standalone store."""
+        """Return the opc_os store or a temporary standalone store."""
 
-        store = getattr(self.kernel, "store", None)
-        if store is not None:
+        store = getattr(self.opc_os, "store", None)
+        if isinstance(store, SQLiteStore):
             return store
         self._tmp_dir = tempfile.TemporaryDirectory()
-        return SQLiteStore(Path(self._tmp_dir.name) / "kernel-health.db")
+        return SQLiteStore(Path(self._tmp_dir.name) / "opc_os-health.db")
 
     def _overall_status(self, checks: list[CheckResult]) -> str:
         """Compute healthy/degraded/unhealthy from check severities."""

@@ -8,14 +8,14 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from opc_os.config import KernelConfig
+from opc_os.config import OPCOSConfig
 from opc_os.ha import HAManager, HAStateStore, SQLiteHAStateStore
 
 
-def _without_kernel_env() -> dict[str, str]:
-    """Return process env without Kernel-specific overrides."""
+def _without_opc_os_env() -> dict[str, str]:
+    """Return process env without OPCOS-specific overrides."""
 
-    return {key: value for key, value in os.environ.items() if not key.startswith("KERNEL_")}
+    return {key: value for key, value in os.environ.items() if not key.startswith("OPC_OS_")}
 
 
 class HATest(unittest.TestCase):
@@ -38,7 +38,7 @@ class HATest(unittest.TestCase):
 
     def test_sqlite_ha_store_shares_state_between_instances(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "kernel.db"
+            db_path = Path(tmp) / "opc_os.db"
             first_store = SQLiteHAStateStore(db_path)
             second_store = SQLiteHAStateStore(db_path)
 
@@ -46,23 +46,23 @@ class HATest(unittest.TestCase):
             self.assertFalse(second_store.acquire_primary("instance-b", now=101.0, ttl_seconds=10.0))
             self.assertTrue(second_store.acquire_primary("instance-b", now=111.0, ttl_seconds=10.0))
 
-    def test_kernel_config_loads_ha_settings_from_env(self) -> None:
+    def test_opc_os_config_loads_ha_settings_from_env(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env_path = Path(tmp) / ".env"
             env_path.write_text(
                 "\n".join(
                     [
-                        "KERNEL_HA_ENABLED=true",
-                        "KERNEL_INSTANCE_ID=worker-a",
-                        "KERNEL_HA_LEASE_TTL_SECONDS=12",
-                        "KERNEL_HA_HEARTBEAT_SECONDS=3",
+                        "OPC_OS_HA_ENABLED=true",
+                        "OPC_OS_INSTANCE_ID=worker-a",
+                        "OPC_OS_HA_LEASE_TTL_SECONDS=12",
+                        "OPC_OS_HA_HEARTBEAT_SECONDS=3",
                     ]
                 ),
                 encoding="utf-8",
             )
 
-            with patch.dict(os.environ, _without_kernel_env(), clear=True):
-                config = KernelConfig.from_env(env_path)
+            with patch.dict(os.environ, _without_opc_os_env(), clear=True):
+                config = OPCOSConfig.from_env(env_path)
 
         self.assertTrue(config.ha_enabled)
         self.assertEqual(config.instance_id, "worker-a")

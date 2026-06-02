@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 SECRET_MARKERS = ("sk-", "ghp_", "xoxb-", "AKIA")
 
 

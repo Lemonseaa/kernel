@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from kernel import Kernel
+from opc_os import OPCOS
 from opc_os.evaluation import EvaluationGate, EvaluationRunner, ReadabilityEvaluator
 from opc_os.models import Artifact, Task, TaskSpec, TaskState
 from opc_os.runtime import BaseAgent
@@ -53,11 +53,11 @@ class EvaluationTest(unittest.TestCase):
     def test_workflow_marks_task_evaluation_failed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             DraftAgent.draft = "短"
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
-            kernel.agent_registry.register_agent_class(DraftAgent)
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            opc_os.agent_registry.register_agent_class(DraftAgent)
 
-            async def run_kernel() -> object:
-                return await kernel.run(
+            async def run_opc_os() -> object:
+                return await opc_os.run(
                     "质量门禁测试",
                     [
                         TaskSpec(
@@ -70,7 +70,7 @@ class EvaluationTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_kernel())
+            run = asyncio.run(run_opc_os())
             task = run.tasks[0]
 
             self.assertEqual(run.state.value, "failed")
@@ -81,10 +81,10 @@ class EvaluationTest(unittest.TestCase):
     def test_evaluation_failure_feedback_is_saved_to_business_line_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             DraftAgent.draft = "短"
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
-            kernel.agent_registry.register_agent_class(DraftAgent)
-            run = kernel.create_run("质量反馈测试", business_line_id="bl-a")
-            task = kernel.create_task(run, "写一篇内容", "content.write")
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            opc_os.agent_registry.register_agent_class(DraftAgent)
+            run = opc_os.create_run("质量反馈测试", business_line_id="bl-a")
+            task = opc_os.create_task(run, "写一篇内容", "content.write")
             task.metadata.update(
                 {
                     "evaluation_required": True,
@@ -93,8 +93,8 @@ class EvaluationTest(unittest.TestCase):
                 }
             )
 
-            kernel.run(run)
-            feedback_text = kernel.memory.build_business_line_prompt_context(
+            opc_os.run(run)
+            feedback_text = opc_os.memory.build_business_line_prompt_context(
                 "bl-a",
                 kind="evaluation_feedback",
             )
@@ -113,11 +113,11 @@ class EvaluationTest(unittest.TestCase):
                 "每一步都有明确分数，低于阈值就要求改写。 #AI #内容"
                 + "这个内容质量检查流程可以复用到选题、写作、审核和分发环节。" * 8
             )
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
-            kernel.agent_registry.register_agent_class(DraftAgent)
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            opc_os.agent_registry.register_agent_class(DraftAgent)
 
-            async def run_kernel() -> object:
-                return await kernel.run(
+            async def run_opc_os() -> object:
+                return await opc_os.run(
                     "质量门禁通过测试",
                     [
                         TaskSpec(
@@ -130,7 +130,7 @@ class EvaluationTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_kernel())
+            run = asyncio.run(run_opc_os())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertEqual(run.tasks[0].state, TaskState.SUCCEEDED)

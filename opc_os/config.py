@@ -1,42 +1,42 @@
-"""Kernel configuration."""
+"""OPC-OS configuration."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
-from uuid import uuid4
 from typing import Any
+from uuid import uuid4
 
 from opc_os.dryrun import DryRunProvider
 from opc_os.llm import LLMProvider, MiniMaxProvider, OpenAIProvider
 
 
 @dataclass(slots=True)
-class KernelConfig:
-    """Configuration for kernel services."""
+class OPCOSConfig:
+    """Configuration for opc_os services."""
 
     providers: dict[str, dict[str, Any]] = field(default_factory=dict)
     default_provider: str = "minimax"
     dry_run: bool = False
-    sqlite_path: str = "kernel.db"
+    sqlite_path: str = "opc_os.db"
     max_concurrency: int = 1
     llm_cache_enabled: bool = True
     llm_cache_max_size: int = 128
     llm_cache_ttl_seconds: float = 300.0
     slow_task_threshold_seconds: float = 5.0
     ha_enabled: bool = False
-    instance_id: str = field(default_factory=lambda: f"kernel-{uuid4()}")
+    instance_id: str = field(default_factory=lambda: f"opc_os-{uuid4()}")
     ha_lease_ttl_seconds: float = 30.0
     ha_heartbeat_seconds: float = 10.0
 
     @classmethod
-    def from_env(cls, env_path: str | Path = ".env") -> KernelConfig:
+    def from_env(cls, env_path: str | Path = ".env") -> OPCOSConfig:
         """Build config from a .env file and process environment."""
 
         values = _load_env_file(Path(env_path))
         values.update(os.environ)
-        default_provider = values.get("KERNEL_DEFAULT_PROVIDER", "minimax").lower()
+        default_provider = values.get("OPC_OS_DEFAULT_PROVIDER", "minimax").lower()
         providers: dict[str, dict[str, Any]] = {}
         minimax_config = _provider_config(values, "MINIMAX")
         openai_config = _provider_config(values, "OPENAI")
@@ -47,27 +47,27 @@ class KernelConfig:
         return cls(
             providers=providers,
             default_provider=default_provider,
-            dry_run=_bool_value(values.get("KERNEL_DRY_RUN"), default=False),
-            sqlite_path=values.get("KERNEL_DB_PATH", "kernel.db"),
-            max_concurrency=_int_value(values.get("KERNEL_MAX_CONCURRENCY"), default=1),
-            llm_cache_enabled=_bool_value(values.get("KERNEL_LLM_CACHE_ENABLED"), default=True),
-            llm_cache_max_size=_int_value(values.get("KERNEL_LLM_CACHE_MAX_SIZE"), default=128),
+            dry_run=_bool_value(values.get("OPC_OS_DRY_RUN"), default=False),
+            sqlite_path=values.get("OPC_OS_DB_PATH", "opc_os.db"),
+            max_concurrency=_int_value(values.get("OPC_OS_MAX_CONCURRENCY"), default=1),
+            llm_cache_enabled=_bool_value(values.get("OPC_OS_LLM_CACHE_ENABLED"), default=True),
+            llm_cache_max_size=_int_value(values.get("OPC_OS_LLM_CACHE_MAX_SIZE"), default=128),
             llm_cache_ttl_seconds=_float_value(
-                values.get("KERNEL_LLM_CACHE_TTL_SECONDS"),
+                values.get("OPC_OS_LLM_CACHE_TTL_SECONDS"),
                 default=300.0,
             ),
             slow_task_threshold_seconds=_float_value(
-                values.get("KERNEL_SLOW_TASK_THRESHOLD_SECONDS"),
+                values.get("OPC_OS_SLOW_TASK_THRESHOLD_SECONDS"),
                 default=5.0,
             ),
-            ha_enabled=_bool_value(values.get("KERNEL_HA_ENABLED"), default=False),
-            instance_id=values.get("KERNEL_INSTANCE_ID", f"kernel-{uuid4()}"),
+            ha_enabled=_bool_value(values.get("OPC_OS_HA_ENABLED"), default=False),
+            instance_id=values.get("OPC_OS_INSTANCE_ID", f"opc_os-{uuid4()}"),
             ha_lease_ttl_seconds=_float_value(
-                values.get("KERNEL_HA_LEASE_TTL_SECONDS"),
+                values.get("OPC_OS_HA_LEASE_TTL_SECONDS"),
                 default=30.0,
             ),
             ha_heartbeat_seconds=_float_value(
-                values.get("KERNEL_HA_HEARTBEAT_SECONDS"),
+                values.get("OPC_OS_HA_HEARTBEAT_SECONDS"),
                 default=10.0,
             ),
         )
@@ -112,7 +112,7 @@ def _strip_quotes(value: str) -> str:
 def _provider_config(values: dict[str, str], provider: str) -> dict[str, Any]:
     """Build one provider configuration from environment values."""
 
-    prefix = f"KERNEL_{provider}_"
+    prefix = f"OPC_OS_{provider}_"
     mapping = {
         "API_KEY": "api_key",
         "MODEL": "model",

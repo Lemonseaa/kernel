@@ -1,4 +1,4 @@
-"""Kernel metrics collection."""
+"""OPC-OS metrics collection."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from opc_os.events import Event, EventType
 
 @dataclass(slots=True)
 class MetricsCollector:
-    """Collect lightweight in-memory kernel metrics."""
+    """Collect lightweight in-memory opc_os metrics."""
 
     run_count: int = 0
     run_completed: int = 0

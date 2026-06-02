@@ -1,1 +1,1 @@
-"""Kernel test package."""
+"""OPC-OS test package."""

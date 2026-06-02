@@ -19,7 +19,7 @@ class CheckResult:
 
 @dataclass(slots=True)
 class DiagnosticReport:
-    """Aggregated health report for the kernel."""
+    """Aggregated health report for the opc_os."""
 
     overall_status: str
     checks: list[CheckResult]

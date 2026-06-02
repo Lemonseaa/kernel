@@ -1,13 +1,13 @@
-# Contributing to Kernel
+# Contributing to OPCOS
 
-Thank you for your interest in contributing to Kernel!
+Thank you for your interest in contributing to OPCOS!
 
 ## Development Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/Lemonseaa/kernel.git
-cd kernel
+git clone https://github.com/Lemonseaa/opc_os.git
+cd opc_os
 
 # Install in development mode
 pip install -e ".[all]"
@@ -16,10 +16,10 @@ pip install -e ".[all]"
 python -m unittest discover -s tests -v
 
 # Lint
-ruff check kernel/
+ruff check opc_os/
 
 # Type check
-mypy kernel/
+mypy opc_os/
 ```
 
 ## Code Style
@@ -27,7 +27,7 @@ mypy kernel/
 - Follow PEP 8
 - Line length: 100 characters
 - Use type hints where possible
-- Run `ruff check kernel/` before committing
+- Run `ruff check opc_os/` before committing
 
 ## Testing
 

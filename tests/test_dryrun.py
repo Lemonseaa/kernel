@@ -9,9 +9,9 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from kernel import Kernel
+from opc_os import OPCOS
 from opc_os.cli import main
-from opc_os.config import KernelConfig
+from opc_os.config import OPCOSConfig
 from opc_os.dryrun import DryRunProvider, DryRunValidator
 from opc_os.llm import LLMRequest
 from opc_os.models import TaskSpec
@@ -40,14 +40,14 @@ class DryRunTest(unittest.TestCase):
         self.assertEqual(result["tool"], "dangerous")
         self.assertEqual(result["arguments"]["path"], "real.txt")
 
-    def test_kernel_dryrun_does_not_execute_file_write_tool(self) -> None:
+    def test_opc_os_dryrun_does_not_execute_file_write_tool(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output_path = Path(tmp) / "out.txt"
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db", config=KernelConfig(dry_run=True))
-            kernel.tool_registry.register(FileWriteTool(root_dir=tmp))
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db", config=OPCOSConfig(dry_run=True))
+            opc_os.tool_registry.register(FileWriteTool(root_dir=tmp))
 
-            async def run_kernel() -> object:
-                return await kernel.run(
+            async def run_opc_os() -> object:
+                return await opc_os.run(
                     "dryrun file write",
                     [
                         TaskSpec(
@@ -58,21 +58,21 @@ class DryRunTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_kernel())
+            run = asyncio.run(run_opc_os())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertFalse(output_path.exists())
             self.assertTrue(run.tasks[0].result["dry_run"])
 
     def test_dryrun_context_temporarily_enables_simulation(self) -> None:
-        kernel = Kernel()
+        opc_os = OPCOS()
 
-        self.assertFalse(kernel.dry_run_enabled)
-        with kernel.dry_run():
-            self.assertTrue(kernel.dry_run_enabled)
-            self.assertTrue(kernel.tool_registry.dry_run)
-        self.assertFalse(kernel.dry_run_enabled)
-        self.assertFalse(kernel.tool_registry.dry_run)
+        self.assertFalse(opc_os.dry_run_enabled)
+        with opc_os.dry_run():
+            self.assertTrue(opc_os.dry_run_enabled)
+            self.assertTrue(opc_os.tool_registry.dry_run)
+        self.assertFalse(opc_os.dry_run_enabled)
+        self.assertFalse(opc_os.tool_registry.dry_run)
 
     def test_cli_dryrun_command_prints_preview(self) -> None:
         stdout = io.StringIO()

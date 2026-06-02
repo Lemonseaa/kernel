@@ -1,4 +1,4 @@
-"""Run a lightweight Kernel performance benchmark."""
+"""Run a lightweight OPC-OS performance benchmark."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from kernel import Kernel  # noqa: E402
+from opc_os import OPCOS  # noqa: E402
 from opc_os.models import TaskSpec  # noqa: E402
 
 
@@ -22,9 +22,9 @@ async def _run_once() -> float:
     """Run one small workflow and return duration."""
 
     with TemporaryDirectory() as tmp:
-        kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
+        opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
         started_at = time.perf_counter()
-        run = await kernel.run("benchmark", [TaskSpec(description="ping")])
+        run = await opc_os.run("benchmark", [TaskSpec(description="ping")])
         duration = time.perf_counter() - started_at
     if run.state.value != "succeeded":
         raise RuntimeError(f"benchmark run failed: {run.state.value}")

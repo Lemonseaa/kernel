@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from kernel import Kernel
+from opc_os import OPCOS
 from opc_os.businessline import BusinessLineConfig, BusinessLineStatus, ResourceLimits
 from opc_os.models import Agent, Task
 from opc_os.persistence import SQLiteStore
@@ -16,22 +16,22 @@ from opc_os.runtime import AgentRegistry
 class BusinessLineTest(unittest.TestCase):
     """Validate BusinessLine lifecycle and resource isolation."""
 
-    def test_kernel_creates_persists_and_filters_business_lines(self) -> None:
+    def test_opc_os_creates_persists_and_filters_business_lines(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "kernel.db"
-            kernel = Kernel(sqlite_path=db_path)
+            db_path = Path(tmp) / "opc_os.db"
+            opc_os = OPCOS(sqlite_path=db_path)
 
-            content = kernel.create_business_line(
+            content = opc_os.create_business_line(
                 "内容业务",
                 config=BusinessLineConfig(
                     evaluation_rules=["readability"],
                     resource_limits=ResourceLimits(max_concurrent_runs=3, max_agents=8),
                 ),
             )
-            ecommerce = kernel.create_business_line("电商业务")
-            kernel.business_lines.update_status(ecommerce.id, BusinessLineStatus.PAUSED)
+            ecommerce = opc_os.create_business_line("电商业务")
+            opc_os.business_lines.update_status(ecommerce.id, BusinessLineStatus.PAUSED)
 
-            reloaded = Kernel(sqlite_path=db_path)
+            reloaded = OPCOS(sqlite_path=db_path)
 
             self.assertEqual(reloaded.get_business_line(content.id).name, "内容业务")
             self.assertEqual(reloaded.get_business_line(content.id).config.evaluation_rules, ["readability"])
@@ -44,32 +44,32 @@ class BusinessLineTest(unittest.TestCase):
 
     def test_business_line_delete_is_lifecycle_state_not_physical_purge(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
-            business_line = kernel.create_business_line("待删除业务")
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            business_line = opc_os.create_business_line("待删除业务")
 
-            kernel.business_lines.delete(business_line.id)
+            opc_os.business_lines.delete(business_line.id)
 
-            deleted = kernel.get_business_line(business_line.id)
+            deleted = opc_os.get_business_line(business_line.id)
             self.assertEqual(deleted.status, BusinessLineStatus.DELETED)
-            self.assertEqual(kernel.list_business_lines(BusinessLineStatus.DELETED), [deleted])
+            self.assertEqual(opc_os.list_business_lines(BusinessLineStatus.DELETED), [deleted])
 
     def test_run_and_task_rows_are_filtered_by_business_line(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
-            bl_a = kernel.create_business_line("A业务")
-            bl_b = kernel.create_business_line("B业务")
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            bl_a = opc_os.create_business_line("A业务")
+            bl_b = opc_os.create_business_line("B业务")
 
-            run_a = kernel.create_run("A请求", business_line_id=bl_a.id)
-            task_a = kernel.create_task(run_a, "A任务", "simple.execute")
-            run_b = kernel.create_run("B请求", business_line_id=bl_b.id)
-            task_b = kernel.create_task(run_b, "B任务", "simple.execute")
+            run_a = opc_os.create_run("A请求", business_line_id=bl_a.id)
+            task_a = opc_os.create_task(run_a, "A任务", "simple.execute")
+            run_b = opc_os.create_run("B请求", business_line_id=bl_b.id)
+            task_b = opc_os.create_task(run_b, "B任务", "simple.execute")
 
-            runs_a = kernel.store.list_runs(business_line_id=bl_a.id)
-            tasks_a = kernel.store.list_tasks(business_line_id=bl_a.id)
+            runs_a = opc_os.store.list_runs(business_line_id=bl_a.id)
+            tasks_a = opc_os.store.list_tasks(business_line_id=bl_a.id)
 
             self.assertEqual([row["id"] for row in runs_a], [run_a.id])
             self.assertEqual([row["id"] for row in tasks_a], [task_a.id])
-            self.assertEqual(kernel.store.load_task(task_b.id)["business_line_id"], bl_b.id)
+            self.assertEqual(opc_os.store.load_task(task_b.id)["business_line_id"], bl_b.id)
 
     def test_agent_registry_filters_agents_by_business_line(self) -> None:
         registry = AgentRegistry()
@@ -96,8 +96,8 @@ class BusinessLineTest(unittest.TestCase):
 
     def test_sqlite_store_migrates_business_line_columns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            store = SQLiteStore(Path(tmp) / "kernel.db")
-            run = Kernel(sqlite_path=Path(tmp) / "kernel.db").create_run("默认业务")
+            store = SQLiteStore(Path(tmp) / "opc_os.db")
+            run = OPCOS(sqlite_path=Path(tmp) / "opc_os.db").create_run("默认业务")
             task = Task(name="默认任务", agent_capability="simple.execute")
             run.add_task(task)
             store.save_run(run)

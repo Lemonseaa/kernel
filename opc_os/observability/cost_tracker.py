@@ -8,7 +8,6 @@ from typing import Callable
 
 from opc_os.events import EventBus
 
-
 DEFAULT_BUSINESS_LINE_ID = "default"
 
 

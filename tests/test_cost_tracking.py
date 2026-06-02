@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date
 import unittest
+from datetime import date
 
-from opc_os.events import EventBus
 from opc_os.control import HumanApprovalGate
+from opc_os.events import EventBus
 from opc_os.observability import CostTracker
 
 

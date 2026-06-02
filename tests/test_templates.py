@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from kernel import Kernel
+from opc_os import OPCOS
 from opc_os.templates import BusinessLineTemplate, TemplateRegistry
 
 
@@ -14,19 +14,19 @@ class TemplateTest(unittest.TestCase):
     """Validate template registration and application."""
 
     def test_registry_lists_builtin_templates(self) -> None:
-        kernel = Kernel()
+        opc_os = OPCOS()
 
-        template_ids = [template.id for template in kernel.templates.list()]
+        template_ids = [template.id for template in opc_os.templates.list()]
 
         self.assertIn("blank", template_ids)
         self.assertIn("content", template_ids)
         self.assertIn("website", template_ids)
 
-    def test_kernel_creates_business_line_from_content_template(self) -> None:
+    def test_opc_os_creates_business_line_from_content_template(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
 
-            business_line = kernel.create_business_line_from_template("我的内容业务", "content")
+            business_line = opc_os.create_business_line_from_template("我的内容业务", "content")
 
             self.assertEqual(business_line.name, "我的内容业务")
             self.assertIn("readability", business_line.config.evaluation_rules)

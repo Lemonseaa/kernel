@@ -36,7 +36,7 @@ class RecordingChannel(NotificationChannel):
 
 
 class NotificationTest(unittest.TestCase):
-    """Validate notification channels and kernel integrations."""
+    """Validate notification channels and opc_os integrations."""
 
     def test_notification_manager_sends_to_registered_channels(self) -> None:
         manager = NotificationManager()

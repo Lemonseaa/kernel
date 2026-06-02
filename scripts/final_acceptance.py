@@ -6,11 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 COMMANDS = [
-    [sys.executable, "-m", "ruff", "check", "kernel", "tests", "scripts"],
-    [sys.executable, "-m", "mypy", "kernel", "--show-error-codes", "--no-incremental"],
-    [sys.executable, "-m", "compileall", "-q", "kernel", "tests", "scripts"],
+    [sys.executable, "-m", "ruff", "check", "opc_os", "tests", "scripts"],
+    [sys.executable, "-m", "mypy", "opc_os", "--show-error-codes", "--no-incremental"],
+    [sys.executable, "-m", "compileall", "-q", "opc_os", "tests", "scripts"],
     [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"],
     [sys.executable, "scripts/benchmark.py", "--runs", "20"],
     [sys.executable, "scripts/stress_test.py", "--runs", "50", "--concurrency", "5"],

@@ -7,15 +7,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from opc_os import Kernel
+from opc_os import OPCOS
 from opc_os.models import TaskSpec
 
 
 async def main() -> None:
     """Run a small workflow with evaluation enabled."""
 
-    kernel = Kernel()
-    run = await kernel.run(
+    opc_os = OPCOS()
+    run = await opc_os.run(
         "生成高质量内容",
         [
             TaskSpec(

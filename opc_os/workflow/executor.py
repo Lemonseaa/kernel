@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import time
+from dataclasses import asdict
 
 from opc_os.evaluation import EvaluationGate
 from opc_os.events import EventBus, EventType

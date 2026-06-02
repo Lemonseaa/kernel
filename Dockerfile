@@ -9,16 +9,16 @@ COPY pyproject.toml README.md ./
 COPY opc_os ./opc_os
 COPY scripts ./scripts
 COPY tests ./tests
-COPY kernel-cli ./kernel-cli
+COPY opc-os ./opc-os
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -e .
 
 RUN mkdir -p /app/data
 
-ENV KERNEL_DB_PATH=/app/data/kernel.db
+ENV OPC_OS_DB_PATH=/app/data/opc_os.db
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD python scripts/health_check.py
 
-CMD ["python", "scripts/run_kernel_service.py"]
+CMD ["python", "scripts/run_opc_os_service.py"]

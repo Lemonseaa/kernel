@@ -8,8 +8,7 @@ from enum import Enum
 from typing import Any
 from uuid import uuid4
 
-from opc_os.control.policy import PolicyEvaluation
-from opc_os.control.policy import PolicyDecision
+from opc_os.control.policy import PolicyDecision, PolicyEvaluation
 from opc_os.events import EventBus, EventType
 from opc_os.notification import NotificationManager
 

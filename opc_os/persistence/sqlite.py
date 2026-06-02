@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from dataclasses import asdict
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from opc_os.businessline.models import BusinessLine, BusinessLineConfig, BusinessLineStatus, ResourceLimits
+from opc_os.businessline.models import (
+    BusinessLine,
+    BusinessLineConfig,
+    BusinessLineStatus,
+    ResourceLimits,
+)
 from opc_os.models import Run, Task
 from opc_os.persistence.store import Storage
 

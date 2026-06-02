@@ -13,8 +13,8 @@ docker-compose ps
 docker-compose logs opc-os
 ```
 
-The default service uses SQLite at `/app/data/kernel.db` inside the container and persists it through
-the `kernel-data` Docker volume.
+The default service uses SQLite at `/app/data/opc_os.db` inside the container and persists it through
+the `opc-os-data` Docker volume.
 
 ## What Runs
 

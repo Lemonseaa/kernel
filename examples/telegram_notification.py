@@ -25,7 +25,7 @@ def main() -> None:
     )
     manager = NotificationManager([channel])
     message = NotificationMessage(
-        title="Kernel通知",
+        title="OPCOS通知",
         body="有任务需要人工处理。",
         type="approval_required",
         priority="high",

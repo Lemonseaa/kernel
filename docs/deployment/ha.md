@@ -5,7 +5,7 @@ V1.0 adds lease-based high availability primitives and a multi-instance Docker C
 ## What HA Means In V1.0
 
 - Instances share state through the same SQLite database path.
-- Each instance has a `KERNEL_INSTANCE_ID`.
+- Each instance has a `OPC_OS_INSTANCE_ID`.
 - `HAManager` uses a primary lease with TTL.
 - A backup instance can acquire primary when the current primary lease expires.
 - Docker Compose includes a secondary instance and an optional Nginx load balancer profile.
@@ -15,10 +15,10 @@ This is an MVP HA model for OPC-OS operations. It is not a cross-region HA syste
 ## Configuration
 
 ```bash
-KERNEL_HA_ENABLED=true
-KERNEL_INSTANCE_ID=opc-os-primary
-KERNEL_HA_LEASE_TTL_SECONDS=30
-KERNEL_HA_HEARTBEAT_SECONDS=10
+OPC_OS_HA_ENABLED=true
+OPC_OS_INSTANCE_ID=opc-os-primary
+OPC_OS_HA_LEASE_TTL_SECONDS=30
+OPC_OS_HA_HEARTBEAT_SECONDS=10
 ```
 
 ## Start Multi-Instance Deployment

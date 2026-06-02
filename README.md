@@ -7,7 +7,7 @@
 
 OPC Operating System — 多Agent操作系统的核心运行时。
 
-OPC-OS is an Agent Workflow Kernel for building a general multi-agent operating system.
+OPC-OS is an Agent Workflow OPC-OS for building a general multi-agent operating system.
 
 ## 核心特性
 
@@ -29,10 +29,10 @@ cp .env.example .env
 # 编辑 .env 填入你的 API Key
 
 # 3. 运行
-kernel-cli status
+opc-os status
 
 # 4. 创建业务线
-kernel-cli bl create --name "内容业务" --template content
+opc-os bl create --name "内容业务" --template content
 ```
 
 或者用Docker：
@@ -50,14 +50,14 @@ docker compose ps
 
 ## 核心概念
 
-### Kernel
+### Python API
 
 系统入口，管理所有组件。
 
 ```python
-from opc_os import Kernel
+from opc_os import OPCOS
 
-k = Kernel()
+k = OPCOS()
 bl = k.create_business_line('my_business', template='content')
 run = k.create_run(bl.id, '写一篇关于AI的文章')
 ```
@@ -162,7 +162,7 @@ k.event_bus.subscribe('task.completed', my_handler)
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                     Kernel                          │
+│                     OPCOS                          │
 ├─────────────────────────────────────────────────────┤
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐            │
 │  │ Business│  │  Agent  │  │  Run/   │            │
@@ -194,25 +194,25 @@ k.event_bus.subscribe('task.completed', my_handler)
 
 | 模块 | 说明 |
 |---|---|
-| kernel/agent/ | Agent定义和LLM集成 |
-| kernel/businessline/ | 业务线隔离 |
-| kernel/cache/ | LLM响应缓存 |
-| kernel/context/ | Context管理和持久化 |
-| kernel/control/ | Policy和HumanGate |
-| kernel/diagnostics/ | 健康检查和告警 |
-| kernel/evaluation/ | Evaluation Gate |
-| kernel/events/ | Event Bus |
-| kernel/llm/ | LLM Provider抽象 |
-| kernel/memory/ | 记忆系统 |
-| kernel/notification/ | 通知系统 |
-| kernel/observability/ | Cost追踪和指标 |
-| kernel/plugins/ | 插件注册表 |
-| kernel/runtime/ | Agent运行时 |
-| kernel/scheduler/ | 定时任务 |
-| kernel/storage/ | SQLite持久化 |
-| kernel/tools/ | 工具注册和权限 |
-| kernel/webhook/ | Webhook发送和接收 |
-| kernel/ha/ | 高可用 |
+| opc_os/agent/ | Agent定义和LLM集成 |
+| opc_os/businessline/ | 业务线隔离 |
+| opc_os/cache/ | LLM响应缓存 |
+| opc_os/context/ | Context管理和持久化 |
+| opc_os/control/ | Policy和HumanGate |
+| opc_os/diagnostics/ | 健康检查和告警 |
+| opc_os/evaluation/ | Evaluation Gate |
+| opc_os/events/ | Event Bus |
+| opc_os/llm/ | LLM Provider抽象 |
+| opc_os/memory/ | 记忆系统 |
+| opc_os/notification/ | 通知系统 |
+| opc_os/observability/ | Cost追踪和指标 |
+| opc_os/plugins/ | 插件注册表 |
+| opc_os/runtime/ | Agent运行时 |
+| opc_os/scheduler/ | 定时任务 |
+| opc_os/storage/ | SQLite持久化 |
+| opc_os/tools/ | 工具注册和权限 |
+| opc_os/webhook/ | Webhook发送和接收 |
+| opc_os/ha/ | 高可用 |
 
 ## 脚本
 
@@ -236,10 +236,10 @@ python scripts/health_check.py
 python scripts/final_acceptance.py
 
 # CLI
-kernel-cli status
-kernel-cli run list
-kernel-cli bl list
-kernel-cli health
+opc-os status
+opc-os run list
+opc-os bl list
+opc-os health
 ```
 
 ## Docker部署
@@ -255,7 +255,7 @@ docker compose --profile ha up -d
 docker compose logs -f
 
 # 进入容器
-docker compose exec kernel bash
+docker compose exec opc_os bash
 ```
 
 详见 [docs/deployment](docs/deployment/README.md)

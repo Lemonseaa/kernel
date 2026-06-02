@@ -8,7 +8,7 @@ docker-compose build
 ```
 
 The image uses `python:3.11-slim`, installs the project in editable mode, and runs
-`scripts/run_kernel_service.py`.
+`scripts/run_opc_os_service.py`.
 
 ## Start
 

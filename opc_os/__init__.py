@@ -1,5 +1,5 @@
-"""Agent Workflow Kernel package."""
+"""Agent Workflow OPC-OS package."""
 
-from opc_os.kernel import Kernel
+from opc_os.opc_os import OPCOS
 
-__all__ = ["Kernel"]
+__all__ = ["OPCOS"]

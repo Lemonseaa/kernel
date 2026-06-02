@@ -10,20 +10,20 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from opc_os import Kernel
+from opc_os import OPCOS
 from opc_os.control.gate import HumanApprovalGate
 
 
 async def main() -> None:
     """Create a human approval gate."""
 
-    kernel = Kernel()
+    opc_os = OPCOS()
 
     # 1. Create a business line
-    bl = kernel.create_business_line('content_business')
+    bl = opc_os.create_business_line('content_business')
 
     # 2. Create an approval gate with event bus
-    gate = HumanApprovalGate(event_bus=kernel.event_bus)
+    gate = HumanApprovalGate(event_bus=opc_os.event_bus)
 
     # 3. Check if gate is subscribed to cost events
     print(f"Approval gate created for business line: {bl.id}")

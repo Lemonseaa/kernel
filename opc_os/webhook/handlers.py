@@ -3,30 +3,28 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, cast
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
-from opc_os.models import Run
-from opc_os.models import TaskSpec
+from opc_os.models import Run, TaskSpec
 
 if TYPE_CHECKING:
-    from opc_os.kernel import Kernel
+    from opc_os.opc_os import OPCOS
 
 
 class WebhookHandler:
     """Handle inbound webhook events."""
 
-    def __init__(self, kernel: "Kernel") -> None:
-        """Create handler for one kernel."""
+    def __init__(self, opc_os: "OPCOS") -> None:
+        """Create handler for one opc_os."""
 
-        self.kernel = kernel
+        self.opc_os = opc_os
 
     def handle(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Handle one external webhook event."""
 
         if event_type == "workflow.trigger":
             return self._trigger_workflow(payload)
-        self.kernel.event_bus.emit(
+        self.opc_os.event_bus.emit(
             "webhook:received",
             {"event_type": event_type, "payload": payload},
         )
@@ -50,5 +48,5 @@ class WebhookHandler:
         ]
         if not task_specs:
             task_specs = [TaskSpec(description=description)]
-        run = cast(Run, asyncio.run(self.kernel.run(description, task_specs)))
+        run = cast(Run, asyncio.run(self.opc_os.run(description, task_specs)))
         return {"status": "accepted", "run_id": run.id, "state": run.state.value}

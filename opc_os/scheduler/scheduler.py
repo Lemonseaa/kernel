@@ -1,4 +1,4 @@
-"""Kernel workflow scheduler."""
+"""OPC-OS workflow scheduler."""
 
 from __future__ import annotations
 

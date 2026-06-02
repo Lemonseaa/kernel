@@ -19,7 +19,7 @@ class JobType(str, Enum):
 
 @dataclass(slots=True)
 class Job:
-    """A scheduled kernel workflow."""
+    """A scheduled opc_os workflow."""
 
     name: str
     job_type: JobType

@@ -10,7 +10,7 @@ from uuid import uuid4
 
 
 class EventType(str, Enum):
-    """Built-in kernel event types."""
+    """Built-in opc_os event types."""
 
     RUN_CREATED = "run:created"
     RUN_STARTED = "run:started"
@@ -28,7 +28,7 @@ class EventType(str, Enum):
 
 @dataclass(slots=True)
 class Event:
-    """Kernel event."""
+    """OPC-OS event."""
 
     type: str
     payload: dict[str, Any]
@@ -37,7 +37,7 @@ class Event:
 
 
 class EventBus:
-    """Record and publish kernel events."""
+    """Record and publish opc_os events."""
 
     def __init__(self) -> None:
         """Create an in-memory event bus."""

@@ -7,7 +7,7 @@ import time
 import unittest
 from pathlib import Path
 
-from kernel import Kernel
+from opc_os import OPCOS
 from opc_os.llm import LLMProvider, LLMRequest
 from opc_os.models import Task, TaskState
 from opc_os.runtime import LLMAgent
@@ -25,14 +25,14 @@ class RiskHardeningTest(unittest.TestCase):
             return f"seen {len(prompts)}"
 
         with tempfile.TemporaryDirectory() as tmp:
-            kernel = Kernel(sqlite_path=Path(tmp) / "kernel.db")
-            run1 = kernel.create_run("run 1")
-            run2 = kernel.create_run("run 2")
+            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            run1 = opc_os.create_run("run 1")
+            run2 = opc_os.create_run("run 2")
             task1 = Task(name="agent1", agent_capability="llm.generate", run_id=run1.id, input="说出你的名字")
             task2 = Task(name="agent2", agent_capability="llm.generate", run_id=run2.id, input="说出你的名字")
-            kernel.memory.add(run1.id, "memory-agent1", {"output": "Agent1 private context"})
-            kernel.memory.add(run2.id, "memory-agent2", {"output": "Agent2 private context"})
-            agent = LLMAgent(provider=kernel.llm_provider, memory=kernel.memory, transport=transport)
+            opc_os.memory.add(run1.id, "memory-agent1", {"output": "Agent1 private context"})
+            opc_os.memory.add(run2.id, "memory-agent2", {"output": "Agent2 private context"})
+            agent = LLMAgent(provider=opc_os.llm_provider, memory=opc_os.memory, transport=transport)
 
             agent.execute(task1)
             agent.execute(task2)
@@ -44,14 +44,14 @@ class RiskHardeningTest(unittest.TestCase):
 
     def test_recover_run_rebuilds_tasks_from_sqlite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "kernel.db"
-            kernel = Kernel(sqlite_path=db_path)
-            run = kernel.create_run("recover")
-            task = kernel.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
+            db_path = Path(tmp) / "opc_os.db"
+            opc_os = OPCOS(sqlite_path=db_path)
+            run = opc_os.create_run("recover")
+            task = opc_os.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
             task.transition_to(TaskState.RUNNING)
-            kernel.store.save_run(run)
+            opc_os.store.save_run(run)
 
-            recovered = Kernel(sqlite_path=db_path).recover_run(run.id)
+            recovered = OPCOS(sqlite_path=db_path).recover_run(run.id)
 
             self.assertEqual(recovered.id, run.id)
             self.assertEqual(len(recovered.tasks), 1)
@@ -59,35 +59,35 @@ class RiskHardeningTest(unittest.TestCase):
 
     def test_recovered_run_can_continue_execution(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "kernel.db"
-            kernel = Kernel(sqlite_path=db_path)
-            run = kernel.create_run("recover execute")
-            task = kernel.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
+            db_path = Path(tmp) / "opc_os.db"
+            opc_os = OPCOS(sqlite_path=db_path)
+            run = opc_os.create_run("recover execute")
+            task = opc_os.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
             task.transition_to(TaskState.RUNNING)
-            kernel.store.save_run(run)
-            restored_kernel = Kernel(sqlite_path=db_path)
+            opc_os.store.save_run(run)
+            restored_opc_os = OPCOS(sqlite_path=db_path)
 
-            result = restored_kernel.run(restored_kernel.recover_run(run.id))
+            result = restored_opc_os.run(restored_opc_os.recover_run(run.id))
 
             self.assertEqual(result.state.value, "succeeded")
             self.assertEqual(result.tasks[0].result, "resume")
 
     def test_resume_run_skips_completed_tasks_and_reruns_failed_tasks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "kernel.db"
-            kernel = Kernel(sqlite_path=db_path)
-            run = kernel.create_run("resume failed point")
-            completed = kernel.create_task(run, name="completed", agent_capability="simple.execute", input="done")
+            db_path = Path(tmp) / "opc_os.db"
+            opc_os = OPCOS(sqlite_path=db_path)
+            run = opc_os.create_run("resume failed point")
+            completed = opc_os.create_task(run, name="completed", agent_capability="simple.execute", input="done")
             completed.transition_to(TaskState.RUNNING)
             completed.result = "finished result"
             completed.transition_to(TaskState.SUCCEEDED)
-            failed = kernel.create_task(run, name="failed", agent_capability="simple.execute", input="retry me")
+            failed = opc_os.create_task(run, name="failed", agent_capability="simple.execute", input="retry me")
             failed.transition_to(TaskState.RUNNING)
             failed.error = "old error"
             failed.transition_to(TaskState.FAILED)
-            kernel.store.save_run(run)
+            opc_os.store.save_run(run)
 
-            resumed = Kernel(sqlite_path=db_path).resume_run(run.id, exclude_completed=True)
+            resumed = OPCOS(sqlite_path=db_path).resume_run(run.id, exclude_completed=True)
 
             self.assertEqual(resumed.tasks[0].state, TaskState.SUCCEEDED)
             self.assertEqual(resumed.tasks[0].result, "finished result")

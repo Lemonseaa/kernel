@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from kernel import Kernel
+from opc_os import OPCOS
 from opc_os.evaluation import Evaluator
 from opc_os.llm import LLMProvider, LLMRequest
 from opc_os.plugins import PluginRegistry
@@ -77,12 +77,12 @@ class PluginRegistryTest(unittest.TestCase):
         self.assertEqual(registry.list_evaluators(), ["evaluator"])
         self.assertEqual(registry.list_providers(), ["provider"])
 
-    def test_kernel_exposes_plugin_registry(self) -> None:
-        kernel = Kernel()
+    def test_opc_os_exposes_plugin_registry(self) -> None:
+        opc_os = OPCOS()
 
-        kernel.plugins.register_agent("agent", PluginAgent)
+        opc_os.plugins.register_agent("agent", PluginAgent)
 
-        self.assertIs(kernel.plugins.get_agent("agent"), PluginAgent)
+        self.assertIs(opc_os.plugins.get_agent("agent"), PluginAgent)
 
 
 if __name__ == "__main__":

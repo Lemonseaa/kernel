@@ -1,4 +1,4 @@
-"""Kernel entrypoint."""
+"""OPC-OS entrypoint."""
 
 from __future__ import annotations
 
@@ -6,10 +6,16 @@ from pathlib import Path
 from typing import Any, Callable, Coroutine, overload
 
 from opc_os.alerts import AlertManager
-from opc_os.businessline import BusinessLine, BusinessLineConfig, BusinessLineRegistry, BusinessLineStatus
-from opc_os.config import KernelConfig
-from opc_os.control.defaults import builtin_policies
+from opc_os.businessline import (
+    BusinessLine,
+    BusinessLineConfig,
+    BusinessLineRegistry,
+    BusinessLineStatus,
+)
+from opc_os.cache import LLMResponseCache
+from opc_os.config import OPCOSConfig
 from opc_os.control import HumanApprovalGate, PolicyEngine
+from opc_os.control.defaults import builtin_policies
 from opc_os.diagnostics import HealthChecker
 from opc_os.dryrun import DryRunContext, DryRunProvider
 from opc_os.evaluation import EvaluationGate, EvaluationRunner
@@ -19,7 +25,6 @@ from opc_os.llm import ProviderRegistry
 from opc_os.memory import ContextManager, PersistentMemory, WorkingMemory
 from opc_os.models import Run, RunState, Task, TaskSpec, TaskState
 from opc_os.notification import NotificationManager
-from opc_os.cache import LLMResponseCache
 from opc_os.observability import CostTracker, MetricsCollector, PerformanceMonitor
 from opc_os.persistence import SQLiteStore
 from opc_os.plugins import PluginRegistry
@@ -31,13 +36,13 @@ from opc_os.webhook import WebhookSender
 from opc_os.workflow import WorkflowEngine
 
 
-class Kernel:
-    """V0.1 Agent Workflow Kernel facade."""
+class OPCOS:
+    """V0.1 Agent Workflow OPC-OS facade."""
 
-    def __init__(self, sqlite_path: str | Path | None = None, config: KernelConfig | None = None) -> None:
-        """Create kernel services and wire their dependencies."""
+    def __init__(self, sqlite_path: str | Path | None = None, config: OPCOSConfig | None = None) -> None:
+        """Create opc_os services and wire their dependencies."""
 
-        self.config = config or KernelConfig()
+        self.config = config or OPCOSConfig()
         active_sqlite_path = sqlite_path if sqlite_path is not None else self.config.sqlite_path
         self.dry_run_enabled = self.config.dry_run
         self.event_bus = EventBus()
@@ -78,7 +83,7 @@ class Kernel:
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(active_sqlite_path)
-        self.health_checker = HealthChecker(kernel=self)
+        self.health_checker = HealthChecker(opc_os=self)
         self.business_lines = BusinessLineRegistry(self.store)
         self.ha_manager = (
             HAManager(
@@ -110,10 +115,10 @@ class Kernel:
         self.agent_registry.register_agent_class(SimpleAgent)
 
     @classmethod
-    def from_env(cls, env_path: str | Path = ".env") -> Kernel:
-        """Create a kernel from .env and environment variables."""
+    def from_env(cls, env_path: str | Path = ".env") -> OPCOS:
+        """Create a opc_os from .env and environment variables."""
 
-        config = KernelConfig.from_env(env_path)
+        config = OPCOSConfig.from_env(env_path)
         return cls(sqlite_path=config.sqlite_path, config=config)
 
     def set_dry_run(self, enabled: bool) -> None:
@@ -188,7 +193,7 @@ class Kernel:
         max_retries: int = 2,
         headers: dict[str, str] | None = None,
     ) -> WebhookSender:
-        """Configure outbound webhooks for supported kernel events."""
+        """Configure outbound webhooks for supported opc_os events."""
 
         self.webhook_sender = WebhookSender(
             event_bus=self.event_bus,
@@ -309,7 +314,7 @@ class Kernel:
         if isinstance(run, Run):
             return self._execute_run(run)
         if tasks is None:
-            raise ValueError("Kernel.run(description, tasks) requires tasks.")
+            raise ValueError("OPCOS.run(description, tasks) requires tasks.")
         return self._run_from_specs(run, tasks)
 
     def _execute_run(self, run: Run) -> Run:
@@ -380,7 +385,7 @@ class Kernel:
         event_type_or_handler: str | EventType | Callable[[Event], None],
         handler: Callable[[Event], None] | None = None,
     ) -> None:
-        """Subscribe to kernel events."""
+        """Subscribe to opc_os events."""
 
         self.event_bus.subscribe(event_type_or_handler, handler)
 

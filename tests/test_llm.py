@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from opc_os.config import KernelConfig
-from kernel import Kernel
+from opc_os import OPCOS
+from opc_os.config import OPCOSConfig
 from opc_os.llm import LLMRequest, MiniMaxProvider, OpenAIProvider, ProviderRegistry
 from opc_os.models import Task
 from opc_os.runtime import LLMAgent
@@ -42,8 +42,8 @@ class LLMProviderTest(unittest.TestCase):
         self.assertEqual(artifact.content["agent"], "llm")
         self.assertEqual(artifact.content["provider"], "minimax")
 
-    def test_kernel_config_builds_default_provider(self) -> None:
-        config = KernelConfig(
+    def test_opc_os_config_builds_default_provider(self) -> None:
+        config = OPCOSConfig(
             providers={"minimax": {"api_key": "test-key", "model": "MiniMax-M2.7-highspeed"}},
             default_provider="minimax",
         )
@@ -53,13 +53,13 @@ class LLMProviderTest(unittest.TestCase):
         self.assertEqual(provider.name, "minimax")
         self.assertEqual(provider.model, "MiniMax-M2.7-highspeed")
 
-    def test_kernel_accepts_configured_default_provider(self) -> None:
-        config = KernelConfig(
+    def test_opc_os_accepts_configured_default_provider(self) -> None:
+        config = OPCOSConfig(
             providers={"openai": {"api_key": "test-key", "model": "gpt-test"}},
             default_provider="openai",
         )
 
-        kernel = Kernel(config=config)
+        opc_os = OPCOS(config=config)
 
-        self.assertEqual(kernel.llm_provider.name, "openai")
-        self.assertEqual(kernel.provider_registry.default().model, "gpt-test")
+        self.assertEqual(opc_os.llm_provider.name, "openai")
+        self.assertEqual(opc_os.provider_registry.default().model, "gpt-test")

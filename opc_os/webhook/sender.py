@@ -10,7 +10,6 @@ from urllib import request
 
 from opc_os.events import Event, EventBus, EventType
 
-
 WEBHOOK_EVENT_MAP = {
     EventType.RUN_COMPLETED.value: "run.completed",
     EventType.TASK_FAILED.value: "task.failed",
@@ -32,7 +31,7 @@ class WebhookDelivery:
 
 
 class WebhookSender:
-    """Send selected kernel events to external webhook URLs."""
+    """Send selected opc_os events to external webhook URLs."""
 
     def __init__(
         self,
@@ -63,13 +62,13 @@ class WebhookSender:
         return deliveries
 
     def _subscribe(self) -> None:
-        """Subscribe to supported kernel events."""
+        """Subscribe to supported opc_os events."""
 
         for event_type in WEBHOOK_EVENT_MAP:
             self.event_bus.subscribe(event_type, self._handle_event)
 
     def _handle_event(self, event: Event) -> None:
-        """Forward a kernel event as an external webhook."""
+        """Forward a opc_os event as an external webhook."""
 
         public_event = WEBHOOK_EVENT_MAP.get(event.type)
         if public_event is None:

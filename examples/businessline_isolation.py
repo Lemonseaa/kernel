@@ -10,18 +10,18 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from opc_os import Kernel
+from opc_os import OPCOS
 from opc_os.models import TaskSpec
 
 
 async def main() -> None:
     """Create two isolated business lines and verify separation."""
 
-    kernel = Kernel()
+    opc_os = OPCOS()
 
     # 1. Create two business lines
-    bl_a = kernel.create_business_line('course_business')
-    bl_b = kernel.create_business_line('website_business')
+    bl_a = opc_os.create_business_line('course_business')
+    bl_b = opc_os.create_business_line('website_business')
 
     print(f"Business A: {bl_a.name} ({bl_a.id})")
     print(f"Business B: {bl_b.name} ({bl_b.id})")
@@ -30,8 +30,8 @@ async def main() -> None:
     task_a = TaskSpec(description='发布新课程公告')
     task_b = TaskSpec(description='更新网站首页')
 
-    run_a = await kernel.run(run=bl_a.id, tasks=[task_a])
-    run_b = await kernel.run(run=bl_b.id, tasks=[task_b])
+    run_a = await opc_os.run(run=bl_a.id, tasks=[task_a])
+    run_b = await opc_os.run(run=bl_b.id, tasks=[task_b])
 
     # 3. Verify isolation - each run belongs to its business line
     print(f"\nRun A belongs to: {run_a.business_line_id}")

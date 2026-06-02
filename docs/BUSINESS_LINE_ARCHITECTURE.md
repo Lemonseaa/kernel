@@ -189,7 +189,7 @@ class ResourceLimits(BaseModel):
 
 ```python
 # 方式1：从模板创建
-bl = kernel.create_business_line(
+bl = opc_os.create_business_line(
     name="个人网站业务",
     template="website",  # 预设模板
     config=BusinessLineConfig(
@@ -198,14 +198,14 @@ bl = kernel.create_business_line(
 )
 
 # 方式2：从已有业务线克隆
-bl = kernel.create_business_line(
+bl = opc_os.create_business_line(
     name="网站业务v2",
     clone_from="business_line_id",  # 克隆配置
     config={...}
 )
 
 # 方式3：空白创建
-bl = kernel.create_business_line(
+bl = opc_os.create_business_line(
     name="新业务",
     template=None,  # 空白
 )
@@ -236,14 +236,14 @@ Shared层资源可跨BusinessLine使用：
 
 ```python
 # Shared层的Provider
-kernel.shared.providers  # 所有Provider
+opc_os.shared.providers  # 所有Provider
 
 # Shared层的Base Tools
-kernel.shared.tools  # 文件读写、Shell等基础工具
+opc_os.shared.tools  # 文件读写、Shell等基础工具
 
 # BusinessLine可引用Shared资源
-bl.add_tool(kernel.shared.tools["file_write"])
-bl.add_tool(kernel.shared.tools["http_request"])
+bl.add_tool(opc_os.shared.tools["file_write"])
+bl.add_tool(opc_os.shared.tools["http_request"])
 ```
 
 ---
@@ -309,7 +309,7 @@ template_website = BusinessLineTemplate(
 )
 
 # 使用模板创建
-bl = kernel.create_business_line(name="客户A的网站", template="website")
+bl = opc_os.create_business_line(name="客户A的网站", template="website")
 ```
 
 ---
@@ -505,7 +505,7 @@ BusinessLine A                    Hub                     BusinessLine B
 - 新增 BusinessLine 模型
 - 新增 BusinessLineRegistry
 - Agent/Context/Run 加 business_line_id
-- Kernel 加 create_business_line()
+- OPCOS 加 create_business_line()
 - BusinessLine 有独立的 Registry 和 Context
 ```
 
@@ -538,11 +538,11 @@ BusinessLine A                    Hub                     BusinessLine B
 
 ## 10. 核心接口
 
-### 10.1 Kernel层接口
+### 10.1 OPCOS层接口
 
 ```python
-class Kernel:
-    """OPC Kernel"""
+class OPCOS:
+    """OPC OPCOS"""
     
     # BusinessLine管理
     def create_business_line(

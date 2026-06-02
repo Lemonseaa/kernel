@@ -1,6 +1,6 @@
 # Examples
 
-实用示例，帮你快速上手 Kernel。
+实用示例，帮你快速上手 OPC-OS。
 
 ## 快速开始
 
@@ -11,7 +11,7 @@ python examples/quickstart.py
 ```
 
 学习内容：
-- 初始化 Kernel
+- 初始化 OPC-OS
 - 创建 BusinessLine
 - 运行 Task
 

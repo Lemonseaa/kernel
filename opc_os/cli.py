@@ -6,15 +6,15 @@ import asyncio
 import json
 from typing import cast
 
-from opc_os import Kernel
-from opc_os.config import KernelConfig
+from opc_os import OPCOS
+from opc_os.config import OPCOSConfig
 from opc_os.dryrun import DryRunValidator
 from opc_os.models import Run, TaskSpec
 from opc_os.notification import ConsoleNotificationChannel, NotificationMessage
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the kernel CLI."""
+    """Run the opc_os CLI."""
 
     parser = argparse.ArgumentParser(prog="opc-os")
     parser.add_argument("--db", default=None)
@@ -41,20 +41,20 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "status":
-        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
+        opc_os = OPCOS.from_env() if args.db is None else OPCOS(sqlite_path=args.db)
         status = {
-            "runs": len(kernel.store.list_runs()),
-            "business_lines": len(kernel.business_lines.list()),
-            "events": len(kernel.event_bus.events),
-            "alerts": len(kernel.alert_manager.alerts),
-            "health": kernel.health_checker.generate_diagnostic_report().overall_status,
+            "runs": len(opc_os.store.list_runs()),
+            "business_lines": len(opc_os.business_lines.list()),
+            "events": len(opc_os.event_bus.events),
+            "alerts": len(opc_os.alert_manager.alerts),
+            "health": opc_os.health_checker.generate_diagnostic_report().overall_status,
         }
         print(json.dumps(status, ensure_ascii=False))
         return 0
 
     if args.command == "run" and args.run_command == "list":
-        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
-        runs = kernel.store.list_runs()
+        opc_os = OPCOS.from_env() if args.db is None else OPCOS(sqlite_path=args.db)
+        runs = opc_os.store.list_runs()
         if not runs:
             print("No runs")
             return 0
@@ -66,8 +66,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "bl" and args.bl_command == "list":
-        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
-        business_lines = kernel.business_lines.list()
+        opc_os = OPCOS.from_env() if args.db is None else OPCOS(sqlite_path=args.db)
+        business_lines = opc_os.business_lines.list()
         if not business_lines:
             print("No business lines")
             return 0
@@ -76,13 +76,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "health":
-        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
-        print(json.dumps(kernel.health_checker.generate_diagnostic_report().to_dict(), ensure_ascii=False))
+        opc_os = OPCOS.from_env() if args.db is None else OPCOS(sqlite_path=args.db)
+        print(json.dumps(opc_os.health_checker.generate_diagnostic_report().to_dict(), ensure_ascii=False))
         return 0
 
     if args.command == "schedule" and args.schedule_command == "list":
-        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
-        jobs = kernel.scheduler.list_jobs()
+        opc_os = OPCOS.from_env() if args.db is None else OPCOS(sqlite_path=args.db)
+        jobs = opc_os.scheduler.list_jobs()
         if not jobs:
             print("No scheduled jobs")
             return 0
@@ -91,9 +91,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "notify":
-        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
-        kernel.notification_manager.register(ConsoleNotificationChannel())
-        kernel.notification_manager.notify(
+        opc_os = OPCOS.from_env() if args.db is None else OPCOS(sqlite_path=args.db)
+        opc_os.notification_manager.register(ConsoleNotificationChannel())
+        opc_os.notification_manager.notify(
             NotificationMessage(
                 title=args.title,
                 body=args.body,
@@ -109,8 +109,8 @@ def main(argv: list[str] | None = None) -> int:
         if not validation.valid:
             print(json.dumps({"dry_run": True, "valid": False, "errors": validation.errors}, ensure_ascii=False))
             return 1
-        kernel = Kernel(sqlite_path=args.db, config=KernelConfig(dry_run=True))
-        dryrun_result = cast(Run, asyncio.run(kernel.run("dryrun preview", [spec])))
+        opc_os = OPCOS(sqlite_path=args.db, config=OPCOSConfig(dry_run=True))
+        dryrun_result = cast(Run, asyncio.run(opc_os.run("dryrun preview", [spec])))
         print(
             json.dumps(
                 {

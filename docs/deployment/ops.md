@@ -5,10 +5,10 @@
 ```bash
 docker-compose ps
 docker-compose logs opc-os
-docker-compose exec opc-os ./kernel-cli status
-docker-compose exec opc-os ./kernel-cli health
-docker-compose exec opc-os ./kernel-cli run list
-docker-compose exec opc-os ./kernel-cli bl list
+docker-compose exec opc-os ./opc-os status
+docker-compose exec opc-os ./opc-os health
+docker-compose exec opc-os ./opc-os run list
+docker-compose exec opc-os ./opc-os bl list
 ```
 
 ## Restart
@@ -17,7 +17,7 @@ docker-compose exec opc-os ./kernel-cli bl list
 docker-compose restart opc-os
 ```
 
-SQLite state is stored in the `kernel-data` volume, so a normal restart does not remove state.
+SQLite state is stored in the `opc-os-data` volume, so a normal restart does not remove state.
 
 ## Backup SQLite
 
@@ -26,8 +26,8 @@ docker-compose exec opc-os python - <<'PY'
 from pathlib import Path
 import shutil
 
-src = Path('/app/data/kernel.db')
-dst = Path('/app/data/kernel.backup.db')
+src = Path('/app/data/opc_os.db')
+dst = Path('/app/data/opc_os.backup.db')
 if src.exists():
     shutil.copy2(src, dst)
     print(dst)
@@ -48,7 +48,7 @@ docker-compose logs opc-os
 
 Common causes:
 
-- Invalid numeric env value such as `KERNEL_MAX_CONCURRENCY=abc`.
+- Invalid numeric env value such as `OPC_OS_MAX_CONCURRENCY=abc`.
 - SQLite path points to an unwritable directory.
 - Image was built from stale files. Rebuild with `docker-compose build --no-cache`.
 
@@ -67,7 +67,7 @@ The script prints the failed run state when the lightweight workflow cannot comp
 Check:
 
 ```bash
-docker-compose exec opc-os env | grep KERNEL_
+docker-compose exec opc-os env | grep OPC_OS_
 ```
 
 Environment variables override `.env`. If a shell export exists, it can override the value you expect

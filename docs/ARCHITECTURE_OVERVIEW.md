@@ -312,7 +312,7 @@ class BaseAgent(ABC):
         pass
 
 # 注册插件
-kernel.plugins.register_agent(MyCustomAgent)
+opc_os.plugins.register_agent(MyCustomAgent)
 ```
 
 ### 4.3 Tool插件
@@ -361,7 +361,7 @@ class CustomProvider(LLMProvider):
         pass
 
 # 注册
-kernel.providers.register("custom", CustomProvider(api_key="..."))
+opc_os.providers.register("custom", CustomProvider(api_key="..."))
 ```
 
 ### 4.5 Evaluation插件
@@ -387,7 +387,7 @@ class SEOEvaluator(BaseEvaluator):
     name = "seo_quality"
 
 # 注册
-kernel.evaluation.register(MyCustomEvaluator)
+opc_os.evaluation.register(MyCustomEvaluator)
 ```
 
 ### 4.6 Policy插件
@@ -601,19 +601,19 @@ TEMPLATES = {
 
 ```python
 # 从模板创建
-bl = kernel.create_business_line(
+bl = opc_os.create_business_line(
     name="客户A的网站",
     template="website"
 )
 
 # 从空白创建
-bl = kernel.create_business_line(
+bl = opc_os.create_business_line(
     name="新业务",
     template="blank"
 )
 
 # 克隆已有业务线
-bl = kernel.create_business_line(
+bl = opc_os.create_business_line(
     name="基于A业务的B业务",
     clone_from=bl_a.id
 )
