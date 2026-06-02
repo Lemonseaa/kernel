@@ -81,6 +81,28 @@ class ExperimentLedger:
             "metrics": metrics,
         }
 
+    def set_baseline(self, experiment_id: str) -> str:
+        """将实验结果设为新基线。"""
+
+        experiment = self.get(experiment_id)
+        if experiment is None:
+            raise KeyError(f"Experiment not found: {experiment_id}")
+        from checkpoint_ai.experiment.baseline import BaselineManager
+
+        return BaselineManager(self._storage_path()).create(
+            experiment.after_metrics,
+            name=f"baseline-from-{experiment_id[:8]}",
+            business_line_id=experiment.business_line_id,
+            experiment_id=experiment_id,
+        )
+
+    def compare_to_baseline(self, experiment_id: str) -> Any:
+        """与当前基线对比。"""
+
+        from checkpoint_ai.experiment.compare import SimpleComparer
+
+        return SimpleComparer(self._storage_path()).compare(experiment_id)
+
     def generate_summary(self, id: str) -> str:
         """生成实验摘要，回答7个问题。"""
 
@@ -136,3 +158,9 @@ class ExperimentLedger:
         if any(delta < 0 for delta in numeric_deltas):
             return "否"
         return "没有变化"
+
+    def _storage_path(self) -> Path:
+        path = getattr(self.storage, "path", None)
+        if path is None:
+            raise RuntimeError("ExperimentLedger baseline operations require SQLite storage")
+        return Path(path)

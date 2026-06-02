@@ -9,7 +9,12 @@ from typing import cast
 from checkpoint_ai import CheckpointAI
 from checkpoint_ai.config import CheckpointAIConfig
 from checkpoint_ai.dryrun import DryRunValidator
-from checkpoint_ai.experiment.cli import handle_experiment_command, register_experiment_parser
+from checkpoint_ai.experiment.cli import (
+    handle_baseline_command,
+    handle_experiment_command,
+    register_baseline_parser,
+    register_experiment_parser,
+)
 from checkpoint_ai.models import Run, TaskSpec
 from checkpoint_ai.notification import ConsoleNotificationChannel, NotificationMessage
 
@@ -40,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     dryrun_parser = subparsers.add_parser("dryrun")
     dryrun_parser.add_argument("--task", required=True)
     register_experiment_parser(subparsers)
+    register_baseline_parser(subparsers)
     args = parser.parse_args(argv)
 
     if args.command == "status":
@@ -133,6 +139,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "experiment":
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
         return handle_experiment_command(args, db_path)
+
+    if args.command == "baseline":
+        db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
+        return handle_baseline_command(args, db_path)
 
     parser.print_help()
     return 0
