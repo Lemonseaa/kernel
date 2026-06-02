@@ -20,6 +20,7 @@ from checkpoint_ai.diagnostics import HealthChecker
 from checkpoint_ai.dryrun import DryRunContext, DryRunProvider
 from checkpoint_ai.evaluation import EvaluationGate, EvaluationRunner
 from checkpoint_ai.events import AuditLogger, Event, EventBus, EventType
+from checkpoint_ai.experiment import ExperimentLedger
 from checkpoint_ai.ha import HAManager, SQLiteHAStateStore
 from checkpoint_ai.llm import ProviderRegistry
 from checkpoint_ai.memory import ContextManager, PersistentMemory, WorkingMemory
@@ -83,6 +84,7 @@ class CheckpointAI:
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(active_sqlite_path)
+        self.experiments = ExperimentLedger(active_sqlite_path)
         self.health_checker = HealthChecker(checkpoint_ai=self)
         self.business_lines = BusinessLineRegistry(self.store)
         self.ha_manager = (
