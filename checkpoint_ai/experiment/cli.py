@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from checkpoint_ai.experiment.feedback import Feedback, FeedbackCollector, FeedbackSource
 from checkpoint_ai.experiment.ledger import ExperimentLedger
 from checkpoint_ai.experiment.models import Experiment, ExperimentStatus
 
@@ -22,6 +23,17 @@ def register_experiment_parser(subparsers: argparse._SubParsersAction[argparse.A
     compare_parser = experiment_subparsers.add_parser("compare")
     compare_parser.add_argument("id1")
     compare_parser.add_argument("id2")
+    feedback_parser = experiment_subparsers.add_parser("feedback")
+    feedback_subparsers = feedback_parser.add_subparsers(dest="feedback_command")
+    feedback_add_parser = feedback_subparsers.add_parser("add")
+    feedback_add_parser.add_argument("id")
+    feedback_add_parser.add_argument("--source", choices=[source.value for source in FeedbackSource], required=True)
+    feedback_add_parser.add_argument("--type", required=True)
+    feedback_add_parser.add_argument("--value", type=float, required=True)
+    feedback_list_parser = feedback_subparsers.add_parser("list")
+    feedback_list_parser.add_argument("id")
+    result_parser = experiment_subparsers.add_parser("result")
+    result_parser.add_argument("id")
 
 
 def handle_experiment_command(args: argparse.Namespace, db_path: str | Path) -> int:
@@ -38,6 +50,12 @@ def handle_experiment_command(args: argparse.Namespace, db_path: str | Path) -> 
         return 0
     if command == "compare":
         print(json.dumps(ledger.compare(args.id1, args.id2), ensure_ascii=False, indent=2))
+        return 0
+    if command == "feedback":
+        return _feedback(args, db_path)
+    if command == "result":
+        result = FeedbackCollector(db_path).apply_to_experiment(args.id)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0
     return 1
 
@@ -85,3 +103,30 @@ def _list(ledger: ExperimentLedger) -> int:
             f"{experiment.business_line_id or 'default'}\t{experiment.action}"
         )
     return 0
+
+
+def _feedback(args: argparse.Namespace, db_path: str | Path) -> int:
+    collector = FeedbackCollector(db_path)
+    feedback_command = getattr(args, "feedback_command", None)
+    if feedback_command == "add":
+        feedback = Feedback(
+            experiment_id=args.id,
+            source=FeedbackSource(args.source),
+            signal_type=args.type,
+            value=args.value,
+        )
+        feedback_id = collector.add(feedback)
+        print(f"Feedback ID: {feedback_id}")
+        return 0
+    if feedback_command == "list":
+        feedback_items = collector.list(experiment_id=args.id)
+        if not feedback_items:
+            print("No feedback")
+            return 0
+        for feedback in feedback_items:
+            print(
+                f"{feedback.id}\t{feedback.source.value}\t"
+                f"{feedback.signal_type}\t{feedback.value}\t{feedback.timestamp.isoformat()}"
+            )
+        return 0
+    return 1
