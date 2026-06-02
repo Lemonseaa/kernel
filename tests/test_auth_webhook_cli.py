@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import json
 import subprocess
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,7 +11,6 @@ from kernel import Kernel
 from kernel.api import create_app
 from kernel.auth import APIKeyManager, BearerTokenAuth
 from kernel.events import EventBus, EventType
-from kernel.models import TaskSpec
 from kernel.webhook import WebhookHandler, WebhookReceiver, WebhookSender
 
 

@@ -160,17 +160,17 @@ class CostTracker:
             if (provider is None or key[1] == provider)
             and (business_line_id is None or key[0] == business_line_id)
         ]
-        for key in keys_to_delete:
-            self._counters.pop(key, None)
-        daily_keys_to_delete = [
+        for counter_key in keys_to_delete:
+            self._counters.pop(counter_key, None)
+        daily_keys_to_delete: list[tuple[str, str, str]] = [
             key
             for key in self._daily_counters
             if (provider is None or key[2] == provider)
             and (business_line_id is None or key[1] == business_line_id)
         ]
-        for key in daily_keys_to_delete:
-            self._daily_counters.pop(key, None)
-            self._warning_days.discard(key)
+        for daily_key_to_delete in daily_keys_to_delete:
+            self._daily_counters.pop(daily_key_to_delete, None)
+            self._warning_days.discard(daily_key_to_delete)
 
     def get_daily_cost(
         self,

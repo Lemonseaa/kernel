@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, overload
+from typing import Any, Callable, Coroutine, overload
 
 from kernel.alerts import AlertManager
 from kernel.businessline import BusinessLine, BusinessLineConfig, BusinessLineRegistry, BusinessLineStatus
@@ -258,10 +258,10 @@ class Kernel:
         """Execute an existing run synchronously."""
 
     @overload
-    def run(self, run: str, tasks: list[TaskSpec]) -> object:
+    def run(self, run: str, tasks: list[TaskSpec]) -> Coroutine[Any, Any, Run]:
         """Create and execute a run asynchronously."""
 
-    def run(self, run: Run | str, tasks: list[TaskSpec] | None = None) -> Run | object:
+    def run(self, run: Run | str, tasks: list[TaskSpec] | None = None) -> Run | Coroutine[Any, Any, Run]:
         """Execute an existing Run, or return a coroutine for TaskSpec execution."""
 
         if isinstance(run, Run):
@@ -370,7 +370,7 @@ class Kernel:
         """Run due scheduled jobs."""
 
         async def run_job(job: Job) -> None:
-            await self.run(job.user_request or job.name, job.task_specs)
+            await self._run_from_specs(job.user_request or job.name, job.task_specs)
 
         count = 0
         for job in self.scheduler.due_jobs():

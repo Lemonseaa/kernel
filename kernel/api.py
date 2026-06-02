@@ -32,7 +32,7 @@ def create_app(
     active_kernel = kernel or Kernel()
     active_auth = BearerTokenAuth(auth_manager or APIKeyManager())
     try:
-        from fastapi import Depends, FastAPI, Header, HTTPException
+        from fastapi import Depends, FastAPI, Header, HTTPException  # type: ignore[import-not-found]
     except ImportError:
         return FallbackApp(
             kernel=active_kernel,

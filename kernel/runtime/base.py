@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 from kernel.llm import LLMProvider, LLMRequest
 from kernel.memory import ContextManager
@@ -51,7 +52,7 @@ class LLMAgent(BaseAgent):
         self,
         provider: LLMProvider,
         memory: ContextManager | None = None,
-        transport: object | None = None,
+        transport: Callable[[LLMRequest], str] | None = None,
     ) -> None:
         """Create an LLM-backed agent."""
 

@@ -6,7 +6,7 @@ from kernel.control import HumanApprovalGate, PolicyEngine
 from kernel.evaluation import EvaluationGate
 from kernel.events import EventBus, EventType
 from kernel.memory import ContextManager
-from kernel.models import Run, Task, TaskState
+from kernel.models import Run, TaskState
 from kernel.runtime import AgentRegistry
 from kernel.workflow.executor import TaskExecutor
 from kernel.workflow.task_queue import TaskQueue

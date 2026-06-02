@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import List, cast
+
 from kernel.models import Agent
 from kernel.runtime.base import BaseAgent
 
@@ -55,7 +57,7 @@ class AgentRegistry:
             return None
         return agent
 
-    def find_by_capability(self, capability: str, business_line_id: str | None = None) -> list[Agent]:
+    def find_by_capability(self, capability: str, business_line_id: str | None = None) -> List[Agent]:
         """Find all registered agents that expose a capability."""
 
         return [
@@ -71,4 +73,4 @@ class AgentRegistry:
         agent_class = self._agent_classes.get(capability)
         if agent_class is None:
             return None
-        return agent_class()
+        return cast(BaseAgent, agent_class())

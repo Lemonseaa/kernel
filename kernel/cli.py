@@ -5,11 +5,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+from typing import cast
 
 from kernel import Kernel
 from kernel.config import KernelConfig
 from kernel.dryrun import DryRunValidator
-from kernel.models import TaskSpec
+from kernel.models import Run, TaskSpec
 from kernel.notification import ConsoleNotificationChannel, NotificationMessage
 
 
@@ -58,8 +59,11 @@ def main(argv: list[str] | None = None) -> int:
         if not runs:
             print("No runs")
             return 0
-        for run in runs:
-            print(f"{run['id']}\t{run['state']}\t{run['business_line_id']}\t{run['user_request']}")
+        for run_row in runs:
+            print(
+                f"{run_row['id']}\t{run_row['state']}\t"
+                f"{run_row['business_line_id']}\t{run_row['user_request']}"
+            )
         return 0
 
     if args.command == "bl" and args.bl_command == "list":
@@ -107,14 +111,17 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"dry_run": True, "valid": False, "errors": validation.errors}, ensure_ascii=False))
             return 1
         kernel = Kernel(sqlite_path=args.db, config=KernelConfig(dry_run=True))
-        run = asyncio.run(kernel.run("dryrun preview", [spec]))
+        dryrun_result = cast(Run, asyncio.run(kernel.run("dryrun preview", [spec])))
         print(
             json.dumps(
                 {
                     "dry_run": True,
-                    "run_id": run.id,
-                    "state": run.state.value,
-                    "tasks": [{"id": task.id, "state": task.state.value, "result": task.result} for task in run.tasks],
+                    "run_id": dryrun_result.id,
+                    "state": dryrun_result.state.value,
+                    "tasks": [
+                        {"id": task.id, "state": task.state.value, "result": task.result}
+                        for task in dryrun_result.tasks
+                    ],
                     "warnings": validation.warnings,
                 },
                 ensure_ascii=False,

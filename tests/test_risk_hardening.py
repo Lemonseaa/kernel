@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import tempfile
 import time
 import unittest
@@ -10,7 +9,7 @@ from pathlib import Path
 
 from kernel import Kernel
 from kernel.llm import LLMProvider, LLMRequest
-from kernel.models import Run, Task, TaskState
+from kernel.models import Task, TaskState
 from kernel.runtime import LLMAgent
 from kernel.tools import ToolPermission, ToolRegistry
 

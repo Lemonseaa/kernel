@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from kernel.llm.provider import LLMProvider, LLMRequest
 
 
@@ -10,14 +12,24 @@ class MiniMaxProvider(LLMProvider):
 
     name = "minimax"
 
-    def __init__(self, api_key: str = "", model: str = "MiniMax-M2.7-highspeed", **kwargs: object) -> None:
+    def __init__(
+        self,
+        api_key: str = "",
+        model: str = "MiniMax-M2.7-highspeed",
+        base_url: str = "https://api.minimax.chat/v1",
+        transport: Callable[[LLMRequest], str] | None = None,
+        timeout_seconds: float | None = None,
+        max_retries: int = 0,
+    ) -> None:
         """Create a MiniMax provider."""
 
         super().__init__(
             api_key=api_key,
             model=model,
-            base_url=str(kwargs.pop("base_url", "https://api.minimax.chat/v1")),
-            **kwargs,
+            base_url=base_url,
+            transport=transport,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
         )
 
     def _fallback_output(self, request: LLMRequest) -> str:
@@ -31,14 +43,24 @@ class OpenAIProvider(LLMProvider):
 
     name = "openai"
 
-    def __init__(self, api_key: str = "", model: str = "gpt-4.1-mini", **kwargs: object) -> None:
+    def __init__(
+        self,
+        api_key: str = "",
+        model: str = "gpt-4.1-mini",
+        base_url: str = "https://api.openai.com/v1",
+        transport: Callable[[LLMRequest], str] | None = None,
+        timeout_seconds: float | None = None,
+        max_retries: int = 0,
+    ) -> None:
         """Create an OpenAI provider."""
 
         super().__init__(
             api_key=api_key,
             model=model,
-            base_url=str(kwargs.pop("base_url", "https://api.openai.com/v1")),
-            **kwargs,
+            base_url=base_url,
+            transport=transport,
+            timeout_seconds=timeout_seconds,
+            max_retries=max_retries,
         )
 
     def _fallback_output(self, request: LLMRequest) -> str:

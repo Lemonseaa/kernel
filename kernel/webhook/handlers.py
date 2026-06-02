@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from typing import Any
 
+from kernel.models import Run
 from kernel.models import TaskSpec
 
 if TYPE_CHECKING:
@@ -35,16 +36,19 @@ class WebhookHandler:
         """Create and execute a workflow from a webhook payload."""
 
         description = str(payload.get("description", "webhook workflow"))
-        task_specs = [
+        raw_tasks = payload.get("tasks", [])
+        if not isinstance(raw_tasks, list):
+            raw_tasks = []
+        task_specs: list[TaskSpec] = [
             TaskSpec(
                 description=str(item.get("description", "webhook task")),
                 capability=str(item.get("capability", "simple.execute")),
                 input=item.get("input"),
             )
-            for item in payload.get("tasks", [])
+            for item in raw_tasks
             if isinstance(item, dict)
         ]
         if not task_specs:
             task_specs = [TaskSpec(description=description)]
-        run = asyncio.run(self.kernel.run(description, task_specs))
+        run = cast(Run, asyncio.run(self.kernel.run(description, task_specs)))
         return {"status": "accepted", "run_id": run.id, "state": run.state.value}

@@ -39,14 +39,17 @@ class TaskExecutor:
             task.output_artifact_id = artifact.id
             task.result = artifact.content
             if self._requires_evaluation(task):
-                passed, results = self.evaluation_gate.check(
+                gate = self.evaluation_gate
+                if gate is None:
+                    raise RuntimeError("Evaluation gate is required but not configured.")
+                passed, results = gate.check(
                     self._content_for_evaluation(artifact.content),
                     platform=str(task.metadata.get("evaluation_platform", "public")),
                     min_score=float(task.metadata.get("min_score", 70.0)),
                 )
                 task.metadata["evaluation"] = [asdict(result) for result in results]
                 if not passed:
-                    suggestions = self.evaluation_gate.get_suggestions(results)
+                    suggestions = gate.get_suggestions(results)
                     task.result = {
                         "output": artifact.content,
                         "evaluation_failed": True,
