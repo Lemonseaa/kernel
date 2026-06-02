@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
-from kernel.models import Task, TaskSpec
-from kernel.persistence import SQLiteStore
-from kernel.runtime import LLMAgent
+from opc_os.memory import ContextManager, PersistentMemory, WorkingMemory
+from opc_os.models import Task, TaskSpec
+from opc_os.persistence import SQLiteStore
+from opc_os.runtime import LLMAgent
 
 
 class MemoryContextTest(unittest.TestCase):

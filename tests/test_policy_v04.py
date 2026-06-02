@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from kernel.control import PolicyDecision, PolicyEngine, PolicyRule, PolicyScope
+from opc_os.control import PolicyDecision, PolicyEngine, PolicyRule, PolicyScope
 
 
 class PolicyV04Test(unittest.TestCase):

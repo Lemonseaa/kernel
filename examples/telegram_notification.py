@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from kernel.notification import NotificationManager, NotificationMessage, WebhookNotificationChannel
+from opc_os.notification import NotificationManager, NotificationMessage, WebhookNotificationChannel
 
 
 def main() -> None:

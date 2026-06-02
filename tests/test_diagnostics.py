@@ -7,9 +7,9 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.diagnostics import HealthChecker
-from kernel.llm import LLMRequest, MiniMaxProvider
-from kernel.models import RunState
+from opc_os.diagnostics import HealthChecker
+from opc_os.llm import LLMRequest, MiniMaxProvider
+from opc_os.models import RunState
 
 
 class FailingProvider(MiniMaxProvider):

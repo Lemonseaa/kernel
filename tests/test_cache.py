@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from kernel.cache import LLMResponseCache
-from kernel.llm import LLMRequest, LLMResponse, MiniMaxProvider
+from opc_os.cache import LLMResponseCache
+from opc_os.llm import LLMRequest, LLMResponse, MiniMaxProvider
 
 
 class ResponseCacheTest(unittest.TestCase):

@@ -6,10 +6,10 @@ import io
 import unittest
 from contextlib import redirect_stdout
 
-from kernel.cli import main
-from kernel.control import HumanApprovalGate, PolicyEngine
-from kernel.models import Task
-from kernel.notification import (
+from opc_os.cli import main
+from opc_os.control import HumanApprovalGate, PolicyEngine
+from opc_os.models import Task
+from opc_os.notification import (
     NotificationChannel,
     NotificationDelivery,
     NotificationManager,

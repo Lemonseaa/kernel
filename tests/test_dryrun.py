@@ -10,12 +10,12 @@ from contextlib import redirect_stdout
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.cli import main
-from kernel.config import KernelConfig
-from kernel.dryrun import DryRunProvider, DryRunValidator
-from kernel.llm import LLMRequest
-from kernel.models import TaskSpec
-from kernel.tools import FileWriteTool, ToolPermission, ToolRegistry
+from opc_os.cli import main
+from opc_os.config import KernelConfig
+from opc_os.dryrun import DryRunProvider, DryRunValidator
+from opc_os.llm import LLMRequest
+from opc_os.models import TaskSpec
+from opc_os.tools import FileWriteTool, ToolPermission, ToolRegistry
 
 
 class DryRunTest(unittest.TestCase):

@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from kernel.config import KernelConfig
-from kernel.ha import HAManager, HAStateStore, SQLiteHAStateStore
+from opc_os.config import KernelConfig
+from opc_os.ha import HAManager, HAStateStore, SQLiteHAStateStore
 
 
 def _without_kernel_env() -> dict[str, str]:

@@ -6,9 +6,9 @@ import threading
 import time
 import unittest
 
-from kernel.models import Artifact, Run, Task, TaskState
-from kernel.runtime import AgentRegistry, BaseAgent
-from kernel.workflow import WorkflowEngine
+from opc_os.models import Artifact, Run, Task, TaskState
+from opc_os.runtime import AgentRegistry, BaseAgent
+from opc_os.workflow import WorkflowEngine
 
 
 class SleepAgent(BaseAgent):

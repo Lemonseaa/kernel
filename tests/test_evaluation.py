@@ -8,9 +8,9 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.evaluation import EvaluationGate, EvaluationRunner, ReadabilityEvaluator
-from kernel.models import Artifact, Task, TaskSpec, TaskState
-from kernel.runtime import BaseAgent
+from opc_os.evaluation import EvaluationGate, EvaluationRunner, ReadabilityEvaluator
+from opc_os.models import Artifact, Task, TaskSpec, TaskState
+from opc_os.runtime import BaseAgent
 
 
 class DraftAgent(BaseAgent):

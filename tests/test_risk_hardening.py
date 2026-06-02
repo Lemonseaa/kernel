@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.llm import LLMProvider, LLMRequest
-from kernel.models import Task, TaskState
-from kernel.runtime import LLMAgent
-from kernel.tools import ToolPermission, ToolRegistry
+from opc_os.llm import LLMProvider, LLMRequest
+from opc_os.models import Task, TaskState
+from opc_os.runtime import LLMAgent
+from opc_os.tools import ToolPermission, ToolRegistry
 
 
 class RiskHardeningTest(unittest.TestCase):

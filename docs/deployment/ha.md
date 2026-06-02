@@ -10,13 +10,13 @@ V1.0 adds lease-based high availability primitives and a multi-instance Docker C
 - A backup instance can acquire primary when the current primary lease expires.
 - Docker Compose includes a secondary instance and an optional Nginx load balancer profile.
 
-This is an MVP HA model for OPC Kernel operations. It is not a cross-region HA system.
+This is an MVP HA model for OPC-OS operations. It is not a cross-region HA system.
 
 ## Configuration
 
 ```bash
 KERNEL_HA_ENABLED=true
-KERNEL_INSTANCE_ID=kernel-primary
+KERNEL_INSTANCE_ID=opc-os-primary
 KERNEL_HA_LEASE_TTL_SECONDS=30
 KERNEL_HA_HEARTBEAT_SECONDS=10
 ```
@@ -30,9 +30,9 @@ docker-compose ps
 
 Services:
 
-- `kernel`: primary candidate.
-- `kernel-secondary`: backup candidate.
-- `kernel-lb`: optional Nginx load balancer on port `8080`.
+- `opc-os`: primary candidate.
+- `opc-os-secondary`: backup candidate.
+- `opc-os-lb`: optional Nginx load balancer on port `8080`.
 
 ## Failover Behavior
 

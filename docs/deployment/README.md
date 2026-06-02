@@ -1,17 +1,16 @@
-# Kernel Deployment
+# OPC-OS Deployment
 
-V0.9 focuses on a small production-friendly deployment path: copy `.env.example`, start Docker
-Compose, and verify health.
+V1.0 production-ready deployment with Docker.
 
 ## 5-Minute Start
 
 ```bash
-cd <your-path>/kernel
+cd <your-path>/OPC-OS
 cp .env.example .env
 docker-compose build
 docker-compose up -d
 docker-compose ps
-docker-compose logs kernel
+docker-compose logs opc-os
 ```
 
 The default service uses SQLite at `/app/data/kernel.db` inside the container and persists it through
@@ -19,21 +18,18 @@ the `kernel-data` Docker volume.
 
 ## What Runs
 
-- `kernel`: long-lived Kernel process with health checks.
+- `opc-os`: long-lived OPC-OS process with health checks.
 - `redis`: optional service enabled with `docker-compose --profile redis up -d`.
-
-V0.9 does not implement HA failover. Redis is included only as an optional deployment building block
-for later versions.
 
 ## Verify
 
 ```bash
 docker-compose ps
-docker-compose exec kernel python -m unittest discover -s tests -v
-docker-compose exec kernel python scripts/health_check.py
+docker-compose exec opc-os python -m unittest discover -s tests -v
+docker-compose exec opc-os python scripts/health_check.py
 ```
 
-Use `docker-compose logs kernel` when health is not green.
+Use `docker-compose logs opc-os` when health is not green.
 
 ## Files
 

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import unittest
 
-from kernel.control import HumanApprovalGate, PolicyDecision, PolicyEngine
-from kernel.events import EventBus, EventType
-from kernel.models import Artifact, Run, Task, TaskState
-from kernel.runtime import AgentRegistry, BaseAgent
-from kernel.tools import EchoTool, ToolPermission, ToolRegistry
-from kernel.workflow import TaskExecutor, WorkflowEngine
+from opc_os.control import HumanApprovalGate, PolicyDecision, PolicyEngine
+from opc_os.events import EventBus, EventType
+from opc_os.models import Artifact, Run, Task, TaskState
+from opc_os.runtime import AgentRegistry, BaseAgent
+from opc_os.tools import EchoTool, ToolPermission, ToolRegistry
+from opc_os.workflow import TaskExecutor, WorkflowEngine
 
 
 class EchoAgent(BaseAgent):

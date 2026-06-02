@@ -3,7 +3,7 @@
 ## Build
 
 ```bash
-cd <your-path>/kernel
+cd <your-path>/OPC-OS
 docker-compose build
 ```
 
@@ -36,16 +36,16 @@ That script executes a small in-process workflow and exits non-zero if the run f
 docker-compose --profile redis up -d
 ```
 
-Redis is optional in V0.9. It is not required for SQLite-backed local deployment.
+Redis is optional in V1.0. It is not required for SQLite-backed local deployment.
 
 ## Run Tests In Container
 
 ```bash
-docker-compose exec kernel python -m unittest discover -s tests -v
+docker-compose exec opc-os python -m unittest discover -s tests -v
 ```
 
 If `exec` fails because the container is unhealthy, inspect logs first:
 
 ```bash
-docker-compose logs kernel
+docker-compose logs opc-os
 ```

@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from kernel.events import AuditLogger, Event, EventType
-from kernel.observability import MetricsCollector
+from opc_os.events import AuditLogger, Event, EventType
+from opc_os.observability import MetricsCollector
 
 
 class ObservabilityTest(unittest.TestCase):

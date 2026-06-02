@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from kernel import Kernel  # noqa: E402
-from kernel.models import TaskSpec  # noqa: E402
+from opc_os.models import TaskSpec  # noqa: E402
 
 
 async def _run_workflow(kernel: Kernel, index: int) -> str:

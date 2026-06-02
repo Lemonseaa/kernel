@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import date
 import unittest
 
-from kernel.events import EventBus
-from kernel.control import HumanApprovalGate
-from kernel.observability import CostTracker
+from opc_os.events import EventBus
+from opc_os.control import HumanApprovalGate
+from opc_os.observability import CostTracker
 
 
 class CostTrackingTest(unittest.TestCase):

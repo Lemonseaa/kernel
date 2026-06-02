@@ -4,17 +4,17 @@
 
 ```bash
 docker-compose ps
-docker-compose logs kernel
-docker-compose exec kernel ./kernel-cli status
-docker-compose exec kernel ./kernel-cli health
-docker-compose exec kernel ./kernel-cli run list
-docker-compose exec kernel ./kernel-cli bl list
+docker-compose logs opc-os
+docker-compose exec opc-os ./kernel-cli status
+docker-compose exec opc-os ./kernel-cli health
+docker-compose exec opc-os ./kernel-cli run list
+docker-compose exec opc-os ./kernel-cli bl list
 ```
 
 ## Restart
 
 ```bash
-docker-compose restart kernel
+docker-compose restart opc-os
 ```
 
 SQLite state is stored in the `kernel-data` volume, so a normal restart does not remove state.
@@ -22,7 +22,7 @@ SQLite state is stored in the `kernel-data` volume, so a normal restart does not
 ## Backup SQLite
 
 ```bash
-docker-compose exec kernel python - <<'PY'
+docker-compose exec opc-os python - <<'PY'
 from pathlib import Path
 import shutil
 
@@ -43,7 +43,7 @@ PY
 Run:
 
 ```bash
-docker-compose logs kernel
+docker-compose logs opc-os
 ```
 
 Common causes:
@@ -57,7 +57,7 @@ Common causes:
 Run:
 
 ```bash
-docker-compose exec kernel python scripts/health_check.py
+docker-compose exec opc-os python scripts/health_check.py
 ```
 
 The script prints the failed run state when the lightweight workflow cannot complete.
@@ -67,7 +67,7 @@ The script prints the failed run state when the lightweight workflow cannot comp
 Check:
 
 ```bash
-docker-compose exec kernel env | grep KERNEL_
+docker-compose exec opc-os env | grep KERNEL_
 ```
 
 Environment variables override `.env`. If a shell export exists, it can override the value you expect

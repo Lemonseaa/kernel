@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.templates import BusinessLineTemplate, TemplateRegistry
+from opc_os.templates import BusinessLineTemplate, TemplateRegistry
 
 
 class TemplateTest(unittest.TestCase):

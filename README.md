@@ -1,11 +1,13 @@
-# Kernel
+# OPC-OS
 
-[![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen)](https://github.com/Lemonseaa/kernel)
+[![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen)](https://github.com/Lemonseaa/OPC-OS)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Agent Workflow Kernel — 构建通用多Agent操作系统的核心运行时。
+OPC Operating System — 多Agent操作系统的核心运行时。
+
+OPC-OS is an Agent Workflow Kernel for building a general multi-agent operating system.
 
 ## 核心特性
 
@@ -53,7 +55,7 @@ docker compose ps
 系统入口，管理所有组件。
 
 ```python
-from kernel import Kernel
+from opc_os import Kernel
 
 k = Kernel()
 bl = k.create_business_line('my_business', template='content')
@@ -264,4 +266,4 @@ MIT License — 详见 [LICENSE](LICENSE)
 
 ## GitHub
 
-https://github.com/Lemonseaa/kernel
+https://github.com/Lemonseaa/OPC-OS

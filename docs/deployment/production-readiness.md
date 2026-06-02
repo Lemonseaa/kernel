@@ -6,9 +6,9 @@ security audit.
 ## Final Validation Commands
 
 ```bash
-python -m ruff check kernel tests scripts
-python -m mypy kernel --show-error-codes --no-incremental
-python -m compileall -q kernel tests scripts
+python -m ruff check opc_os tests scripts
+python -m mypy opc_os --show-error-codes --no-incremental
+python -m compileall -q opc_os tests scripts
 python -m unittest discover -s tests -v
 python scripts/benchmark.py --runs 20
 python scripts/stress_test.py --runs 50 --concurrency 5

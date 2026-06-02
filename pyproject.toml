@@ -1,7 +1,7 @@
 [project]
-name = "kernel"
+name = "opc-os"
 version = "1.0.0"
-description = "Agent Workflow Kernel for a general multi-agent operating system."
+description = "OPC Operating System - Agent Workflow Kernel for building a general multi-agent operating system."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -46,7 +46,7 @@ all = [
 ]
 
 [project.scripts]
-kernel-cli = "kernel.cli:main"
+kernel-cli = "opc_os.cli:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,8 +1,8 @@
 services:
-  kernel:
+  opc-os:
     build:
       context: .
-    container_name: opc-kernel
+    container_name: opc-os
     environment:
       KERNEL_DB_PATH: ${KERNEL_DB_PATH:-/app/data/kernel.db}
       KERNEL_DEFAULT_PROVIDER: ${KERNEL_DEFAULT_PROVIDER:-minimax}
@@ -37,10 +37,10 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  kernel-secondary:
+  opc-os-secondary:
     build:
       context: .
-    container_name: opc-kernel-secondary
+    container_name: opc-os-secondary
     profiles: ["ha"]
     environment:
       KERNEL_DB_PATH: ${KERNEL_DB_PATH:-/app/data/kernel.db}
@@ -76,17 +76,17 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  kernel-lb:
+  opc-os-lb:
     image: nginx:1.27-alpine
-    container_name: opc-kernel-lb
+    container_name: opc-os-lb
     profiles: ["ha"]
     ports:
       - "${KERNEL_LB_PORT:-8080}:8080"
     volumes:
       - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - kernel
-      - kernel-secondary
+      - opc-os
+      - opc-os-secondary
     restart: unless-stopped
 
   redis:

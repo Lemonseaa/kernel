@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
-COPY kernel ./kernel
+COPY opc_os ./opc_os
 COPY scripts ./scripts
 COPY tests ./tests
 COPY kernel-cli ./kernel-cli

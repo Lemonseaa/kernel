@@ -10,8 +10,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from kernel import Kernel
-from kernel.observability.cost_tracker import CostTracker
+from opc_os import Kernel
+from opc_os.observability.cost_tracker import CostTracker
 
 
 async def main() -> None:

@@ -5,11 +5,11 @@ from __future__ import annotations
 import time
 import unittest
 
-from kernel.alerts import AlertManager, AlertSeverity
-from kernel.control import HumanApprovalGate, PolicyDecision, PolicyEvaluation
-from kernel.events import EventBus, EventType
-from kernel.notification import NotificationManager
-from kernel.observability import CostTracker
+from opc_os.alerts import AlertManager, AlertSeverity
+from opc_os.control import HumanApprovalGate, PolicyDecision, PolicyEvaluation
+from opc_os.events import EventBus, EventType
+from opc_os.notification import NotificationManager
+from opc_os.observability import CostTracker
 
 
 class AlertSystemTest(unittest.TestCase):

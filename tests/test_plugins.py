@@ -5,11 +5,11 @@ from __future__ import annotations
 import unittest
 
 from kernel import Kernel
-from kernel.evaluation import Evaluator
-from kernel.llm import LLMProvider, LLMRequest
-from kernel.plugins import PluginRegistry
-from kernel.runtime import BaseAgent
-from kernel.tools import BaseTool
+from opc_os.evaluation import Evaluator
+from opc_os.llm import LLMProvider, LLMRequest
+from opc_os.plugins import PluginRegistry
+from opc_os.runtime import BaseAgent
+from opc_os.tools import BaseTool
 
 
 class PluginAgent(BaseAgent):

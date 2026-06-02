@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.models import TaskSpec
-from kernel.scheduler import Job, JobType, Scheduler
+from opc_os.models import TaskSpec
+from opc_os.scheduler import Job, JobType, Scheduler
 
 
 class SchedulerTest(unittest.TestCase):

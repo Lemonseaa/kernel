@@ -10,8 +10,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from kernel import Kernel
-from kernel.control.gate import HumanApprovalGate
+from opc_os import Kernel
+from opc_os.control.gate import HumanApprovalGate
 
 
 async def main() -> None:

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import unittest
 
-from kernel.config import KernelConfig
+from opc_os.config import KernelConfig
 from kernel import Kernel
-from kernel.llm import LLMRequest, MiniMaxProvider, OpenAIProvider, ProviderRegistry
-from kernel.models import Task
-from kernel.runtime import LLMAgent
+from opc_os.llm import LLMRequest, MiniMaxProvider, OpenAIProvider, ProviderRegistry
+from opc_os.models import Task
+from opc_os.runtime import LLMAgent
 
 
 class LLMProviderTest(unittest.TestCase):

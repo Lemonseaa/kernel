@@ -7,10 +7,10 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.businessline import BusinessLineConfig, BusinessLineStatus, ResourceLimits
-from kernel.models import Agent, Task
-from kernel.persistence import SQLiteStore
-from kernel.runtime import AgentRegistry
+from opc_os.businessline import BusinessLineConfig, BusinessLineStatus, ResourceLimits
+from opc_os.models import Agent, Task
+from opc_os.persistence import SQLiteStore
+from opc_os.runtime import AgentRegistry
 
 
 class BusinessLineTest(unittest.TestCase):

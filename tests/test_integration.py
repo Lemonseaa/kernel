@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.models import Artifact, Task, TaskSpec, TaskState
-from kernel.persistence import SQLiteStore
-from kernel.runtime import BaseAgent, SimpleAgent
-from kernel.tools import EchoTool, FileWriteTool
+from opc_os.models import Artifact, Task, TaskSpec, TaskState
+from opc_os.persistence import SQLiteStore
+from opc_os.runtime import BaseAgent, SimpleAgent
+from opc_os.tools import EchoTool, FileWriteTool
 
 
 class WriterAgent(BaseAgent):

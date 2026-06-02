@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from kernel.events import EventBus
-from kernel.observability import PerformanceMonitor
+from opc_os.events import EventBus
+from opc_os.observability import PerformanceMonitor
 
 
 class PerformanceMonitorTest(unittest.TestCase):

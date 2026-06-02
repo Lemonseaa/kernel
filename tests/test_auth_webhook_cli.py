@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 
 from kernel import Kernel
-from kernel.api import create_app
-from kernel.auth import APIKeyManager, BearerTokenAuth
-from kernel.events import EventBus, EventType
-from kernel.webhook import WebhookHandler, WebhookReceiver, WebhookSender
+from opc_os.api import create_app
+from opc_os.auth import APIKeyManager, BearerTokenAuth
+from opc_os.events import EventBus, EventType
+from opc_os.webhook import WebhookHandler, WebhookReceiver, WebhookSender
 
 
 class AuthWebhookCliTest(unittest.TestCase):

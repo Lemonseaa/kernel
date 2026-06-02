@@ -7,7 +7,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from kernel.api import create_app
+from opc_os.api import create_app
 
 
 class ApiHealthTest(unittest.TestCase):

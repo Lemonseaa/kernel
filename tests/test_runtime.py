@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from kernel.models import Agent
-from kernel.runtime import AgentRegistry
+from opc_os.models import Agent
+from opc_os.runtime import AgentRegistry
 
 
 class RuntimeTest(unittest.TestCase):
