@@ -80,6 +80,14 @@ V0.3 introduces BusinessLine as a first-class runtime boundary. Runs, tasks, and
 The release also adds a simple plugin registry and a cost tracker that publishes `cost.updated` and
 `cost.budget_exceeded` events so policy, approval, and notification layers can react to token usage.
 
+## Templates And Policy
+
+V0.4 adds built-in BusinessLine templates for `blank`, `content`, and `website`, plus
+`Kernel.create_business_line_from_template()` for zero-configuration setup.
+
+Policy now supports global rules and BusinessLine scoped overrides. Cost budget events can create
+HumanGate approval requests, closing the loop from token usage to approval.
+
 ## Risk Hardening
 
 The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,

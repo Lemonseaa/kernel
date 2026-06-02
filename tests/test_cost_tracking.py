@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 
 from kernel.events import EventBus
+from kernel.control import HumanApprovalGate
 from kernel.observability import CostTracker
 
 
@@ -49,6 +50,20 @@ class CostTrackingTest(unittest.TestCase):
 
         self.assertEqual(tracker.get_cost("minimax", business_line_id="bl-a").total_tokens, 150)
         self.assertEqual(tracker.get_cost("minimax", business_line_id="bl-b").total_tokens, 300)
+
+    def test_human_gate_creates_request_for_budget_exceeded_event(self) -> None:
+        bus = EventBus()
+        gate = HumanApprovalGate(auto_approve=None, event_bus=bus)
+        gate.subscribe_to_cost_events()
+        tracker = CostTracker(event_bus=bus)
+        tracker.set_budget("minimax", daily_budget=1.0, business_line_id="bl-a")
+
+        tracker.track("minimax", 800, 400, business_line_id="bl-a")
+
+        self.assertEqual(len(gate.pending_requests()), 1)
+        request = gate.pending_requests()[0]
+        self.assertEqual(request.policy.action, "cost.budget_exceeded")
+        self.assertEqual(request.subject["business_line_id"], "bl-a")
 
 
 if __name__ == "__main__":

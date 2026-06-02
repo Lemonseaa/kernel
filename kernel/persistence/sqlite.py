@@ -354,6 +354,9 @@ class SQLiteStore(Storage):
             status=BusinessLineStatus(row["status"]),
             config=BusinessLineConfig(
                 evaluation_rules=list(config.get("evaluation_rules", [])),
+                agent_templates=list(config.get("agent_templates", [])),
+                workflow_templates=list(config.get("workflow_templates", [])),
+                policy_ids=list(config.get("policy_ids", [])),
                 resource_limits=ResourceLimits(
                     max_concurrent_runs=resource_limits.get("max_concurrent_runs", 10),
                     max_agents=resource_limits.get("max_agents", 50),

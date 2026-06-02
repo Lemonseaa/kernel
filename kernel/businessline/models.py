@@ -33,6 +33,9 @@ class BusinessLineConfig:
     """Per-BusinessLine configuration."""
 
     evaluation_rules: list[str] = field(default_factory=list)
+    agent_templates: list[str] = field(default_factory=list)
+    workflow_templates: list[str] = field(default_factory=list)
+    policy_ids: list[str] = field(default_factory=list)
     resource_limits: ResourceLimits = field(default_factory=ResourceLimits)
 
 

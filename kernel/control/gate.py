@@ -8,6 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 from kernel.control.policy import PolicyEvaluation
+from kernel.control.policy import PolicyDecision
 from kernel.events import EventBus, EventType
 from kernel.notification import NotificationManager
 
@@ -46,6 +47,33 @@ class HumanApprovalGate:
         self.event_bus = event_bus
         self.notification_manager = notification_manager
         self.requests: list[ApprovalRequest] = []
+
+    def subscribe_to_cost_events(self) -> None:
+        """Subscribe to cost budget events and convert them into approval requests."""
+
+        if self.event_bus is None:
+            raise ValueError("Cost event subscription requires an EventBus.")
+        self.event_bus.subscribe("cost.budget_exceeded", self._handle_cost_budget_exceeded)
+
+    def _handle_cost_budget_exceeded(self, event: object) -> None:
+        """Create an approval request from a cost budget event."""
+
+        payload = getattr(event, "payload", {})
+        provider = payload.get("provider", "unknown")
+        current = payload.get("current", 0)
+        budget = payload.get("budget", 0)
+        policy = PolicyEvaluation(
+            action="cost.budget_exceeded",
+            decision=PolicyDecision.REVIEW,
+            requires_approval=True,
+            reason=f"Cost budget exceeded for {provider}: {current} > {budget}",
+            policy_id="cost_budget_exceeded",
+        )
+        self.create_request(
+            policy=policy,
+            message="Cost budget exceeded.",
+            subject=dict(payload),
+        )
 
     def create_request(
         self,

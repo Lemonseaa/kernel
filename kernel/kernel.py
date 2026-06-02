@@ -7,6 +7,7 @@ from typing import Callable, overload
 
 from kernel.businessline import BusinessLine, BusinessLineConfig, BusinessLineRegistry, BusinessLineStatus
 from kernel.config import KernelConfig
+from kernel.control.defaults import builtin_policies
 from kernel.control import HumanApprovalGate, PolicyEngine
 from kernel.dryrun import DryRunContext, DryRunProvider
 from kernel.evaluation import EvaluationGate, EvaluationRunner
@@ -20,6 +21,7 @@ from kernel.persistence import SQLiteStore
 from kernel.plugins import PluginRegistry
 from kernel.runtime import AgentRegistry, SimpleAgent
 from kernel.scheduler import Job, JobType, Scheduler
+from kernel.templates import TemplateApplier, TemplateRegistry, builtin_templates
 from kernel.tools import EchoTool, FileWriteTool, ToolPermission, ToolRegistry
 from kernel.workflow import WorkflowEngine
 
@@ -46,13 +48,18 @@ class Kernel:
         self.tool_registry.register(EchoTool())
         self.tool_registry.register(FileWriteTool(root_dir=Path.cwd()))
         self.policy_engine = PolicyEngine()
+        for policy in builtin_policies():
+            self.policy_engine.add_policy(policy)
         self.notification_manager = NotificationManager()
         self.human_gate = HumanApprovalGate(event_bus=self.event_bus, notification_manager=self.notification_manager)
+        self.human_gate.subscribe_to_cost_events()
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(sqlite_path)
         self.business_lines = BusinessLineRegistry(self.store)
         self.plugins = PluginRegistry()
+        self.templates = TemplateRegistry(builtin_templates())
+        self.template_applier = TemplateApplier()
         self.cost_tracker = CostTracker(self.event_bus)
         self.memory = ContextManager(WorkingMemory(), PersistentMemory(self.store))
         self.workflow = WorkflowEngine(
@@ -95,6 +102,17 @@ class Kernel:
         """Return one BusinessLine."""
 
         return self.business_lines.get(business_line_id)
+
+    def create_business_line_from_template(
+        self,
+        name: str,
+        template_id: str,
+    ) -> BusinessLine:
+        """Create a BusinessLine from a registered template."""
+
+        template = self.templates.get(template_id)
+        business_line = self.template_applier.apply(name, template)
+        return self.business_lines.create(name=business_line.name, config=business_line.config)
 
     def list_business_lines(
         self,
