@@ -18,7 +18,7 @@ def main(argv: list[str] | None = None) -> int:
     """Run the kernel CLI."""
 
     parser = argparse.ArgumentParser(prog="kernel")
-    parser.add_argument("--db", default="kernel.db")
+    parser.add_argument("--db", default=None)
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("status")
     health_parser = subparsers.add_parser("health")
@@ -42,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "status":
-        kernel = Kernel(sqlite_path=args.db)
+        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
         status = {
             "runs": len(kernel.store.list_runs()),
             "business_lines": len(kernel.business_lines.list()),
@@ -54,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "run" and args.run_command == "list":
-        kernel = Kernel(sqlite_path=args.db)
+        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
         runs = kernel.store.list_runs()
         if not runs:
             print("No runs")
@@ -67,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "bl" and args.bl_command == "list":
-        kernel = Kernel(sqlite_path=args.db)
+        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
         business_lines = kernel.business_lines.list()
         if not business_lines:
             print("No business lines")
@@ -77,12 +77,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "health":
-        kernel = Kernel(sqlite_path=args.db)
+        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
         print(json.dumps(kernel.health_checker.generate_diagnostic_report().to_dict(), ensure_ascii=False))
         return 0
 
     if args.command == "schedule" and args.schedule_command == "list":
-        kernel = Kernel(sqlite_path=args.db)
+        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
         jobs = kernel.scheduler.list_jobs()
         if not jobs:
             print("No scheduled jobs")
@@ -92,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "notify":
-        kernel = Kernel(sqlite_path=args.db)
+        kernel = Kernel.from_env() if args.db is None else Kernel(sqlite_path=args.db)
         kernel.notification_manager.register(ConsoleNotificationChannel())
         kernel.notification_manager.notify(
             NotificationMessage(

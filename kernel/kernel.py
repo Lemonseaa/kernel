@@ -33,10 +33,11 @@ from kernel.workflow import WorkflowEngine
 class Kernel:
     """V0.1 Agent Workflow Kernel facade."""
 
-    def __init__(self, sqlite_path: str | Path = "kernel.db", config: KernelConfig | None = None) -> None:
+    def __init__(self, sqlite_path: str | Path | None = None, config: KernelConfig | None = None) -> None:
         """Create kernel services and wire their dependencies."""
 
         self.config = config or KernelConfig()
+        active_sqlite_path = sqlite_path if sqlite_path is not None else self.config.sqlite_path
         self.dry_run_enabled = self.config.dry_run
         self.event_bus = EventBus()
         self.audit_logger = AuditLogger()
@@ -75,7 +76,7 @@ class Kernel:
         self.alert_manager = AlertManager(self.event_bus, self.notification_manager)
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
-        self.store = SQLiteStore(sqlite_path)
+        self.store = SQLiteStore(active_sqlite_path)
         self.health_checker = HealthChecker(kernel=self)
         self.business_lines = BusinessLineRegistry(self.store)
         self.plugins = PluginRegistry()
@@ -94,6 +95,13 @@ class Kernel:
             max_concurrency=self.config.max_concurrency,
         )
         self.agent_registry.register_agent_class(SimpleAgent)
+
+    @classmethod
+    def from_env(cls, env_path: str | Path = ".env") -> Kernel:
+        """Create a kernel from .env and environment variables."""
+
+        config = KernelConfig.from_env(env_path)
+        return cls(sqlite_path=config.sqlite_path, config=config)
 
     def set_dry_run(self, enabled: bool) -> None:
         """Enable or disable dry run simulation."""

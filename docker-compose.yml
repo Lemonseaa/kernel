@@ -1,0 +1,45 @@
+services:
+  kernel:
+    build:
+      context: .
+    container_name: opc-kernel
+    environment:
+      KERNEL_DB_PATH: ${KERNEL_DB_PATH:-/app/data/kernel.db}
+      KERNEL_DEFAULT_PROVIDER: ${KERNEL_DEFAULT_PROVIDER:-minimax}
+      KERNEL_DRY_RUN: ${KERNEL_DRY_RUN:-false}
+      KERNEL_MINIMAX_API_KEY: ${KERNEL_MINIMAX_API_KEY:-}
+      KERNEL_MINIMAX_MODEL: ${KERNEL_MINIMAX_MODEL:-MiniMax-M2.7-highspeed}
+      KERNEL_MINIMAX_BASE_URL: ${KERNEL_MINIMAX_BASE_URL:-https://api.minimax.chat/v1}
+      KERNEL_MINIMAX_TIMEOUT_SECONDS: ${KERNEL_MINIMAX_TIMEOUT_SECONDS:-30}
+      KERNEL_MINIMAX_MAX_RETRIES: ${KERNEL_MINIMAX_MAX_RETRIES:-2}
+      KERNEL_OPENAI_API_KEY: ${KERNEL_OPENAI_API_KEY:-}
+      KERNEL_OPENAI_MODEL: ${KERNEL_OPENAI_MODEL:-gpt-4.1-mini}
+      KERNEL_OPENAI_BASE_URL: ${KERNEL_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      KERNEL_OPENAI_TIMEOUT_SECONDS: ${KERNEL_OPENAI_TIMEOUT_SECONDS:-30}
+      KERNEL_OPENAI_MAX_RETRIES: ${KERNEL_OPENAI_MAX_RETRIES:-2}
+      KERNEL_MAX_CONCURRENCY: ${KERNEL_MAX_CONCURRENCY:-1}
+      KERNEL_LLM_CACHE_ENABLED: ${KERNEL_LLM_CACHE_ENABLED:-true}
+      KERNEL_LLM_CACHE_MAX_SIZE: ${KERNEL_LLM_CACHE_MAX_SIZE:-128}
+      KERNEL_LLM_CACHE_TTL_SECONDS: ${KERNEL_LLM_CACHE_TTL_SECONDS:-300}
+      KERNEL_SLOW_TASK_THRESHOLD_SECONDS: ${KERNEL_SLOW_TASK_THRESHOLD_SECONDS:-5}
+      KERNEL_SERVICE_HEARTBEAT_SECONDS: ${KERNEL_SERVICE_HEARTBEAT_SECONDS:-30}
+    volumes:
+      - kernel-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "scripts/health_check.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: opc-kernel-redis
+    profiles: ["redis"]
+    ports:
+      - "${KERNEL_REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+
+volumes:
+  kernel-data:

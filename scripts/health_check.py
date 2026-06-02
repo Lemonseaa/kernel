@@ -11,8 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from kernel import Kernel
-from kernel.models import TaskSpec
+from kernel import Kernel  # noqa: E402
+from kernel.models import TaskSpec  # noqa: E402
 
 
 async def main() -> int:

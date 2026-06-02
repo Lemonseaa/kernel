@@ -29,7 +29,7 @@ def create_app(
 ) -> Any:
     """Create a FastAPI app when available, otherwise return a fallback app."""
 
-    active_kernel = kernel or Kernel()
+    active_kernel = kernel or Kernel.from_env()
     active_auth = BearerTokenAuth(auth_manager or APIKeyManager())
     try:
         from fastapi import Depends, FastAPI, Header, HTTPException  # type: ignore[import-not-found]

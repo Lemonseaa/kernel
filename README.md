@@ -125,3 +125,16 @@ Operational commands are available through `./kernel-cli`: `status`, `run list`,
 
 The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,
 and provider retry/timeout behavior.
+
+## Docker Deployment
+
+V0.9 adds Docker Compose deployment and environment-driven configuration:
+
+```bash
+cp .env.example .env
+docker-compose build
+docker-compose up -d
+docker-compose ps
+```
+
+Deployment docs live in [docs/deployment](docs/deployment/README.md).
