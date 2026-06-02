@@ -34,15 +34,36 @@ class AgentRegistry:
 
         self._agents.pop(agent_id, None)
 
-    def get(self, agent_id: str) -> Agent | None:
-        """Get an agent by id."""
+    def list(self, business_line_id: str | None = None) -> list[Agent]:
+        """List registered agents, optionally scoped to one BusinessLine."""
 
-        return self._agents.get(agent_id)
+        if business_line_id is None:
+            return list(self._agents.values())
+        return [
+            agent
+            for agent in self._agents.values()
+            if agent.business_line_id == business_line_id
+        ]
 
-    def find_by_capability(self, capability: str) -> list[Agent]:
+    def get(self, agent_id: str, business_line_id: str | None = None) -> Agent | None:
+        """Get an agent by id, optionally scoped to one BusinessLine."""
+
+        agent = self._agents.get(agent_id)
+        if agent is None:
+            return None
+        if business_line_id is not None and agent.business_line_id != business_line_id:
+            return None
+        return agent
+
+    def find_by_capability(self, capability: str, business_line_id: str | None = None) -> list[Agent]:
         """Find all registered agents that expose a capability."""
 
-        return [agent for agent in self._agents.values() if capability in agent.capabilities]
+        return [
+            agent
+            for agent in self._agents.values()
+            if capability in agent.capabilities
+            and (business_line_id is None or agent.business_line_id == business_line_id)
+        ]
 
     def create_agent_for_capability(self, capability: str) -> BaseAgent | None:
         """Instantiate an executable agent by capability."""

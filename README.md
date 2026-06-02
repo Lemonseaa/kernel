@@ -71,6 +71,15 @@ python -m kernel.cli dryrun --task "预演任务"
 V0.2 now covers provider abstraction, memory/context, evaluation gate, notification, and dry run
 simulation on top of the V0.1 workflow kernel.
 
+## BusinessLine MVP
+
+V0.3 introduces BusinessLine as a first-class runtime boundary. Runs, tasks, and agents carry a
+`business_line_id`, SQLite can filter runs and tasks by business line, and `Kernel` exposes
+`create_business_line()`, `get_business_line()`, and `list_business_lines()`.
+
+The release also adds a simple plugin registry and a cost tracker that publishes `cost.updated` and
+`cost.budget_exceeded` events so policy, approval, and notification layers can react to token usage.
+
 ## Risk Hardening
 
 The current kernel verifies run-scoped context isolation, SQLite run recovery, high-risk tool blocking,

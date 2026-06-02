@@ -46,6 +46,7 @@ class Task:
 
     name: str
     agent_capability: str
+    business_line_id: str = "default"
     input: Any = None
     id: str = field(default_factory=lambda: str(uuid4()))
     run_id: str | None = None
@@ -70,6 +71,7 @@ class TaskSpec:
     """User-facing task creation spec."""
 
     description: str
+    business_line_id: str = "default"
     assigned_agent: str | None = None
     agent: str | None = None
     requires_approval: bool = False
@@ -86,6 +88,7 @@ class TaskSpec:
         return Task(
             name=self.description,
             agent_capability=self.capability,
+            business_line_id=self.business_line_id,
             input=self.input if self.input is not None else self.description,
             metadata={
                 "assigned_agent": self.assigned_agent or self.agent,

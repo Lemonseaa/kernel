@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, overload
 
+from kernel.businessline import BusinessLine, BusinessLineConfig, BusinessLineRegistry, BusinessLineStatus
 from kernel.config import KernelConfig
 from kernel.control import HumanApprovalGate, PolicyEngine
 from kernel.dryrun import DryRunContext, DryRunProvider
@@ -14,8 +15,9 @@ from kernel.llm import ProviderRegistry
 from kernel.memory import ContextManager, PersistentMemory, WorkingMemory
 from kernel.models import Run, RunState, Task, TaskSpec, TaskState
 from kernel.notification import NotificationManager
-from kernel.observability import MetricsCollector
+from kernel.observability import CostTracker, MetricsCollector
 from kernel.persistence import SQLiteStore
+from kernel.plugins import PluginRegistry
 from kernel.runtime import AgentRegistry, SimpleAgent
 from kernel.scheduler import Job, JobType, Scheduler
 from kernel.tools import EchoTool, FileWriteTool, ToolPermission, ToolRegistry
@@ -49,6 +51,9 @@ class Kernel:
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(sqlite_path)
+        self.business_lines = BusinessLineRegistry(self.store)
+        self.plugins = PluginRegistry()
+        self.cost_tracker = CostTracker(self.event_bus)
         self.memory = ContextManager(WorkingMemory(), PersistentMemory(self.store))
         self.workflow = WorkflowEngine(
             agent_registry=self.agent_registry,
@@ -77,21 +82,72 @@ class Kernel:
 
         return DryRunContext(self)
 
-    def create_run(self, user_request: str) -> Run:
+    def create_business_line(
+        self,
+        name: str,
+        config: BusinessLineConfig | None = None,
+    ) -> BusinessLine:
+        """Create a BusinessLine."""
+
+        return self.business_lines.create(name=name, config=config)
+
+    def get_business_line(self, business_line_id: str) -> BusinessLine:
+        """Return one BusinessLine."""
+
+        return self.business_lines.get(business_line_id)
+
+    def list_business_lines(
+        self,
+        status: BusinessLineStatus | str | None = None,
+    ) -> list[BusinessLine]:
+        """List BusinessLines."""
+
+        return self.business_lines.list(status=status)
+
+    def set_cost_budget(
+        self,
+        provider: str,
+        daily_budget: float,
+        business_line_id: str = "default",
+    ) -> None:
+        """Set a cost budget for one provider and BusinessLine."""
+
+        self.cost_tracker.set_budget(provider, daily_budget, business_line_id=business_line_id)
+
+    def create_run(self, user_request: str, business_line_id: str = "default") -> Run:
         """Create and persist a run."""
 
-        run = Run(user_request=user_request)
+        run = Run(user_request=user_request, business_line_id=business_line_id)
         self.store.save_run(run)
-        self.event_bus.emit(EventType.RUN_CREATED, {"run_id": run.id, "user_request": user_request})
+        self.event_bus.emit(
+            EventType.RUN_CREATED,
+            {
+                "run_id": run.id,
+                "business_line_id": business_line_id,
+                "user_request": user_request,
+            },
+        )
         return run
 
     def create_task(self, run: Run, name: str, agent_capability: str, input: object = None) -> Task:
         """Create and attach a task to a run."""
 
-        task = Task(name=name, agent_capability=agent_capability, input=input)
+        task = Task(
+            name=name,
+            agent_capability=agent_capability,
+            business_line_id=run.business_line_id,
+            input=input,
+        )
         run.add_task(task)
         self.store.save_run(run)
-        self.event_bus.emit(EventType.TASK_CREATED, {"run_id": run.id, "task_id": task.id})
+        self.event_bus.emit(
+            EventType.TASK_CREATED,
+            {
+                "run_id": run.id,
+                "task_id": task.id,
+                "business_line_id": task.business_line_id,
+            },
+        )
         return task
 
     def recover_run(self, run_id: str) -> Run:
@@ -103,6 +159,7 @@ class Kernel:
             run_state = RunState.PENDING
         run = Run(
             user_request=row["user_request"],
+            business_line_id=row["business_line_id"],
             id=row["id"],
             state=run_state,
             metadata=row["metadata"],
@@ -114,6 +171,7 @@ class Kernel:
             task = Task(
                 name=task_row["name"],
                 agent_capability=task_row["agent_capability"],
+                business_line_id=task_row["business_line_id"],
                 input=task_row["input"],
                 id=task_row["id"],
                 run_id=task_row["run_id"],
@@ -158,8 +216,16 @@ class Kernel:
         run = self.create_run(description)
         for spec in tasks:
             task = spec.to_task()
+            task.business_line_id = run.business_line_id
             run.add_task(task)
-            self.event_bus.emit(EventType.TASK_CREATED, {"run_id": run.id, "task_id": task.id})
+            self.event_bus.emit(
+                EventType.TASK_CREATED,
+                {
+                    "run_id": run.id,
+                    "task_id": task.id,
+                    "business_line_id": task.business_line_id,
+                },
+            )
             for tool_name in spec.tool_names:
                 result = await self.tool_registry.acall(tool_name, self._tool_arguments(tool_name, spec, task))
                 task.input = result

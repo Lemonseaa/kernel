@@ -25,6 +25,7 @@ class Run:
     """A complete workflow run containing multiple tasks."""
 
     user_request: str
+    business_line_id: str = "default"
     id: str = field(default_factory=lambda: str(uuid4()))
     state: RunState = RunState.PENDING
     tasks: list[Task] = field(default_factory=list)
@@ -35,6 +36,7 @@ class Run:
         """Attach a task to this run."""
 
         task.run_id = self.id
+        task.business_line_id = self.business_line_id
         self.tasks.append(task)
 
     def mark_running(self) -> None:

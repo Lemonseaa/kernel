@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from dataclasses import asdict
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from kernel.businessline.models import BusinessLine, BusinessLineConfig, BusinessLineStatus, ResourceLimits
 from kernel.models import Run, Task
 from kernel.persistence.store import Storage
 
@@ -47,6 +49,7 @@ class SQLiteStore(Storage):
                 """
                 CREATE TABLE IF NOT EXISTS runs (
                     id TEXT PRIMARY KEY,
+                    business_line_id TEXT NOT NULL DEFAULT 'default',
                     user_request TEXT NOT NULL,
                     state TEXT NOT NULL,
                     metadata TEXT NOT NULL
@@ -57,6 +60,7 @@ class SQLiteStore(Storage):
                 """
                 CREATE TABLE IF NOT EXISTS tasks (
                     id TEXT PRIMARY KEY,
+                    business_line_id TEXT NOT NULL DEFAULT 'default',
                     run_id TEXT,
                     name TEXT NOT NULL,
                     agent_capability TEXT NOT NULL,
@@ -69,10 +73,30 @@ class SQLiteStore(Storage):
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS business_lines (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    config TEXT NOT NULL,
+                    created_at REAL NOT NULL,
+                    last_active_at REAL NOT NULL
+                )
+                """
+            )
+            run_columns = {
+                row[1]
+                for row in conn.execute("PRAGMA table_info(runs)").fetchall()
+            }
+            if "business_line_id" not in run_columns:
+                conn.execute("ALTER TABLE runs ADD COLUMN business_line_id TEXT NOT NULL DEFAULT 'default'")
             columns = {
                 row[1]
                 for row in conn.execute("PRAGMA table_info(tasks)").fetchall()
             }
+            if "business_line_id" not in columns:
+                conn.execute("ALTER TABLE tasks ADD COLUMN business_line_id TEXT NOT NULL DEFAULT 'default'")
             if "result" not in columns:
                 conn.execute("ALTER TABLE tasks ADD COLUMN result TEXT")
             conn.execute(
@@ -92,14 +116,21 @@ class SQLiteStore(Storage):
         with self._connection() as conn:
             conn.execute(
                 """
-                INSERT INTO runs (id, user_request, state, metadata)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO runs (id, business_line_id, user_request, state, metadata)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
+                    business_line_id=excluded.business_line_id,
                     user_request=excluded.user_request,
                     state=excluded.state,
                     metadata=excluded.metadata
                 """,
-                (run.id, run.user_request, run.state.value, self._to_json(run.metadata)),
+                (
+                    run.id,
+                    run.business_line_id,
+                    run.user_request,
+                    run.state.value,
+                    self._to_json(run.metadata),
+                ),
             )
         for task in run.tasks:
             self.save_task(task)
@@ -111,11 +142,12 @@ class SQLiteStore(Storage):
             conn.execute(
                 """
                 INSERT INTO tasks (
-                    id, run_id, name, agent_capability, state, input,
+                    id, business_line_id, run_id, name, agent_capability, state, input,
                     output_artifact_id, error, result, metadata
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
+                    business_line_id=excluded.business_line_id,
                     run_id=excluded.run_id,
                     name=excluded.name,
                     agent_capability=excluded.agent_capability,
@@ -128,6 +160,7 @@ class SQLiteStore(Storage):
                 """,
                 (
                     task.id,
+                    task.business_line_id,
                     task.run_id,
                     task.name,
                     task.agent_capability,
@@ -139,6 +172,58 @@ class SQLiteStore(Storage):
                     self._to_json(task.metadata),
                 ),
             )
+
+    def save_business_line(self, business_line: BusinessLine) -> None:
+        """Persist a BusinessLine."""
+
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO business_lines (id, name, status, config, created_at, last_active_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    name=excluded.name,
+                    status=excluded.status,
+                    config=excluded.config,
+                    created_at=excluded.created_at,
+                    last_active_at=excluded.last_active_at
+                """,
+                (
+                    business_line.id,
+                    business_line.name,
+                    business_line.status.value,
+                    self._to_json(asdict(business_line.config)),
+                    business_line.created_at,
+                    business_line.last_active_at,
+                ),
+            )
+
+    def load_business_line(self, business_line_id: str) -> BusinessLine:
+        """Load a BusinessLine by id."""
+
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT * FROM business_lines WHERE id = ?",
+                (business_line_id,),
+            ).fetchone()
+        if row is None:
+            raise KeyError(f"BusinessLine not found: {business_line_id}")
+        return self._business_line_row_to_model(row)
+
+    def list_business_lines(self, status: BusinessLineStatus | None = None) -> list[BusinessLine]:
+        """List BusinessLines ordered by insertion row id."""
+
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            if status is None:
+                rows = conn.execute("SELECT * FROM business_lines ORDER BY rowid").fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM business_lines WHERE status = ? ORDER BY rowid",
+                    (status.value,),
+                ).fetchall()
+        return [self._business_line_row_to_model(row) for row in rows]
 
     def load_run(self, run_id: str) -> dict[str, Any]:
         """Load a run row as a dict."""
@@ -166,12 +251,18 @@ class SQLiteStore(Storage):
         result["result"] = json.loads(result["result"]) if result.get("result") is not None else None
         return result
 
-    def list_runs(self) -> list[dict[str, Any]]:
+    def list_runs(self, business_line_id: str | None = None) -> list[dict[str, Any]]:
         """List persisted runs ordered by insertion row id."""
 
         with self._connection() as conn:
             conn.row_factory = sqlite3.Row
-            rows = conn.execute("SELECT * FROM runs ORDER BY rowid").fetchall()
+            if business_line_id is None:
+                rows = conn.execute("SELECT * FROM runs ORDER BY rowid").fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM runs WHERE business_line_id = ? ORDER BY rowid",
+                    (business_line_id,),
+                ).fetchall()
         results = []
         for row in rows:
             item = dict(row)
@@ -179,18 +270,36 @@ class SQLiteStore(Storage):
             results.append(item)
         return results
 
-    def list_tasks(self, run_id: str | None = None) -> list[dict[str, Any]]:
+    def list_tasks(
+        self,
+        run_id: str | None = None,
+        business_line_id: str | None = None,
+    ) -> list[dict[str, Any]]:
         """List persisted tasks ordered by insertion row id."""
 
         with self._connection() as conn:
             conn.row_factory = sqlite3.Row
-            if run_id is None:
-                rows = conn.execute("SELECT * FROM tasks ORDER BY rowid").fetchall()
-            else:
+            if run_id is not None and business_line_id is not None:
+                rows = conn.execute(
+                    """
+                    SELECT * FROM tasks
+                    WHERE run_id = ? AND business_line_id = ?
+                    ORDER BY rowid
+                    """,
+                    (run_id, business_line_id),
+                ).fetchall()
+            elif run_id is not None:
                 rows = conn.execute(
                     "SELECT * FROM tasks WHERE run_id = ? ORDER BY rowid",
                     (run_id,),
                 ).fetchall()
+            elif business_line_id is not None:
+                rows = conn.execute(
+                    "SELECT * FROM tasks WHERE business_line_id = ? ORDER BY rowid",
+                    (business_line_id,),
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM tasks ORDER BY rowid").fetchall()
         return [self._task_row_to_dict(row) for row in rows]
 
     def save_memory(self, run_id: str, task_id: str, content: Any) -> None:
@@ -232,6 +341,27 @@ class SQLiteStore(Storage):
         result["input"] = json.loads(result["input"]) if result["input"] is not None else None
         result["result"] = json.loads(result["result"]) if result.get("result") is not None else None
         return result
+
+    @staticmethod
+    def _business_line_row_to_model(row: sqlite3.Row) -> BusinessLine:
+        """Convert a SQLite BusinessLine row into a model."""
+
+        config = json.loads(row["config"])
+        resource_limits = config.get("resource_limits", {})
+        return BusinessLine(
+            id=row["id"],
+            name=row["name"],
+            status=BusinessLineStatus(row["status"]),
+            config=BusinessLineConfig(
+                evaluation_rules=list(config.get("evaluation_rules", [])),
+                resource_limits=ResourceLimits(
+                    max_concurrent_runs=resource_limits.get("max_concurrent_runs", 10),
+                    max_agents=resource_limits.get("max_agents", 50),
+                ),
+            ),
+            created_at=row["created_at"],
+            last_active_at=row["last_active_at"],
+        )
 
     @staticmethod
     def _to_json(value: Any) -> str:
