@@ -7,11 +7,11 @@ import time
 import unittest
 from pathlib import Path
 
-from opc_os import OPCOS
-from opc_os.llm import LLMProvider, LLMRequest
-from opc_os.models import Task, TaskState
-from opc_os.runtime import LLMAgent
-from opc_os.tools import ToolPermission, ToolRegistry
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.llm import LLMProvider, LLMRequest
+from checkpoint_ai.models import Task, TaskState
+from checkpoint_ai.runtime import LLMAgent
+from checkpoint_ai.tools import ToolPermission, ToolRegistry
 
 
 class RiskHardeningTest(unittest.TestCase):
@@ -25,14 +25,14 @@ class RiskHardeningTest(unittest.TestCase):
             return f"seen {len(prompts)}"
 
         with tempfile.TemporaryDirectory() as tmp:
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            run1 = opc_os.create_run("run 1")
-            run2 = opc_os.create_run("run 2")
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            run1 = checkpoint_ai.create_run("run 1")
+            run2 = checkpoint_ai.create_run("run 2")
             task1 = Task(name="agent1", agent_capability="llm.generate", run_id=run1.id, input="说出你的名字")
             task2 = Task(name="agent2", agent_capability="llm.generate", run_id=run2.id, input="说出你的名字")
-            opc_os.memory.add(run1.id, "memory-agent1", {"output": "Agent1 private context"})
-            opc_os.memory.add(run2.id, "memory-agent2", {"output": "Agent2 private context"})
-            agent = LLMAgent(provider=opc_os.llm_provider, memory=opc_os.memory, transport=transport)
+            checkpoint_ai.memory.add(run1.id, "memory-agent1", {"output": "Agent1 private context"})
+            checkpoint_ai.memory.add(run2.id, "memory-agent2", {"output": "Agent2 private context"})
+            agent = LLMAgent(provider=checkpoint_ai.llm_provider, memory=checkpoint_ai.memory, transport=transport)
 
             agent.execute(task1)
             agent.execute(task2)
@@ -44,14 +44,14 @@ class RiskHardeningTest(unittest.TestCase):
 
     def test_recover_run_rebuilds_tasks_from_sqlite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
-            opc_os = OPCOS(sqlite_path=db_path)
-            run = opc_os.create_run("recover")
-            task = opc_os.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
+            run = checkpoint_ai.create_run("recover")
+            task = checkpoint_ai.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
             task.transition_to(TaskState.RUNNING)
-            opc_os.store.save_run(run)
+            checkpoint_ai.store.save_run(run)
 
-            recovered = OPCOS(sqlite_path=db_path).recover_run(run.id)
+            recovered = CheckpointAI(sqlite_path=db_path).recover_run(run.id)
 
             self.assertEqual(recovered.id, run.id)
             self.assertEqual(len(recovered.tasks), 1)
@@ -59,35 +59,35 @@ class RiskHardeningTest(unittest.TestCase):
 
     def test_recovered_run_can_continue_execution(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
-            opc_os = OPCOS(sqlite_path=db_path)
-            run = opc_os.create_run("recover execute")
-            task = opc_os.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
+            run = checkpoint_ai.create_run("recover execute")
+            task = checkpoint_ai.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
             task.transition_to(TaskState.RUNNING)
-            opc_os.store.save_run(run)
-            restored_opc_os = OPCOS(sqlite_path=db_path)
+            checkpoint_ai.store.save_run(run)
+            restored_checkpoint_ai = CheckpointAI(sqlite_path=db_path)
 
-            result = restored_opc_os.run(restored_opc_os.recover_run(run.id))
+            result = restored_checkpoint_ai.run(restored_checkpoint_ai.recover_run(run.id))
 
             self.assertEqual(result.state.value, "succeeded")
             self.assertEqual(result.tasks[0].result, "resume")
 
     def test_resume_run_skips_completed_tasks_and_reruns_failed_tasks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
-            opc_os = OPCOS(sqlite_path=db_path)
-            run = opc_os.create_run("resume failed point")
-            completed = opc_os.create_task(run, name="completed", agent_capability="simple.execute", input="done")
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
+            run = checkpoint_ai.create_run("resume failed point")
+            completed = checkpoint_ai.create_task(run, name="completed", agent_capability="simple.execute", input="done")
             completed.transition_to(TaskState.RUNNING)
             completed.result = "finished result"
             completed.transition_to(TaskState.SUCCEEDED)
-            failed = opc_os.create_task(run, name="failed", agent_capability="simple.execute", input="retry me")
+            failed = checkpoint_ai.create_task(run, name="failed", agent_capability="simple.execute", input="retry me")
             failed.transition_to(TaskState.RUNNING)
             failed.error = "old error"
             failed.transition_to(TaskState.FAILED)
-            opc_os.store.save_run(run)
+            checkpoint_ai.store.save_run(run)
 
-            resumed = OPCOS(sqlite_path=db_path).resume_run(run.id, exclude_completed=True)
+            resumed = CheckpointAI(sqlite_path=db_path).resume_run(run.id, exclude_completed=True)
 
             self.assertEqual(resumed.tasks[0].state, TaskState.SUCCEEDED)
             self.assertEqual(resumed.tasks[0].result, "finished result")

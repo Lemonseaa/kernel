@@ -7,7 +7,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from opc_os.api import create_app
+from checkpoint_ai.api import create_app
 
 
 class ApiHealthTest(unittest.TestCase):
@@ -16,7 +16,7 @@ class ApiHealthTest(unittest.TestCase):
     def test_create_app_returns_fastapi_or_fallback_app(self) -> None:
         app = create_app()
 
-        self.assertTrue(hasattr(app, "routes") or hasattr(app, "opc_os"))
+        self.assertTrue(hasattr(app, "routes") or hasattr(app, "checkpoint_ai"))
 
     def test_health_check_script_exits_successfully(self) -> None:
         root = Path(__file__).resolve().parents[1]

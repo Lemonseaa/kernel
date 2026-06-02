@@ -1,13 +1,13 @@
-# Contributing to OPCOS
+# Contributing to CheckpointAI
 
-Thank you for your interest in contributing to OPCOS!
+Thank you for your interest in contributing to CheckpointAI!
 
 ## Development Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/Lemonseaa/opc_os.git
-cd opc_os
+git clone https://github.com/Lemonseaa/checkpoint_ai.git
+cd checkpoint_ai
 
 # Install in development mode
 pip install -e ".[all]"
@@ -16,10 +16,10 @@ pip install -e ".[all]"
 python -m unittest discover -s tests -v
 
 # Lint
-ruff check opc_os/
+ruff check checkpoint_ai/
 
 # Type check
-mypy opc_os/
+mypy checkpoint_ai/
 ```
 
 ## Code Style
@@ -27,7 +27,7 @@ mypy opc_os/
 - Follow PEP 8
 - Line length: 100 characters
 - Use type hints where possible
-- Run `ruff check opc_os/` before committing
+- Run `ruff check checkpoint_ai/` before committing
 
 ## Testing
 

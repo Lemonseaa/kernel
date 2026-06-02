@@ -5,11 +5,11 @@ from __future__ import annotations
 import time
 import unittest
 
-from opc_os.alerts import AlertManager, AlertSeverity
-from opc_os.control import HumanApprovalGate, PolicyDecision, PolicyEvaluation
-from opc_os.events import EventBus, EventType
-from opc_os.notification import NotificationManager
-from opc_os.observability import CostTracker
+from checkpoint_ai.alerts import AlertManager, AlertSeverity
+from checkpoint_ai.control import HumanApprovalGate, PolicyDecision, PolicyEvaluation
+from checkpoint_ai.events import EventBus, EventType
+from checkpoint_ai.notification import NotificationManager
+from checkpoint_ai.observability import CostTracker
 
 
 class AlertSystemTest(unittest.TestCase):

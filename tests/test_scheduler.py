@@ -9,13 +9,13 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from opc_os import OPCOS
-from opc_os.models import TaskSpec
-from opc_os.scheduler import Job, JobType, Scheduler
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.models import TaskSpec
+from checkpoint_ai.scheduler import Job, JobType, Scheduler
 
 
 class SchedulerTest(unittest.TestCase):
-    """Validate interval, cron, opc_os integration, and CLI scheduling."""
+    """Validate interval, cron, checkpoint_ai integration, and CLI scheduling."""
 
     def test_interval_job_runs_when_due(self) -> None:
         calls = []
@@ -49,21 +49,21 @@ class SchedulerTest(unittest.TestCase):
 
         self.assertEqual(next_run, datetime(2026, 1, 1, 9, 30, tzinfo=timezone.utc))
 
-    def test_opc_os_schedule_registers_job_and_cli_lists(self) -> None:
+    def test_checkpoint_ai_schedule_registers_job_and_cli_lists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
-            opc_os = OPCOS(sqlite_path=db_path)
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
 
-            job = opc_os.schedule(
+            job = checkpoint_ai.schedule(
                 name="daily report",
                 tasks=[TaskSpec(description="report")],
                 interval_seconds=3600,
             )
 
-            self.assertEqual(opc_os.scheduler.list_jobs()[0].id, job.id)
+            self.assertEqual(checkpoint_ai.scheduler.list_jobs()[0].id, job.id)
 
         result = subprocess.run(
-            [sys.executable, "-m", "opc_os.cli", "schedule", "list"],
+            [sys.executable, "-m", "checkpoint_ai.cli", "schedule", "list"],
             cwd=Path(__file__).resolve().parents[1],
             capture_output=True,
             text=True,

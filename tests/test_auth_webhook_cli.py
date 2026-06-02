@@ -7,11 +7,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from opc_os import OPCOS
-from opc_os.api import create_app
-from opc_os.auth import APIKeyManager, BearerTokenAuth
-from opc_os.events import EventBus, EventType
-from opc_os.webhook import WebhookHandler, WebhookReceiver, WebhookSender
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.api import create_app
+from checkpoint_ai.auth import APIKeyManager, BearerTokenAuth
+from checkpoint_ai.events import EventBus, EventType
+from checkpoint_ai.webhook import WebhookHandler, WebhookReceiver, WebhookSender
 
 
 class AuthWebhookCliTest(unittest.TestCase):
@@ -71,28 +71,28 @@ class AuthWebhookCliTest(unittest.TestCase):
         self.assertTrue(sender.deliveries[0].success)
         self.assertEqual(attempts[-1]["payload"]["event_type"], "task.failed")
 
-    def test_opc_os_configure_webhooks_sends_supported_events(self) -> None:
+    def test_checkpoint_ai_configure_webhooks_sends_supported_events(self) -> None:
         attempts: list[dict[str, object]] = []
 
         def transport(url: str, payload: dict[str, object], headers: dict[str, str]) -> object:
             attempts.append({"url": url, "payload": payload, "headers": headers})
             return {"status": 200}
 
-        opc_os = OPCOS()
-        sender = opc_os.configure_webhooks(
+        checkpoint_ai = CheckpointAI()
+        sender = checkpoint_ai.configure_webhooks(
             ["https://example.test/webhook"],
             transport=transport,
         )
 
-        opc_os.event_bus.emit(EventType.RUN_COMPLETED, {"run_id": "run-1", "state": "succeeded"})
+        checkpoint_ai.event_bus.emit(EventType.RUN_COMPLETED, {"run_id": "run-1", "state": "succeeded"})
 
-        self.assertIs(opc_os.webhook_sender, sender)
+        self.assertIs(checkpoint_ai.webhook_sender, sender)
         self.assertEqual(attempts[0]["payload"]["event_type"], "run.completed")
 
     def test_webhook_receiver_can_trigger_workflow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            handler = WebhookHandler(opc_os)
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            handler = WebhookHandler(checkpoint_ai)
             receiver = WebhookReceiver(handler=handler)
 
             result = receiver.receive(
@@ -106,22 +106,22 @@ class AuthWebhookCliTest(unittest.TestCase):
             )
 
             self.assertEqual(result["status"], "accepted")
-            self.assertEqual(opc_os.store.list_runs()[0]["user_request"], "external workflow")
+            self.assertEqual(checkpoint_ai.store.list_runs()[0]["user_request"], "external workflow")
 
     def test_cli_status_run_list_business_line_list_and_health(self) -> None:
         root = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
-            opc_os = OPCOS(sqlite_path=db_path)
-            run = opc_os.create_run("cli run")
-            opc_os.create_business_line("cli business")
-            opc_os.store.save_run(run)
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
+            run = checkpoint_ai.create_run("cli run")
+            checkpoint_ai.create_business_line("cli business")
+            checkpoint_ai.store.save_run(run)
 
             commands = [
-                ["./opc-os", "--db", str(db_path), "status"],
-                ["./opc-os", "--db", str(db_path), "run", "list"],
-                ["./opc-os", "--db", str(db_path), "bl", "list"],
-                ["./opc-os", "--db", str(db_path), "health"],
+                ["./checkpointai", "--db", str(db_path), "status"],
+                ["./checkpointai", "--db", str(db_path), "run", "list"],
+                ["./checkpointai", "--db", str(db_path), "bl", "list"],
+                ["./checkpointai", "--db", str(db_path), "health"],
             ]
             outputs: list[str] = []
             for command in commands:

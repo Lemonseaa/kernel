@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import unittest
 
-from opc_os import OPCOS
-from opc_os.evaluation import Evaluator
-from opc_os.llm import LLMProvider, LLMRequest
-from opc_os.plugins import PluginRegistry
-from opc_os.runtime import BaseAgent
-from opc_os.tools import BaseTool
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.evaluation import Evaluator
+from checkpoint_ai.llm import LLMProvider, LLMRequest
+from checkpoint_ai.plugins import PluginRegistry
+from checkpoint_ai.runtime import BaseAgent
+from checkpoint_ai.tools import BaseTool
 
 
 class PluginAgent(BaseAgent):
@@ -77,12 +77,12 @@ class PluginRegistryTest(unittest.TestCase):
         self.assertEqual(registry.list_evaluators(), ["evaluator"])
         self.assertEqual(registry.list_providers(), ["provider"])
 
-    def test_opc_os_exposes_plugin_registry(self) -> None:
-        opc_os = OPCOS()
+    def test_checkpoint_ai_exposes_plugin_registry(self) -> None:
+        checkpoint_ai = CheckpointAI()
 
-        opc_os.plugins.register_agent("agent", PluginAgent)
+        checkpoint_ai.plugins.register_agent("agent", PluginAgent)
 
-        self.assertIs(opc_os.plugins.get_agent("agent"), PluginAgent)
+        self.assertIs(checkpoint_ai.plugins.get_agent("agent"), PluginAgent)
 
 
 if __name__ == "__main__":

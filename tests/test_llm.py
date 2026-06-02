@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import unittest
 
-from opc_os import OPCOS
-from opc_os.config import OPCOSConfig
-from opc_os.llm import LLMRequest, MiniMaxProvider, OpenAIProvider, ProviderRegistry
-from opc_os.models import Task
-from opc_os.runtime import LLMAgent
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.config import CheckpointAIConfig
+from checkpoint_ai.llm import LLMRequest, MiniMaxProvider, OpenAIProvider, ProviderRegistry
+from checkpoint_ai.models import Task
+from checkpoint_ai.runtime import LLMAgent
 
 
 class LLMProviderTest(unittest.TestCase):
@@ -42,8 +42,8 @@ class LLMProviderTest(unittest.TestCase):
         self.assertEqual(artifact.content["agent"], "llm")
         self.assertEqual(artifact.content["provider"], "minimax")
 
-    def test_opc_os_config_builds_default_provider(self) -> None:
-        config = OPCOSConfig(
+    def test_checkpoint_ai_config_builds_default_provider(self) -> None:
+        config = CheckpointAIConfig(
             providers={"minimax": {"api_key": "test-key", "model": "MiniMax-M2.7-highspeed"}},
             default_provider="minimax",
         )
@@ -53,13 +53,13 @@ class LLMProviderTest(unittest.TestCase):
         self.assertEqual(provider.name, "minimax")
         self.assertEqual(provider.model, "MiniMax-M2.7-highspeed")
 
-    def test_opc_os_accepts_configured_default_provider(self) -> None:
-        config = OPCOSConfig(
+    def test_checkpoint_ai_accepts_configured_default_provider(self) -> None:
+        config = CheckpointAIConfig(
             providers={"openai": {"api_key": "test-key", "model": "gpt-test"}},
             default_provider="openai",
         )
 
-        opc_os = OPCOS(config=config)
+        checkpoint_ai = CheckpointAI(config=config)
 
-        self.assertEqual(opc_os.llm_provider.name, "openai")
-        self.assertEqual(opc_os.provider_registry.default().model, "gpt-test")
+        self.assertEqual(checkpoint_ai.llm_provider.name, "openai")
+        self.assertEqual(checkpoint_ai.provider_registry.default().model, "gpt-test")

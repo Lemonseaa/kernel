@@ -1,7 +1,7 @@
 [project]
-name = "opc-os"
+name = "checkpointai"
 version = "1.0.0"
-description = "OPC Operating System - Agent Workflow OPC-OS for building a general multi-agent operating system."
+description = "checkpointAI - Agent Workflow checkpointAI for building a general multi-agent operating system."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
@@ -14,7 +14,7 @@ keywords = [
     "ai-agents",
     "workflow",
     "human-in-the-loop",
-    "OPC",
+    "checkpointAI",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -46,11 +46,14 @@ all = [
 ]
 
 [project.scripts]
-opc-os = "opc_os.cli:main"
+checkpointai = "checkpoint_ai.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["checkpoint_ai"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -6,19 +6,19 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
-COPY opc_os ./opc_os
+COPY checkpoint_ai ./checkpoint_ai
 COPY scripts ./scripts
 COPY tests ./tests
-COPY opc-os ./opc-os
+COPY checkpointai ./checkpointai
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -e .
 
 RUN mkdir -p /app/data
 
-ENV OPC_OS_DB_PATH=/app/data/opc_os.db
+ENV CHECKPOINT_AI_DB_PATH=/app/data/checkpoint_ai.db
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD python scripts/health_check.py
 
-CMD ["python", "scripts/run_opc_os_service.py"]
+CMD ["python", "scripts/run_checkpointai_service.py"]

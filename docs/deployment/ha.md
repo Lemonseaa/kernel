@@ -5,20 +5,20 @@ V1.0 adds lease-based high availability primitives and a multi-instance Docker C
 ## What HA Means In V1.0
 
 - Instances share state through the same SQLite database path.
-- Each instance has a `OPC_OS_INSTANCE_ID`.
+- Each instance has a `CHECKPOINT_AI_INSTANCE_ID`.
 - `HAManager` uses a primary lease with TTL.
 - A backup instance can acquire primary when the current primary lease expires.
 - Docker Compose includes a secondary instance and an optional Nginx load balancer profile.
 
-This is an MVP HA model for OPC-OS operations. It is not a cross-region HA system.
+This is an MVP HA model for checkpointAI operations. It is not a cross-region HA system.
 
 ## Configuration
 
 ```bash
-OPC_OS_HA_ENABLED=true
-OPC_OS_INSTANCE_ID=opc-os-primary
-OPC_OS_HA_LEASE_TTL_SECONDS=30
-OPC_OS_HA_HEARTBEAT_SECONDS=10
+CHECKPOINT_AI_HA_ENABLED=true
+CHECKPOINT_AI_INSTANCE_ID=checkpointai-primary
+CHECKPOINT_AI_HA_LEASE_TTL_SECONDS=30
+CHECKPOINT_AI_HA_HEARTBEAT_SECONDS=10
 ```
 
 ## Start Multi-Instance Deployment
@@ -30,9 +30,9 @@ docker-compose ps
 
 Services:
 
-- `opc-os`: primary candidate.
-- `opc-os-secondary`: backup candidate.
-- `opc-os-lb`: optional Nginx load balancer on port `8080`.
+- `checkpointai`: primary candidate.
+- `checkpointai-secondary`: backup candidate.
+- `checkpointai-lb`: optional Nginx load balancer on port `8080`.
 
 ## Failover Behavior
 

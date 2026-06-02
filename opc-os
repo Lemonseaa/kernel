@@ -1,8 +1,0 @@
-#!/usr/bin/env python
-"""Executable wrapper for opc_os.cli."""
-
-from opc_os.cli import main
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

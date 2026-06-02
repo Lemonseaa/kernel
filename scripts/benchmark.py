@@ -1,4 +1,4 @@
-"""Run a lightweight OPC-OS performance benchmark."""
+"""Run a lightweight checkpointAI performance benchmark."""
 
 from __future__ import annotations
 
@@ -14,17 +14,17 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from opc_os import OPCOS  # noqa: E402
-from opc_os.models import TaskSpec  # noqa: E402
+from checkpoint_ai import CheckpointAI  # noqa: E402
+from checkpoint_ai.models import TaskSpec  # noqa: E402
 
 
 async def _run_once() -> float:
     """Run one small workflow and return duration."""
 
     with TemporaryDirectory() as tmp:
-        opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+        checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
         started_at = time.perf_counter()
-        run = await opc_os.run("benchmark", [TaskSpec(description="ping")])
+        run = await checkpoint_ai.run("benchmark", [TaskSpec(description="ping")])
         duration = time.perf_counter() - started_at
     if run.state.value != "succeeded":
         raise RuntimeError(f"benchmark run failed: {run.state.value}")

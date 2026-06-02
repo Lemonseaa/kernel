@@ -6,9 +6,9 @@ import threading
 import time
 import unittest
 
-from opc_os.models import Artifact, Run, Task, TaskState
-from opc_os.runtime import AgentRegistry, BaseAgent
-from opc_os.workflow import WorkflowEngine
+from checkpoint_ai.models import Artifact, Run, Task, TaskState
+from checkpoint_ai.runtime import AgentRegistry, BaseAgent
+from checkpoint_ai.workflow import WorkflowEngine
 
 
 class SleepAgent(BaseAgent):

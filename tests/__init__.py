@@ -1,1 +1,1 @@
-"""OPC-OS test package."""
+"""checkpointAI test package."""

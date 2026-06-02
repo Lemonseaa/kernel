@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from opc_os.models import Agent, AgentState, Artifact, Run, RunState, Task, TaskState
+from checkpoint_ai.models import Agent, AgentState, Artifact, Run, RunState, Task, TaskState
 
 
 class ModelTest(unittest.TestCase):

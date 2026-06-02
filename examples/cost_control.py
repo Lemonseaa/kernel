@@ -10,14 +10,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from opc_os import OPCOS
-from opc_os.observability.cost_tracker import CostTracker
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.observability.cost_tracker import CostTracker
 
 
 async def main() -> None:
     """Set budget and track cost in real-time."""
 
-    opc_os = OPCOS()
+    checkpoint_ai = CheckpointAI()
     cost_tracker = CostTracker()
 
     # 1. Set daily budget for each provider

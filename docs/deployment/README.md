@@ -1,35 +1,35 @@
-# OPC-OS Deployment
+# checkpointAI Deployment
 
 V1.0 production-ready deployment with Docker.
 
 ## 5-Minute Start
 
 ```bash
-cd <your-path>/OPC-OS
+cd <your-path>/checkpointAI
 cp .env.example .env
 docker-compose build
 docker-compose up -d
 docker-compose ps
-docker-compose logs opc-os
+docker-compose logs checkpointai
 ```
 
-The default service uses SQLite at `/app/data/opc_os.db` inside the container and persists it through
-the `opc-os-data` Docker volume.
+The default service uses SQLite at `/app/data/checkpoint_ai.db` inside the container and persists it through
+the `checkpointai-data` Docker volume.
 
 ## What Runs
 
-- `opc-os`: long-lived OPC-OS process with health checks.
+- `checkpointai`: long-lived checkpointAI process with health checks.
 - `redis`: optional service enabled with `docker-compose --profile redis up -d`.
 
 ## Verify
 
 ```bash
 docker-compose ps
-docker-compose exec opc-os python -m unittest discover -s tests -v
-docker-compose exec opc-os python scripts/health_check.py
+docker-compose exec checkpointai python -m unittest discover -s tests -v
+docker-compose exec checkpointai python scripts/health_check.py
 ```
 
-Use `docker-compose logs opc-os` when health is not green.
+Use `docker-compose logs checkpointai` when health is not green.
 
 ## Files
 

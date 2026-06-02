@@ -8,14 +8,14 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from opc_os.config import OPCOSConfig
-from opc_os.ha import HAManager, HAStateStore, SQLiteHAStateStore
+from checkpoint_ai.config import CheckpointAIConfig
+from checkpoint_ai.ha import HAManager, HAStateStore, SQLiteHAStateStore
 
 
-def _without_opc_os_env() -> dict[str, str]:
-    """Return process env without OPCOS-specific overrides."""
+def _without_checkpoint_ai_env() -> dict[str, str]:
+    """Return process env without CheckpointAI-specific overrides."""
 
-    return {key: value for key, value in os.environ.items() if not key.startswith("OPC_OS_")}
+    return {key: value for key, value in os.environ.items() if not key.startswith("CHECKPOINT_AI_")}
 
 
 class HATest(unittest.TestCase):
@@ -38,7 +38,7 @@ class HATest(unittest.TestCase):
 
     def test_sqlite_ha_store_shares_state_between_instances(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
+            db_path = Path(tmp) / "checkpoint_ai.db"
             first_store = SQLiteHAStateStore(db_path)
             second_store = SQLiteHAStateStore(db_path)
 
@@ -46,23 +46,23 @@ class HATest(unittest.TestCase):
             self.assertFalse(second_store.acquire_primary("instance-b", now=101.0, ttl_seconds=10.0))
             self.assertTrue(second_store.acquire_primary("instance-b", now=111.0, ttl_seconds=10.0))
 
-    def test_opc_os_config_loads_ha_settings_from_env(self) -> None:
+    def test_checkpoint_ai_config_loads_ha_settings_from_env(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env_path = Path(tmp) / ".env"
             env_path.write_text(
                 "\n".join(
                     [
-                        "OPC_OS_HA_ENABLED=true",
-                        "OPC_OS_INSTANCE_ID=worker-a",
-                        "OPC_OS_HA_LEASE_TTL_SECONDS=12",
-                        "OPC_OS_HA_HEARTBEAT_SECONDS=3",
+                        "CHECKPOINT_AI_HA_ENABLED=true",
+                        "CHECKPOINT_AI_INSTANCE_ID=worker-a",
+                        "CHECKPOINT_AI_HA_LEASE_TTL_SECONDS=12",
+                        "CHECKPOINT_AI_HA_HEARTBEAT_SECONDS=3",
                     ]
                 ),
                 encoding="utf-8",
             )
 
-            with patch.dict(os.environ, _without_opc_os_env(), clear=True):
-                config = OPCOSConfig.from_env(env_path)
+            with patch.dict(os.environ, _without_checkpoint_ai_env(), clear=True):
+                config = CheckpointAIConfig.from_env(env_path)
 
         self.assertTrue(config.ha_enabled)
         self.assertEqual(config.instance_id, "worker-a")

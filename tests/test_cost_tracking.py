@@ -5,9 +5,9 @@ from __future__ import annotations
 import unittest
 from datetime import date
 
-from opc_os.control import HumanApprovalGate
-from opc_os.events import EventBus
-from opc_os.observability import CostTracker
+from checkpoint_ai.control import HumanApprovalGate
+from checkpoint_ai.events import EventBus
+from checkpoint_ai.observability import CostTracker
 
 
 class CostTrackingTest(unittest.TestCase):

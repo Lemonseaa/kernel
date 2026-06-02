@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from opc_os.notification import NotificationManager, NotificationMessage, WebhookNotificationChannel
+from checkpoint_ai.notification import NotificationManager, NotificationMessage, WebhookNotificationChannel
 
 
 def main() -> None:
@@ -25,7 +25,7 @@ def main() -> None:
     )
     manager = NotificationManager([channel])
     message = NotificationMessage(
-        title="OPCOS通知",
+        title="CheckpointAI通知",
         body="有任务需要人工处理。",
         type="approval_required",
         priority="high",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from opc_os.control import PolicyDecision, PolicyEngine, PolicyRule, PolicyScope
+from checkpoint_ai.control import PolicyDecision, PolicyEngine, PolicyRule, PolicyScope
 
 
 class PolicyV04Test(unittest.TestCase):

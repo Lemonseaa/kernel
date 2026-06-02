@@ -7,10 +7,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from opc_os import OPCOS
-from opc_os.evaluation import EvaluationGate, EvaluationRunner, ReadabilityEvaluator
-from opc_os.models import Artifact, Task, TaskSpec, TaskState
-from opc_os.runtime import BaseAgent
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.evaluation import EvaluationGate, EvaluationRunner, ReadabilityEvaluator
+from checkpoint_ai.models import Artifact, Task, TaskSpec, TaskState
+from checkpoint_ai.runtime import BaseAgent
 
 
 class DraftAgent(BaseAgent):
@@ -53,11 +53,11 @@ class EvaluationTest(unittest.TestCase):
     def test_workflow_marks_task_evaluation_failed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             DraftAgent.draft = "短"
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            opc_os.agent_registry.register_agent_class(DraftAgent)
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            checkpoint_ai.agent_registry.register_agent_class(DraftAgent)
 
-            async def run_opc_os() -> object:
-                return await opc_os.run(
+            async def run_checkpoint_ai() -> object:
+                return await checkpoint_ai.run(
                     "质量门禁测试",
                     [
                         TaskSpec(
@@ -70,7 +70,7 @@ class EvaluationTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_opc_os())
+            run = asyncio.run(run_checkpoint_ai())
             task = run.tasks[0]
 
             self.assertEqual(run.state.value, "failed")
@@ -81,10 +81,10 @@ class EvaluationTest(unittest.TestCase):
     def test_evaluation_failure_feedback_is_saved_to_business_line_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             DraftAgent.draft = "短"
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            opc_os.agent_registry.register_agent_class(DraftAgent)
-            run = opc_os.create_run("质量反馈测试", business_line_id="bl-a")
-            task = opc_os.create_task(run, "写一篇内容", "content.write")
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            checkpoint_ai.agent_registry.register_agent_class(DraftAgent)
+            run = checkpoint_ai.create_run("质量反馈测试", business_line_id="bl-a")
+            task = checkpoint_ai.create_task(run, "写一篇内容", "content.write")
             task.metadata.update(
                 {
                     "evaluation_required": True,
@@ -93,8 +93,8 @@ class EvaluationTest(unittest.TestCase):
                 }
             )
 
-            opc_os.run(run)
-            feedback_text = opc_os.memory.build_business_line_prompt_context(
+            checkpoint_ai.run(run)
+            feedback_text = checkpoint_ai.memory.build_business_line_prompt_context(
                 "bl-a",
                 kind="evaluation_feedback",
             )
@@ -113,11 +113,11 @@ class EvaluationTest(unittest.TestCase):
                 "每一步都有明确分数，低于阈值就要求改写。 #AI #内容"
                 + "这个内容质量检查流程可以复用到选题、写作、审核和分发环节。" * 8
             )
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            opc_os.agent_registry.register_agent_class(DraftAgent)
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            checkpoint_ai.agent_registry.register_agent_class(DraftAgent)
 
-            async def run_opc_os() -> object:
-                return await opc_os.run(
+            async def run_checkpoint_ai() -> object:
+                return await checkpoint_ai.run(
                     "质量门禁通过测试",
                     [
                         TaskSpec(
@@ -130,7 +130,7 @@ class EvaluationTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_opc_os())
+            run = asyncio.run(run_checkpoint_ai())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertEqual(run.tasks[0].state, TaskState.SUCCEEDED)

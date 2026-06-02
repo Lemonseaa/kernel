@@ -4,30 +4,30 @@
 
 ```bash
 docker-compose ps
-docker-compose logs opc-os
-docker-compose exec opc-os ./opc-os status
-docker-compose exec opc-os ./opc-os health
-docker-compose exec opc-os ./opc-os run list
-docker-compose exec opc-os ./opc-os bl list
+docker-compose logs checkpointai
+docker-compose exec checkpointai ./checkpointai status
+docker-compose exec checkpointai ./checkpointai health
+docker-compose exec checkpointai ./checkpointai run list
+docker-compose exec checkpointai ./checkpointai bl list
 ```
 
 ## Restart
 
 ```bash
-docker-compose restart opc-os
+docker-compose restart checkpointai
 ```
 
-SQLite state is stored in the `opc-os-data` volume, so a normal restart does not remove state.
+SQLite state is stored in the `checkpointai-data` volume, so a normal restart does not remove state.
 
 ## Backup SQLite
 
 ```bash
-docker-compose exec opc-os python - <<'PY'
+docker-compose exec checkpointai python - <<'PY'
 from pathlib import Path
 import shutil
 
-src = Path('/app/data/opc_os.db')
-dst = Path('/app/data/opc_os.backup.db')
+src = Path('/app/data/checkpoint_ai.db')
+dst = Path('/app/data/checkpoint_ai.backup.db')
 if src.exists():
     shutil.copy2(src, dst)
     print(dst)
@@ -43,12 +43,12 @@ PY
 Run:
 
 ```bash
-docker-compose logs opc-os
+docker-compose logs checkpointai
 ```
 
 Common causes:
 
-- Invalid numeric env value such as `OPC_OS_MAX_CONCURRENCY=abc`.
+- Invalid numeric env value such as `CHECKPOINT_AI_MAX_CONCURRENCY=abc`.
 - SQLite path points to an unwritable directory.
 - Image was built from stale files. Rebuild with `docker-compose build --no-cache`.
 
@@ -57,7 +57,7 @@ Common causes:
 Run:
 
 ```bash
-docker-compose exec opc-os python scripts/health_check.py
+docker-compose exec checkpointai python scripts/health_check.py
 ```
 
 The script prints the failed run state when the lightweight workflow cannot complete.
@@ -67,7 +67,7 @@ The script prints the failed run state when the lightweight workflow cannot comp
 Check:
 
 ```bash
-docker-compose exec opc-os env | grep OPC_OS_
+docker-compose exec checkpointai env | grep CHECKPOINT_AI_
 ```
 
 Environment variables override `.env`. If a shell export exists, it can override the value you expect

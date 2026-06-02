@@ -6,10 +6,10 @@ import io
 import unittest
 from contextlib import redirect_stdout
 
-from opc_os.cli import main
-from opc_os.control import HumanApprovalGate, PolicyEngine
-from opc_os.models import Task
-from opc_os.notification import (
+from checkpoint_ai.cli import main
+from checkpoint_ai.control import HumanApprovalGate, PolicyEngine
+from checkpoint_ai.models import Task
+from checkpoint_ai.notification import (
     NotificationChannel,
     NotificationDelivery,
     NotificationManager,
@@ -36,7 +36,7 @@ class RecordingChannel(NotificationChannel):
 
 
 class NotificationTest(unittest.TestCase):
-    """Validate notification channels and opc_os integrations."""
+    """Validate notification channels and checkpoint_ai integrations."""
 
     def test_notification_manager_sends_to_registered_channels(self) -> None:
         manager = NotificationManager()

@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 COMMANDS = [
-    [sys.executable, "-m", "ruff", "check", "opc_os", "tests", "scripts"],
-    [sys.executable, "-m", "mypy", "opc_os", "--show-error-codes", "--no-incremental"],
-    [sys.executable, "-m", "compileall", "-q", "opc_os", "tests", "scripts"],
+    [sys.executable, "-m", "ruff", "check", "checkpoint_ai", "tests", "scripts"],
+    [sys.executable, "-m", "mypy", "checkpoint_ai", "--show-error-codes", "--no-incremental"],
+    [sys.executable, "-m", "compileall", "-q", "checkpoint_ai", "tests", "scripts"],
     [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"],
     [sys.executable, "scripts/benchmark.py", "--runs", "20"],
     [sys.executable, "scripts/stress_test.py", "--runs", "50", "--concurrency", "5"],

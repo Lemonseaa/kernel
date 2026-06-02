@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from opc_os import OPCOS
-from opc_os.diagnostics import HealthChecker
-from opc_os.llm import LLMRequest, MiniMaxProvider
-from opc_os.models import RunState
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.diagnostics import HealthChecker
+from checkpoint_ai.llm import LLMRequest, MiniMaxProvider
+from checkpoint_ai.models import RunState
 
 
 class FailingProvider(MiniMaxProvider):
@@ -24,10 +24,10 @@ class FailingProvider(MiniMaxProvider):
 class DiagnosticsTest(unittest.TestCase):
     """Validate health checker reports actionable status."""
 
-    def test_health_checker_reports_healthy_default_opc_os(self) -> None:
+    def test_health_checker_reports_healthy_default_checkpoint_ai(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            checker = HealthChecker(opc_os=opc_os)
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            checker = HealthChecker(checkpoint_ai=checkpoint_ai)
 
             report = checker.generate_diagnostic_report()
 
@@ -37,9 +37,9 @@ class DiagnosticsTest(unittest.TestCase):
 
     def test_health_checker_reports_provider_failure_with_recommendation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            opc_os.llm_provider = FailingProvider()
-            checker = HealthChecker(opc_os=opc_os)
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            checkpoint_ai.llm_provider = FailingProvider()
+            checker = HealthChecker(checkpoint_ai=checkpoint_ai)
 
             report = checker.generate_diagnostic_report()
 
@@ -51,12 +51,12 @@ class DiagnosticsTest(unittest.TestCase):
 
     def test_health_checker_detects_failed_recent_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            run = opc_os.create_run("failed run")
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            run = checkpoint_ai.create_run("failed run")
             run.state = RunState.FAILED
-            opc_os.store.save_run(run)
+            checkpoint_ai.store.save_run(run)
 
-            report = HealthChecker(opc_os=opc_os).generate_diagnostic_report()
+            report = HealthChecker(checkpoint_ai=checkpoint_ai).generate_diagnostic_report()
 
             failed_check = next(check for check in report.checks if check.component == "recent_runs")
             self.assertEqual(failed_check.status, "warning")

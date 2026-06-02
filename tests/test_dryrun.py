@@ -9,13 +9,13 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from opc_os import OPCOS
-from opc_os.cli import main
-from opc_os.config import OPCOSConfig
-from opc_os.dryrun import DryRunProvider, DryRunValidator
-from opc_os.llm import LLMRequest
-from opc_os.models import TaskSpec
-from opc_os.tools import FileWriteTool, ToolPermission, ToolRegistry
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.cli import main
+from checkpoint_ai.config import CheckpointAIConfig
+from checkpoint_ai.dryrun import DryRunProvider, DryRunValidator
+from checkpoint_ai.llm import LLMRequest
+from checkpoint_ai.models import TaskSpec
+from checkpoint_ai.tools import FileWriteTool, ToolPermission, ToolRegistry
 
 
 class DryRunTest(unittest.TestCase):
@@ -40,14 +40,14 @@ class DryRunTest(unittest.TestCase):
         self.assertEqual(result["tool"], "dangerous")
         self.assertEqual(result["arguments"]["path"], "real.txt")
 
-    def test_opc_os_dryrun_does_not_execute_file_write_tool(self) -> None:
+    def test_checkpoint_ai_dryrun_does_not_execute_file_write_tool(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output_path = Path(tmp) / "out.txt"
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db", config=OPCOSConfig(dry_run=True))
-            opc_os.tool_registry.register(FileWriteTool(root_dir=tmp))
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db", config=CheckpointAIConfig(dry_run=True))
+            checkpoint_ai.tool_registry.register(FileWriteTool(root_dir=tmp))
 
-            async def run_opc_os() -> object:
-                return await opc_os.run(
+            async def run_checkpoint_ai() -> object:
+                return await checkpoint_ai.run(
                     "dryrun file write",
                     [
                         TaskSpec(
@@ -58,21 +58,21 @@ class DryRunTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_opc_os())
+            run = asyncio.run(run_checkpoint_ai())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertFalse(output_path.exists())
             self.assertTrue(run.tasks[0].result["dry_run"])
 
     def test_dryrun_context_temporarily_enables_simulation(self) -> None:
-        opc_os = OPCOS()
+        checkpoint_ai = CheckpointAI()
 
-        self.assertFalse(opc_os.dry_run_enabled)
-        with opc_os.dry_run():
-            self.assertTrue(opc_os.dry_run_enabled)
-            self.assertTrue(opc_os.tool_registry.dry_run)
-        self.assertFalse(opc_os.dry_run_enabled)
-        self.assertFalse(opc_os.tool_registry.dry_run)
+        self.assertFalse(checkpoint_ai.dry_run_enabled)
+        with checkpoint_ai.dry_run():
+            self.assertTrue(checkpoint_ai.dry_run_enabled)
+            self.assertTrue(checkpoint_ai.tool_registry.dry_run)
+        self.assertFalse(checkpoint_ai.dry_run_enabled)
+        self.assertFalse(checkpoint_ai.tool_registry.dry_run)
 
     def test_cli_dryrun_command_prints_preview(self) -> None:
         stdout = io.StringIO()

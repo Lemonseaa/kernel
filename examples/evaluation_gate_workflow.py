@@ -7,15 +7,15 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from opc_os import OPCOS
-from opc_os.models import TaskSpec
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.models import TaskSpec
 
 
 async def main() -> None:
     """Run a small workflow with evaluation enabled."""
 
-    opc_os = OPCOS()
-    run = await opc_os.run(
+    checkpoint_ai = CheckpointAI()
+    run = await checkpoint_ai.run(
         "生成高质量内容",
         [
             TaskSpec(

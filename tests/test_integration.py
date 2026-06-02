@@ -1,4 +1,4 @@
-"""OPC-OS integration tests."""
+"""checkpointAI integration tests."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from opc_os import OPCOS
-from opc_os.models import Artifact, Task, TaskSpec, TaskState
-from opc_os.persistence import SQLiteStore
-from opc_os.runtime import BaseAgent, SimpleAgent
-from opc_os.tools import EchoTool, FileWriteTool
+from checkpoint_ai import CheckpointAI
+from checkpoint_ai.models import Artifact, Task, TaskSpec, TaskState
+from checkpoint_ai.persistence import SQLiteStore
+from checkpoint_ai.runtime import BaseAgent, SimpleAgent
+from checkpoint_ai.tools import EchoTool, FileWriteTool
 
 
 class WriterAgent(BaseAgent):
@@ -28,29 +28,29 @@ class WriterAgent(BaseAgent):
 
 
 class IntegrationTest(unittest.TestCase):
-    """Validate the V0.1 opc_os happy path."""
+    """Validate the V0.1 checkpoint_ai happy path."""
 
-    def test_opc_os_runs_workflow_and_persists_state(self) -> None:
+    def test_checkpoint_ai_runs_workflow_and_persists_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
-            opc_os = OPCOS(sqlite_path=db_path)
-            opc_os.agent_registry.register_agent_class(WriterAgent)
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
+            checkpoint_ai.agent_registry.register_agent_class(WriterAgent)
 
-            run = opc_os.create_run("write content")
-            task = opc_os.create_task(run, name="write", agent_capability="content.write")
-            result = opc_os.run(run)
+            run = checkpoint_ai.create_run("write content")
+            task = checkpoint_ai.create_task(run, name="write", agent_capability="content.write")
+            result = checkpoint_ai.run(run)
 
-            loaded_run = opc_os.store.load_run(run.id)
-            loaded_task = opc_os.store.load_task(task.id)
+            loaded_run = checkpoint_ai.store.load_run(run.id)
+            loaded_task = checkpoint_ai.store.load_task(task.id)
 
             self.assertEqual(result.state.value, "succeeded")
             self.assertEqual(loaded_run["state"], "succeeded")
             self.assertEqual(loaded_task["state"], TaskState.SUCCEEDED.value)
-            self.assertTrue(opc_os.event_bus.events)
+            self.assertTrue(checkpoint_ai.event_bus.events)
 
     def test_sqlite_store_creates_parent_directory_and_handles_non_json_input(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "nested" / "opc_os.db"
+            db_path = Path(tmp) / "nested" / "checkpoint_ai.db"
             store = SQLiteStore(db_path)
             task = Task(name="write", agent_capability="content.write", input={"path": Path(tmp)})
 
@@ -62,13 +62,13 @@ class IntegrationTest(unittest.TestCase):
 
     def test_sqlite_store_lists_runs_and_tasks_for_recovery(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "opc_os.db"
-            opc_os = OPCOS(sqlite_path=db_path)
+            db_path = Path(tmp) / "checkpoint_ai.db"
+            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
 
-            async def run_opc_os() -> object:
-                return await opc_os.run("恢复测试", [TaskSpec(description="hello")])
+            async def run_checkpoint_ai() -> object:
+                return await checkpoint_ai.run("恢复测试", [TaskSpec(description="hello")])
 
-            run = asyncio.run(run_opc_os())
+            run = asyncio.run(run_checkpoint_ai())
             store = SQLiteStore(db_path)
 
             runs = store.list_runs()
@@ -79,17 +79,17 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(len(tasks), 1)
             self.assertEqual(tasks[0]["run_id"], run.id)
 
-    def test_opc_os_async_run_executes_task_specs(self) -> None:
+    def test_checkpoint_ai_async_run_executes_task_specs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
 
-            async def run_opc_os() -> object:
-                return await opc_os.run(
+            async def run_checkpoint_ai() -> object:
+                return await checkpoint_ai.run(
                     "测试Run",
                     [TaskSpec(description="说hello"), TaskSpec(description="再说一次")],
                 )
 
-            run = asyncio.run(run_opc_os())
+            run = asyncio.run(run_checkpoint_ai())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertEqual(len(run.tasks), 2)
@@ -99,12 +99,12 @@ class IntegrationTest(unittest.TestCase):
     def test_simple_agent_can_call_builtin_tools(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output_path = Path(tmp) / "out.txt"
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
-            opc_os.tool_registry.register(EchoTool())
-            opc_os.tool_registry.register(FileWriteTool(root_dir=tmp))
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            checkpoint_ai.tool_registry.register(EchoTool())
+            checkpoint_ai.tool_registry.register(FileWriteTool(root_dir=tmp))
 
-            async def run_opc_os() -> object:
-                return await opc_os.run(
+            async def run_checkpoint_ai() -> object:
+                return await checkpoint_ai.run(
                     "工具测试",
                     [
                         TaskSpec(description="hello", tool_names=["echo"]),
@@ -116,23 +116,23 @@ class IntegrationTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_opc_os())
+            run = asyncio.run(run_checkpoint_ai())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertEqual(run.tasks[0].result, "hello")
             self.assertEqual(output_path.read_text(encoding="utf-8"), "saved")
             self.assertIn("out.txt", run.tasks[1].result["path"])
 
-    def test_opc_os_on_subscribes_to_typed_events(self) -> None:
+    def test_checkpoint_ai_on_subscribes_to_typed_events(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            opc_os = OPCOS(sqlite_path=Path(tmp) / "opc_os.db")
+            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
             events = []
-            opc_os.on("task:completed", lambda event: events.append(event))
+            checkpoint_ai.on("task:completed", lambda event: events.append(event))
 
-            async def run_opc_os() -> object:
-                return await opc_os.run("测试", [TaskSpec(description="hello")])
+            async def run_checkpoint_ai() -> object:
+                return await checkpoint_ai.run("测试", [TaskSpec(description="hello")])
 
-            run = asyncio.run(run_opc_os())
+            run = asyncio.run(run_checkpoint_ai())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertEqual(len(events), 1)

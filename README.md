@@ -1,13 +1,13 @@
-# OPC-OS
+# checkpointAI
 
-[![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen)](https://github.com/Lemonseaa/OPC-OS)
+[![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen)](https://github.com/Lemonseaa/checkpointAI)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-OPC Operating System — 多Agent操作系统的核心运行时。
+checkpointAI — 多Agent操作系统的核心运行时。
 
-OPC-OS is an Agent Workflow OPC-OS for building a general multi-agent operating system.
+checkpointAI is an Agent Workflow checkpointAI for building a general multi-agent operating system.
 
 ## 核心特性
 
@@ -29,10 +29,10 @@ cp .env.example .env
 # 编辑 .env 填入你的 API Key
 
 # 3. 运行
-opc-os status
+checkpointai status
 
 # 4. 创建业务线
-opc-os bl create --name "内容业务" --template content
+checkpointai bl create --name "内容业务" --template content
 ```
 
 或者用Docker：
@@ -55,9 +55,9 @@ docker compose ps
 系统入口，管理所有组件。
 
 ```python
-from opc_os import OPCOS
+from checkpoint_ai import CheckpointAI
 
-k = OPCOS()
+k = CheckpointAI()
 bl = k.create_business_line('my_business', template='content')
 run = k.create_run(bl.id, '写一篇关于AI的文章')
 ```
@@ -162,7 +162,7 @@ k.event_bus.subscribe('task.completed', my_handler)
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                     OPCOS                          │
+│                     CheckpointAI                          │
 ├─────────────────────────────────────────────────────┤
 │  ┌─────────┐  ┌─────────┐  ┌─────────┐            │
 │  │ Business│  │  Agent  │  │  Run/   │            │
@@ -194,25 +194,25 @@ k.event_bus.subscribe('task.completed', my_handler)
 
 | 模块 | 说明 |
 |---|---|
-| opc_os/agent/ | Agent定义和LLM集成 |
-| opc_os/businessline/ | 业务线隔离 |
-| opc_os/cache/ | LLM响应缓存 |
-| opc_os/context/ | Context管理和持久化 |
-| opc_os/control/ | Policy和HumanGate |
-| opc_os/diagnostics/ | 健康检查和告警 |
-| opc_os/evaluation/ | Evaluation Gate |
-| opc_os/events/ | Event Bus |
-| opc_os/llm/ | LLM Provider抽象 |
-| opc_os/memory/ | 记忆系统 |
-| opc_os/notification/ | 通知系统 |
-| opc_os/observability/ | Cost追踪和指标 |
-| opc_os/plugins/ | 插件注册表 |
-| opc_os/runtime/ | Agent运行时 |
-| opc_os/scheduler/ | 定时任务 |
-| opc_os/storage/ | SQLite持久化 |
-| opc_os/tools/ | 工具注册和权限 |
-| opc_os/webhook/ | Webhook发送和接收 |
-| opc_os/ha/ | 高可用 |
+| checkpoint_ai/agent/ | Agent定义和LLM集成 |
+| checkpoint_ai/businessline/ | 业务线隔离 |
+| checkpoint_ai/cache/ | LLM响应缓存 |
+| checkpoint_ai/context/ | Context管理和持久化 |
+| checkpoint_ai/control/ | Policy和HumanGate |
+| checkpoint_ai/diagnostics/ | 健康检查和告警 |
+| checkpoint_ai/evaluation/ | Evaluation Gate |
+| checkpoint_ai/events/ | Event Bus |
+| checkpoint_ai/llm/ | LLM Provider抽象 |
+| checkpoint_ai/memory/ | 记忆系统 |
+| checkpoint_ai/notification/ | 通知系统 |
+| checkpoint_ai/observability/ | Cost追踪和指标 |
+| checkpoint_ai/plugins/ | 插件注册表 |
+| checkpoint_ai/runtime/ | Agent运行时 |
+| checkpoint_ai/scheduler/ | 定时任务 |
+| checkpoint_ai/storage/ | SQLite持久化 |
+| checkpoint_ai/tools/ | 工具注册和权限 |
+| checkpoint_ai/webhook/ | Webhook发送和接收 |
+| checkpoint_ai/ha/ | 高可用 |
 
 ## 脚本
 
@@ -236,10 +236,10 @@ python scripts/health_check.py
 python scripts/final_acceptance.py
 
 # CLI
-opc-os status
-opc-os run list
-opc-os bl list
-opc-os health
+checkpointai status
+checkpointai run list
+checkpointai bl list
+checkpointai health
 ```
 
 ## Docker部署
@@ -255,7 +255,7 @@ docker compose --profile ha up -d
 docker compose logs -f
 
 # 进入容器
-docker compose exec opc_os bash
+docker compose exec checkpoint_ai bash
 ```
 
 详见 [docs/deployment](docs/deployment/README.md)
@@ -266,4 +266,4 @@ MIT License — 详见 [LICENSE](LICENSE)
 
 ## GitHub
 
-https://github.com/Lemonseaa/OPC-OS
+https://github.com/Lemonseaa/checkpointAI
