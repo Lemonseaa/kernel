@@ -6,7 +6,7 @@ Compose, and verify health.
 ## 5-Minute Start
 
 ```bash
-cd /Users/lemonsea/Desktop/mas/kernel
+cd <your-path>/kernel
 cp .env.example .env
 docker-compose build
 docker-compose up -d

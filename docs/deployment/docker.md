@@ -3,7 +3,7 @@
 ## Build
 
 ```bash
-cd /Users/lemonsea/Desktop/mas/kernel
+cd <your-path>/kernel
 docker-compose build
 ```
 
