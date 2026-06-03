@@ -1,6 +1,11 @@
 # Innovation Research
 # 从业界框架迁移的创新点
 
+> Status: historical research notes.
+>
+> This document is a source of reusable ideas, not the current roadmap. The current source of truth is [BLUEPRINT.md](BLUEPRINT.md).
+> Use these notes only when they support CheckpointAI's current scope: experiment ledger, evidence gate, shadow/replay, patch/versioning, context control, and approval workflow.
+
 **原则：创新来自实际需求，不能盲目借鉴**
 
 ---

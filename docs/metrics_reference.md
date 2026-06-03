@@ -1,5 +1,10 @@
 # CheckpointAI 系统评估指标体系
 
+> Status: historical metric reference.
+>
+> This document is intentionally broad. For current implementation, prefer the narrower metrics required by [BLUEPRINT.md](BLUEPRINT.md): experiment quality, baseline comparison, evidence sufficiency, risk, cost, trace quality, and business outcome metrics.
+> Do not treat all 241 metrics as mandatory.
+
 > 版本：V1.0
 > 日期：2026-06-02
 > 目的：建立完整的AI Agent系统评估标准

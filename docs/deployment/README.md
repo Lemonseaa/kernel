@@ -1,5 +1,7 @@
 # checkpointAI Deployment
 
+> Product direction is defined in [../BLUEPRINT.md](../BLUEPRINT.md). This deployment folder only documents how to run the current codebase.
+
 V1.0 production-ready deployment with Docker.
 
 ## 5-Minute Start

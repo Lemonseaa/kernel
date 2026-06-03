@@ -1,6 +1,12 @@
 # Business Line Architecture
 # 多业务线checkpointAI系统的架构设计
 
+> Status: historical reference.
+>
+> This document captures the old BusinessLine-first architecture. The current source of truth is [BLUEPRINT.md](BLUEPRINT.md).
+> The useful part that remains is scenario/business-domain isolation: quant research, media growth, and other domains must not pollute each other.
+> Do not read this as a mandate to build a full generic business-line runtime, workflow builder, or enterprise tenant system.
+
 **版本：V1**
 **日期：2026-06-02**
 
