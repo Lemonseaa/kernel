@@ -13,6 +13,8 @@ It is not a low-code workflow builder, Agent runtime replacement, or Dify clone.
 
 CheckpointAI is source-available for non-commercial use. Commercial use requires prior written authorization. See [LICENSE](LICENSE).
 
+Commercial authorization contact: liminxi634@163.com
+
 ## Current Direction
 
 ```text
