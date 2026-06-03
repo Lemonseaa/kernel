@@ -3,11 +3,15 @@
 [![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen)](https://github.com/Lemonseaa/checkpointAI)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-Non--Commercial-red)](LICENSE)
 
 CheckpointAI is a code-first experiment and optimization system for Agent teams.
 
 It is not a low-code workflow builder, Agent runtime replacement, or Dify clone. Its job is to make Agent behavior changes observable, comparable, reversible, and evidence-based.
+
+## License
+
+CheckpointAI is source-available for non-commercial use. Commercial use requires prior written authorization. See [LICENSE](LICENSE).
 
 ## Current Direction
 

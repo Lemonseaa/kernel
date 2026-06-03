@@ -1,25 +1,25 @@
 [project]
 name = "checkpointai"
 version = "1.0.0"
-description = "checkpointAI - Agent Workflow checkpointAI for building a general multi-agent operating system."
+description = "CheckpointAI - code-first experiment and optimization system for Agent teams."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { text = "Non-Commercial; commercial use requires authorization" }
 authors = [
     { name = "Lemonsea", email = "lemonsea@example.com" }
 ]
 keywords = [
-    "multi-agent",
-    "agent-framework",
+    "agent-optimization",
+    "experiment-ledger",
     "ai-agents",
-    "workflow",
+    "shadow-testing",
     "human-in-the-loop",
     "checkpointAI",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",

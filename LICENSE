@@ -1,21 +1,43 @@
-MIT License
+CheckpointAI Non-Commercial License
 
 Copyright (c) 2024-2026 CheckpointAI Contributors
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is granted to use, copy, modify, and distribute this software and
+associated documentation files (the "Software") for non-commercial purposes
+only, subject to the conditions below.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. Non-Commercial Use
+
+You may use the Software for personal, educational, research, evaluation, and
+internal non-commercial purposes.
+
+2. Commercial Use Requires Authorization
+
+Commercial use is not permitted without prior written authorization from the
+copyright holder.
+
+Commercial use includes, but is not limited to:
+
+- using the Software to provide paid products or services;
+- using the Software in revenue-generating business operations;
+- selling, sublicensing, hosting, or distributing the Software as part of a
+  commercial product or service;
+- using the Software to operate a production system for commercial clients or
+  customers.
+
+To request commercial authorization, contact the copyright holder.
+
+3. Redistribution
+
+Any permitted redistribution must include this license notice and retain the
+copyright notice.
+
+4. No Warranty
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
