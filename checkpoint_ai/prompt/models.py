@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -32,7 +32,7 @@ class PromptVersion(BaseModel):
     reason: str
     parent_version_id: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("reason")
     @classmethod
@@ -75,7 +75,7 @@ class PromptProposal(BaseModel):
     status: PromptProposalStatus = PromptProposalStatus.PROPOSED
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("reason", "expected_metric")
     @classmethod

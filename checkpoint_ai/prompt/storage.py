@@ -34,7 +34,7 @@ class PromptVersionStore:
         slots: dict[PromptSlot, str] | dict[str, str],
         reason: str,
         parent_version_id: str | None = None,
-        metadata: dict[str, str | int | float | bool | None] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> PromptVersion:
         """Save a full prompt snapshot."""
 
@@ -238,7 +238,7 @@ class PromptProposalStore:
     def update_metadata(
         self,
         proposal_id: str,
-        metadata: dict[str, str | int | float | bool | None],
+        metadata: dict[str, Any],
     ) -> bool:
         """Merge metadata onto one proposal."""
 
