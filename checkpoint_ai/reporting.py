@@ -10,7 +10,12 @@ from checkpoint_ai.evaluation import EvidenceEvaluationEngine
 from checkpoint_ai.insights import CrossScenarioInsightStore
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.metrics import ComparisonResult
-from checkpoint_ai.prompt import PromptProposalStore
+from checkpoint_ai.prompt import (
+    PromptProposalStatus,
+    PromptProposalStore,
+    ProposalStatus,
+    ProposalStore,
+)
 from checkpoint_ai.recommendation import VersionRecommendationStore
 from checkpoint_ai.shadow import ShadowResultStore
 
@@ -22,19 +27,74 @@ class ReportGenerator:
         self.raw_logs = RawLogStore(db_path)
         self.summary_logs = SummaryLogStore(db_path)
         self.proposals = PromptProposalStore(db_path)
+        self.generic_proposals = ProposalStore(db_path)
         self.shadow_results = ShadowResultStore(db_path)
         self.recommendations = VersionRecommendationStore(db_path)
         self.insights = CrossScenarioInsightStore(db_path)
 
-    def latest(self) -> str:
-        """Return the latest run report when available."""
+    def latest(self, scenario_id: str | None = None) -> str:
+        """Return the latest scoped run report when available."""
 
-        logs: list[dict[str, Any]] = []
-        for raw_log in self._all_raw_logs():
-            logs.append(raw_log)
+        logs = self._raw_logs_for_scope(scenario_id)
         if not logs:
             return "Run Report\n\n没有可报告的运行。"
+        scenario_ids = {str(log["scenario_id"]) for log in logs}
+        if scenario_id is None and len(scenario_ids) > 1:
+            return (
+                "Run Report\n\n"
+                "需要指定 scenario_id。当前数据库包含多个 scenario，"
+                "V5 控制台不允许隐式跨场景读取 latest run。"
+            )
         return self.run(str(logs[-1]["run_id"]))
+
+    def pending_items(self, scenario_id: str | None = None) -> list[dict[str, Any]]:
+        """Return a unified pending inbox view for prompt and generic proposals."""
+
+        items: list[dict[str, Any]] = []
+        prompt_statuses = {
+            PromptProposalStatus.PROPOSED,
+            PromptProposalStatus.APPROVED,
+        }
+        for status in prompt_statuses:
+            for proposal in self.proposals.list(status=status, scenario_id=scenario_id):
+                if proposal.status == PromptProposalStatus.APPROVED and not proposal.metadata.get(
+                    "awaiting_human_confirmation"
+                ):
+                    continue
+                items.append(
+                    {
+                        "source_id": proposal.id,
+                        "scenario_id": proposal.scenario_id,
+                        "item_type": "prompt_proposal",
+                        "status": proposal.status.value,
+                        "title": f"Prompt patch: {proposal.agent_id}.{proposal.patch.slot.value}",
+                        "summary": proposal.reason,
+                        "expected_metric": proposal.expected_metric,
+                        "created_at": proposal.created_at.isoformat(),
+                    }
+                )
+        generic_statuses = {
+            ProposalStatus.PROPOSED,
+            ProposalStatus.APPROVED,
+        }
+        for generic_status in generic_statuses:
+            for generic_proposal in self.generic_proposals.list(
+                status=generic_status,
+                scenario_id=scenario_id,
+            ):
+                items.append(
+                    {
+                        "source_id": generic_proposal.id,
+                        "scenario_id": generic_proposal.scenario_id,
+                        "item_type": f"{generic_proposal.proposal_kind.value}_proposal",
+                        "status": generic_proposal.status.value,
+                        "title": f"{generic_proposal.proposal_kind.value}: {generic_proposal.target_id}",
+                        "summary": generic_proposal.reason,
+                        "expected_metric": generic_proposal.expected_metric,
+                        "created_at": generic_proposal.created_at.isoformat(),
+                    }
+                )
+        return sorted(items, key=lambda item: str(item["created_at"]))
 
     def run(self, run_id: str) -> str:
         """Generate a report for one adapter run."""
@@ -180,6 +240,11 @@ class ReportGenerator:
                 if raw is not None:
                     rows.append(raw)
         return rows
+
+    def _raw_logs_for_scope(self, scenario_id: str | None) -> list[dict[str, Any]]:
+        if scenario_id is not None:
+            return self.raw_logs.query_by_scenario(scenario_id)
+        return self._all_raw_logs()
 
     @staticmethod
     def _pretty(value: object) -> str:

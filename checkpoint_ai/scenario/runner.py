@@ -7,6 +7,7 @@ from typing import Any
 
 from checkpoint_ai.adapter import AdapterRegistry, AgentAdapter, AgentRunRequest, AgentRunResult
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
+from checkpoint_ai.scenario.models import ScenarioStatus
 from checkpoint_ai.scenario.registry import ScenarioRegistry
 
 
@@ -37,6 +38,8 @@ class ScenarioRunner:
         """Run a scenario and record raw and summary logs."""
 
         scenario = self.scenarios.get(scenario_id)
+        if scenario.status == ScenarioStatus.ARCHIVED:
+            raise ValueError(f"Scenario is archived and cannot start new runs: {scenario_id}")
         adapter = self.adapters.resolve(scenario.adapter_type)
         request = AgentRunRequest(
             scenario_id=scenario.id,

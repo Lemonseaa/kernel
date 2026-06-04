@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 已落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike；V4 当前落地 isolation、adapter capability、compatibility contract、cross-scenario insight preview。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 已落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike；V4 当前落地 isolation、adapter capability、compatibility contract、cross-scenario insight preview；V4.6/V5.1 开始把隐患修复和控制台 read model 落到代码。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -204,6 +204,8 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | V4.3 | Adapter Compatibility Contract | `checkpoint_ai/adapter/compatibility.py`, `docs/adapter_checklist.md` |
 | V4.4 | Cross-Scenario Insight Preview | `checkpoint_ai/insights/` |
 | V4.5 | V4 Stable | `tests/test_v45_v4_stable.py` |
+| V4.6 | Systemic Hardening | `tests/test_v46_systemic_hardening.py` |
+| V5.1 | Console Read Model | `checkpoint_ai/console/` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -331,6 +333,43 @@ V2.7 约束：
 | V4 | Scenario isolation + AdapterRegistry + compatibility checklist | 不为了外部框架做深度 fork |
 | V5 | Control panel、Approval inbox、Report、Notification、Cost/resource control、Backup/restore | 不做复杂企业平台 |
 | V6 | Safe auto-execution、self-healing、experiment scheduling、policy preference suggestions | 不完全无人值守，不自动上线高风险策略 |
+
+---
+
+## V5 主线
+
+V5 的核心不是先做网页，而是先做“人每天能看的控制台语义”。UI 只能读取 read model，不能直接拼各个 store。
+
+V5 前置隐患修复：
+
+```
+1. report latest 不能隐式跨 scenario
+2. archived scenario 不能启动新 run
+3. prompt proposal 和 generic proposal 必须能进入统一 pending view
+4. console read model 默认 scope-aware，跨场景必须显式 reason
+```
+
+V5 顺序：
+
+| 版本 | 内容 | 重点 |
+|---|---|---|
+| V5.1 | Console Read Model | 已开始：统一 scenario/run/pending snapshot |
+| V5.2 | Approval Inbox | 聚合 prompt / strategy / parameter / deployment 待审批项 |
+| V5.3 | Run & Experiment Dashboard | 回答为什么跑、发生什么、有没有变好 |
+| V5.4 | Cost & Resource Control | 成本事件持久化、预算状态、资源风险 |
+| V5.5 | Notification Routing | 只推送需要人判断的审批/告警/报告 |
+| V5.6 | Backup / Restore | SQLite 和关键配置的可恢复备份 |
+| V5.7 | V5 Stable | 控制台闭环稳定，不做复杂企业平台 |
+
+V5.1 验收：
+
+```
+1. ConsoleReadModel 能生成 scope-aware snapshot
+2. snapshot 包含 scenario count、active/archive、recent runs、failed runs、pending approvals
+3. CLI 能输出 console snapshot
+4. 默认不隐式跨 scenario
+5. 跨 scenario 必须传 allow_cross_scenario + reason
+```
 
 ---
 

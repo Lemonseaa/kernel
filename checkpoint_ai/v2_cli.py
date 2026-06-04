@@ -16,6 +16,7 @@ from checkpoint_ai.adapter import (
     OPCAgentAdapter,
     QuantResearchDemoAdapter,
 )
+from checkpoint_ai.console import ConsoleReadModel
 from checkpoint_ai.insights import (
     CrossScenarioInsightGenerator,
     CrossScenarioInsightStore,
@@ -207,6 +208,13 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     insight_compare.add_argument("--target-non-synthetic-recommendations", type=int, required=True)
     insight_sub.add_parser("list")
 
+    console = subparsers.add_parser("console")
+    console_sub = console.add_subparsers(dest="console_command")
+    console_snapshot = console_sub.add_parser("snapshot")
+    console_snapshot.add_argument("--scenario-id", default=None)
+    console_snapshot.add_argument("--all-scenarios", action="store_true")
+    console_snapshot.add_argument("--reason", default=None)
+
 
 def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
     """Handle V2 command groups."""
@@ -233,6 +241,8 @@ def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
         return _handle_isolation(args, db_path)
     if args.command == "insight":
         return _handle_insight(args, db_path)
+    if args.command == "console":
+        return _handle_console(args, db_path)
     return 1
 
 
@@ -626,6 +636,34 @@ def _handle_insight(args: argparse.Namespace, db_path: str | Path) -> int:
                 f"{insight.source_scenario_id}->{insight.target_scenario_id}\t"
                 f"similarity={insight.similarity_score}"
             )
+        return 0
+    return 1
+
+
+def _handle_console(args: argparse.Namespace, db_path: str | Path) -> int:
+    if args.console_command == "snapshot":
+        snapshot = ConsoleReadModel(db_path).snapshot(
+            scenario_id=args.scenario_id,
+            allow_cross_scenario=args.all_scenarios,
+            reason=args.reason,
+        )
+        print("Console Snapshot")
+        print(f"scope: {snapshot.scope.scenario_id or 'all'}")
+        print(f"scenario_count: {snapshot.scenario_count}")
+        print(f"active_scenario_count: {snapshot.active_scenario_count}")
+        print(f"archived_scenario_count: {snapshot.archived_scenario_count}")
+        print(f"recent_run_count: {snapshot.recent_run_count}")
+        print(f"failed_run_count: {snapshot.failed_run_count}")
+        print(f"pending_approval_count: {snapshot.pending_approval_count}")
+        print(f"operator_summary: {snapshot.operator_summary}")
+        if snapshot.latest_runs:
+            print("latest_runs:")
+            for run in snapshot.latest_runs:
+                print(f"- {run.run_id}\t{run.scenario_id}\t{run.status}\t{run.task}\t{run.value_summary}")
+        if snapshot.pending_items:
+            print("pending_items:")
+            for item in snapshot.pending_items:
+                print(f"- {item['source_id']}\t{item['item_type']}\t{item['summary']}")
         return 0
     return 1
 
