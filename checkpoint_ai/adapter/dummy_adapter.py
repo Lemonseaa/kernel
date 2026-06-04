@@ -10,6 +10,7 @@ from checkpoint_ai.adapter.base import (
     AgentRunResult,
     latency_ms_since,
 )
+from checkpoint_ai.adapter.capabilities import AdapterCapabilities, CapabilitySupport
 
 
 class DummyAdapter(AgentAdapter):
@@ -67,10 +68,8 @@ class DummyAdapter(AgentAdapter):
             status="success",
         )
 
-    def capabilities(self) -> dict[str, bool]:
-        return {
-            "prompt_injection": False,
-            "metrics_capture": True,
-            "shadow_run": True,
-            "continuous_params": False,
-        }
+    def capabilities(self) -> AdapterCapabilities:
+        return AdapterCapabilities(
+            metrics_capture=CapabilitySupport.SUPPORTED,
+            shadow_run=CapabilitySupport.SUPPORTED,
+        )

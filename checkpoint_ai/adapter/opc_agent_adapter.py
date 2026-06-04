@@ -15,6 +15,7 @@ from checkpoint_ai.adapter.base import (
     AgentRunResult,
     latency_ms_since,
 )
+from checkpoint_ai.adapter.capabilities import AdapterCapabilities, CapabilitySupport
 
 DEFAULT_OPC_AGENT_DIR = Path("/Users/lemonsea/Desktop/mas/opc_agent")
 
@@ -81,13 +82,17 @@ class OPCAgentAdapter(AgentAdapter):
 
         return self._result_from_stdout(request, completed.stdout, latency_ms)
 
-    def capabilities(self) -> dict[str, bool]:
-        return {
-            "prompt_injection": False,
-            "metrics_capture": True,
-            "shadow_run": False,
-            "continuous_params": False,
-        }
+    def capabilities(self) -> AdapterCapabilities:
+        return AdapterCapabilities(
+            metrics_capture=CapabilitySupport.SUPPORTED,
+            shadow_run=CapabilitySupport.SUPPORTED,
+            notes={
+                "shadow_run": (
+                    "OPC demo runs through a subprocess boundary; shadow mode is represented by "
+                    "request.config['shadow'] and does not mutate deployed CheckpointAI prompts."
+                )
+            },
+        )
 
     @staticmethod
     def _resolve_command(config: dict[str, Any]) -> list[str]:

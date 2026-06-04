@@ -7,7 +7,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AdapterRegistry, AgentAdapter, AgentRunRequest, AgentRunResult
+from checkpoint_ai.adapter import (
+    AdapterCapabilities,
+    AdapterRegistry,
+    AgentAdapter,
+    AgentRunRequest,
+    AgentRunResult,
+    CapabilitySupport,
+)
 from checkpoint_ai.metrics import (
     MetricCategory,
     MetricDirection,
@@ -244,13 +251,12 @@ class _RiskFixtureAdapter(AgentAdapter):
             value_summary="fixture metrics",
         )
 
-    def capabilities(self) -> dict[str, bool]:
-        return {
-            "prompt_injection": True,
-            "metrics_capture": True,
-            "shadow_run": True,
-            "continuous_params": False,
-        }
+    def capabilities(self) -> AdapterCapabilities:
+        return AdapterCapabilities(
+            prompt_injection=CapabilitySupport.SUPPORTED,
+            metrics_capture=CapabilitySupport.SUPPORTED,
+            shadow_run=CapabilitySupport.SUPPORTED,
+        )
 
 
 def _run_cli(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:

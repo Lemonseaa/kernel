@@ -4,9 +4,17 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
+
+
+class ScenarioStatus(str, Enum):
+    """Scenario lifecycle state."""
+
+    ACTIVE = "active"
+    ARCHIVED = "archived"
 
 
 class Scenario(BaseModel):
@@ -18,4 +26,6 @@ class Scenario(BaseModel):
     adapter_type: str
     business_line_id: str | None = None
     adapter_config: dict[str, Any] = Field(default_factory=dict)
+    status: ScenarioStatus = ScenarioStatus.ACTIVE
+    metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

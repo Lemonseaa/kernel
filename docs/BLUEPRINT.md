@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 当前落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 已落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike；V4 当前落地 isolation、adapter capability、compatibility contract、cross-scenario insight preview。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -199,6 +199,11 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | V3.2 | Scenario MetricSchema | `checkpoint_ai/metrics/store.py` |
 | V3.3 | Version Recommender | `checkpoint_ai/recommendation/` |
 | V3.4 | Bayesian Optimization Spike | `checkpoint_ai/optimization/` |
+| V4.1 | Scenario Isolation Hardening | `checkpoint_ai/isolation/` |
+| V4.2 | AdapterRegistry Hardening | `checkpoint_ai/adapter/capabilities.py` |
+| V4.3 | Adapter Compatibility Contract | `checkpoint_ai/adapter/compatibility.py`, `docs/adapter_checklist.md` |
+| V4.4 | Cross-Scenario Insight Preview | `checkpoint_ai/insights/` |
+| V4.5 | V4 Stable | `tests/test_v45_v4_stable.py` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -326,6 +331,42 @@ V2.7 约束：
 | V4 | Scenario isolation + AdapterRegistry + compatibility checklist | 不为了外部框架做深度 fork |
 | V5 | Control panel、Approval inbox、Report、Notification、Cost/resource control、Backup/restore | 不做复杂企业平台 |
 | V6 | Safe auto-execution、self-healing、experiment scheduling、policy preference suggestions | 不完全无人值守，不自动上线高风险策略 |
+
+---
+
+## V4 主线
+
+V4 的核心是“隔离与可插拔能力验证”，不是接入更多外部框架。
+
+Hermes 讨论结论：
+
+```
+1. Scenario 有 archive，不做物理 delete；delete 留在 BusinessLine 层面
+2. Cross-scenario insight 的 tags 人工填为主，自动推断为辅
+3. Adapter compatibility report 同时写文档和 SQLite
+4. Adapter capabilities 在 V4.2 强制结构化，废弃 dict 兼容
+5. TradingAgents/CrewAI spike 放在 V4.5 之后
+```
+
+V4 顺序：
+
+| 版本 | 内容 | 状态 |
+|---|---|---|
+| V4.1 | Scenario Isolation Hardening | 已实现：ScenarioScope、archive、IsolationAuditor |
+| V4.2 | AdapterRegistry Hardening | 已实现：结构化 capabilities、registry 查询、unsupported shadow 显式失败 |
+| V4.3 | Adapter Compatibility Contract | 已实现：兼容性 evaluator、SQLite report store、adapter checklist 文档 |
+| V4.4 | Cross-Scenario Insight Preview | 已实现：preview-only insight，真实 evidence 不足时拒绝 |
+| V4.5 | V4 Stable | 已实现：多 scenario、多 adapter、隔离、兼容性、insight 端到端测试 |
+
+V4 约束：
+
+```
+1. 不正式适配 TradingAgents/CrewAI
+2. 不自动跨场景迁移 prompt、参数、策略、policy
+3. 不允许 hidden global query；跨场景必须显式
+4. Adapter 不支持的能力必须明确降级
+5. Synthetic evidence 只能验证链路，不能支撑 cross-scenario insight
+```
 
 ---
 

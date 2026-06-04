@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from checkpoint_ai.adapter import AdapterRegistry, AgentRunRequest
+from checkpoint_ai.adapter import AdapterRegistry, AgentRunRequest, CapabilitySupport
 from checkpoint_ai.metrics import MetricSchemaRegistry, MetricSchemaStore
 from checkpoint_ai.prompt import PromptProposal, PromptSlot, PromptVersionStore
 from checkpoint_ai.scenario import ScenarioRegistry
@@ -41,6 +41,20 @@ class ShadowRunner:
 
         scenario = self.scenarios.get(proposal.scenario_id)
         adapter = self.adapters.resolve(scenario.adapter_type)
+        if adapter.capabilities().shadow_run != CapabilitySupport.SUPPORTED:
+            result = ShadowResult(
+                proposal_id=proposal.id,
+                scenario_id=proposal.scenario_id,
+                agent_id=proposal.agent_id,
+                run_id=f"unsupported-{proposal.id}",
+                status="failed",
+                passed=False,
+                answer="shadow_run unsupported",
+                value_summary=f"shadow_run unsupported by adapter: {adapter.name}",
+                error_type="unsupported_capability",
+            )
+            self.results.save(result)
+            return result
         baseline = self.versions.get_latest(proposal.scenario_id, proposal.agent_id)
         baseline_slots = dict(baseline.slots) if baseline is not None else {}
         candidate_slots = self._apply_patch(dict(baseline_slots), proposal)

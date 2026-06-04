@@ -170,6 +170,8 @@ def main(argv: list[str] | None = None) -> int:
         "metric-schema",
         "recommendation",
         "optimization",
+        "isolation",
+        "insight",
     }:
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
         return handle_v2_command(args, db_path)

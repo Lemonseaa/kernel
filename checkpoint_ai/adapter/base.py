@@ -9,6 +9,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from checkpoint_ai.adapter.capabilities import AdapterCapabilities
+
 
 class AgentRunRequest(BaseModel):
     """Structured request passed into an Agent adapter."""
@@ -50,7 +52,7 @@ class AgentAdapter(ABC):
         """Run the adapter and return a structured result."""
 
     @abstractmethod
-    def capabilities(self) -> dict[str, bool]:
+    def capabilities(self) -> AdapterCapabilities:
         """Declare adapter capabilities."""
 
     def build_request(

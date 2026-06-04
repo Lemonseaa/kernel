@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from checkpoint_ai.evaluation import EvidenceEvaluationEngine
+from checkpoint_ai.insights import CrossScenarioInsightStore
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.metrics import ComparisonResult
 from checkpoint_ai.prompt import PromptProposalStore
@@ -23,6 +24,7 @@ class ReportGenerator:
         self.proposals = PromptProposalStore(db_path)
         self.shadow_results = ShadowResultStore(db_path)
         self.recommendations = VersionRecommendationStore(db_path)
+        self.insights = CrossScenarioInsightStore(db_path)
 
     def latest(self) -> str:
         """Return the latest run report when available."""
@@ -138,6 +140,29 @@ class ReportGenerator:
                 "证据来源:",
                 f"source_shadow_ids: {self._pretty(recommendation.source_shadow_ids)}",
                 f"evidence: {self._pretty(recommendation.evidence)}",
+            ]
+        )
+
+    def insight(self, insight_id: str) -> str:
+        """Generate a report for one cross-scenario insight."""
+
+        insight = self.insights.get(insight_id)
+        if insight is None:
+            return f"Cross-Scenario Insight Report\n\ninsight_id: {insight_id}\n状态: not found"
+        return "\n".join(
+            [
+                "Cross-Scenario Insight Report",
+                "",
+                f"insight_id: {insight.id}",
+                f"source_scenario_id: {insight.source_scenario_id}",
+                f"target_scenario_id: {insight.target_scenario_id}",
+                f"decision: {insight.decision.value}",
+                f"similarity_score: {insight.similarity_score}",
+                f"risk: {insight.risk}",
+                f"reason: {insight.reason}",
+                f"rejection_reasons: {self._pretty(insight.rejection_reasons)}",
+                "",
+                "This is an observation only. It does not migrate prompt, parameter, strategy, or policy.",
             ]
         )
 

@@ -10,7 +10,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from checkpoint_ai.scenario.models import Scenario
+from checkpoint_ai.scenario.models import Scenario, ScenarioStatus
 
 
 class ScenarioStore:
@@ -28,15 +28,18 @@ class ScenarioStore:
             conn.execute(
                 """
                 INSERT INTO scenarios (
-                    id, name, description, adapter_type, business_line_id, adapter_config, created_at
+                    id, name, description, adapter_type, business_line_id, adapter_config,
+                    status, metadata, created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     name=excluded.name,
                     description=excluded.description,
                     adapter_type=excluded.adapter_type,
                     business_line_id=excluded.business_line_id,
-                    adapter_config=excluded.adapter_config
+                    adapter_config=excluded.adapter_config,
+                    status=excluded.status,
+                    metadata=excluded.metadata
                 """,
                 self._to_row(scenario),
             )
@@ -63,6 +66,17 @@ class ScenarioStore:
             ).fetchall()
         return [self._from_row(row) for row in rows]
 
+    def archive(self, scenario_id: str, reason: str) -> bool:
+        """Archive one scenario without deleting historical data."""
+
+        scenario = self.get(scenario_id)
+        if scenario is None:
+            return False
+        scenario.status = ScenarioStatus.ARCHIVED
+        scenario.metadata = {**scenario.metadata, "archive_reason": reason}
+        self.save(scenario)
+        return True
+
     @contextmanager
     def _connection(self) -> Iterator[sqlite3.Connection]:
         conn = sqlite3.connect(self.path)
@@ -83,6 +97,8 @@ class ScenarioStore:
                     adapter_type TEXT NOT NULL,
                     business_line_id TEXT,
                     adapter_config TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'active',
+                    metadata TEXT NOT NULL DEFAULT '{}',
                     created_at TEXT NOT NULL
                 )
                 """
@@ -99,6 +115,10 @@ class ScenarioStore:
         existing = {row[1] for row in conn.execute("PRAGMA table_info(scenarios)").fetchall()}
         if "business_line_id" not in existing:
             conn.execute("ALTER TABLE scenarios ADD COLUMN business_line_id TEXT")
+        if "status" not in existing:
+            conn.execute("ALTER TABLE scenarios ADD COLUMN status TEXT NOT NULL DEFAULT 'active'")
+        if "metadata" not in existing:
+            conn.execute("ALTER TABLE scenarios ADD COLUMN metadata TEXT NOT NULL DEFAULT '{}'")
 
     @staticmethod
     def _to_row(scenario: Scenario) -> tuple[Any, ...]:
@@ -109,6 +129,8 @@ class ScenarioStore:
             scenario.adapter_type,
             scenario.business_line_id,
             json.dumps(scenario.adapter_config, ensure_ascii=False, default=str),
+            scenario.status.value,
+            json.dumps(scenario.metadata, ensure_ascii=False, default=str),
             scenario.created_at.isoformat(),
         )
 
@@ -121,5 +143,7 @@ class ScenarioStore:
             adapter_type=row["adapter_type"],
             business_line_id=row["business_line_id"],
             adapter_config=json.loads(row["adapter_config"]),
+            status=ScenarioStatus(row["status"]),
+            metadata=json.loads(row["metadata"]),
             created_at=datetime.fromisoformat(row["created_at"]).astimezone(UTC),
         )

@@ -11,6 +11,7 @@ from checkpoint_ai.adapter.base import (
     AgentRunResult,
     latency_ms_since,
 )
+from checkpoint_ai.adapter.capabilities import AdapterCapabilities, CapabilitySupport
 
 
 class QuantResearchDemoAdapter(AgentAdapter):
@@ -56,13 +57,12 @@ class QuantResearchDemoAdapter(AgentAdapter):
             status="success",
         )
 
-    def capabilities(self) -> dict[str, bool]:
-        return {
-            "prompt_injection": False,
-            "metrics_capture": True,
-            "shadow_run": True,
-            "continuous_params": True,
-        }
+    def capabilities(self) -> AdapterCapabilities:
+        return AdapterCapabilities(
+            metrics_capture=CapabilitySupport.SUPPORTED,
+            shadow_run=CapabilitySupport.SUPPORTED,
+            continuous_params=CapabilitySupport.SUPPORTED,
+        )
 
     def _signals(
         self,

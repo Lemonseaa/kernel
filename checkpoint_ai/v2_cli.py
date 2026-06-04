@@ -8,11 +8,20 @@ from pathlib import Path
 from typing import Any
 
 from checkpoint_ai.adapter import (
+    AdapterCompatibilityEvaluator,
+    AdapterCompatibilityInput,
+    AdapterCompatibilityReportStore,
     AdapterRegistry,
     DummyAdapter,
     OPCAgentAdapter,
     QuantResearchDemoAdapter,
 )
+from checkpoint_ai.insights import (
+    CrossScenarioInsightGenerator,
+    CrossScenarioInsightStore,
+    ScenarioInsightInput,
+)
+from checkpoint_ai.isolation import ScenarioIsolationAuditor
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.metrics import (
     MetricCategory,
@@ -70,6 +79,17 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     adapter_run.add_argument("--task", required=True)
     adapter_run.add_argument("--context-json", default="{}")
     adapter_run.add_argument("--config-json", default="{}")
+    adapter_compat = adapter_sub.add_parser("compatibility")
+    adapter_compat.add_argument("--name", required=True)
+    adapter_compat.add_argument("--structured-input", required=True)
+    adapter_compat.add_argument("--structured-output", required=True)
+    adapter_compat.add_argument("--prompt-slots", required=True)
+    adapter_compat.add_argument("--prompt-injection", required=True)
+    adapter_compat.add_argument("--shadow-run", required=True)
+    adapter_compat.add_argument("--run-trace", required=True)
+    adapter_compat.add_argument("--metrics-capture", required=True)
+    adapter_compat.add_argument("--metric-format-compatible", required=True)
+    adapter_compat.add_argument("--estimated-days", type=int, required=True)
 
     prompt = subparsers.add_parser("prompt")
     prompt_sub = prompt.add_subparsers(dest="prompt_command")
@@ -116,6 +136,8 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     report_proposal.add_argument("proposal_id")
     report_recommendation = report_sub.add_parser("recommendation")
     report_recommendation.add_argument("recommendation_id")
+    report_insight = report_sub.add_parser("insight")
+    report_insight.add_argument("insight_id")
 
     metric_schema = subparsers.add_parser("metric-schema")
     metric_schema_sub = metric_schema.add_subparsers(dest="metric_schema_command")
@@ -166,6 +188,25 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     optimization_reject = optimization_sub.add_parser("reject")
     optimization_reject.add_argument("suggestion_id")
 
+    isolation = subparsers.add_parser("isolation")
+    isolation_sub = isolation.add_subparsers(dest="isolation_command")
+    isolation_sub.add_parser("audit")
+
+    insight = subparsers.add_parser("insight")
+    insight_sub = insight.add_subparsers(dest="insight_command")
+    insight_compare = insight_sub.add_parser("compare")
+    insight_compare.add_argument("--source", required=True)
+    insight_compare.add_argument("--target", required=True)
+    insight_compare.add_argument("--source-tags", required=True)
+    insight_compare.add_argument("--target-tags", required=True)
+    insight_compare.add_argument("--source-metrics", required=True)
+    insight_compare.add_argument("--target-metrics", required=True)
+    insight_compare.add_argument("--source-runs", type=int, required=True)
+    insight_compare.add_argument("--target-runs", type=int, required=True)
+    insight_compare.add_argument("--source-non-synthetic-recommendations", type=int, required=True)
+    insight_compare.add_argument("--target-non-synthetic-recommendations", type=int, required=True)
+    insight_sub.add_parser("list")
+
 
 def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
     """Handle V2 command groups."""
@@ -188,6 +229,10 @@ def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
         return _handle_recommendation(args, db_path)
     if args.command == "optimization":
         return _handle_optimization(args, db_path)
+    if args.command == "isolation":
+        return _handle_isolation(args, db_path)
+    if args.command == "insight":
+        return _handle_insight(args, db_path)
     return 1
 
 
@@ -237,6 +282,30 @@ def _handle_scenario(args: argparse.Namespace, db_path: str | Path) -> int:
 
 
 def _handle_adapter(args: argparse.Namespace, db_path: str | Path) -> int:
+    if args.adapter_command == "compatibility":
+        report = AdapterCompatibilityEvaluator().evaluate(
+            AdapterCompatibilityInput(
+                name=args.name,
+                structured_input=_bool_arg(args.structured_input),
+                structured_output=_bool_arg(args.structured_output),
+                prompt_slots=_bool_arg(args.prompt_slots),
+                prompt_injection=_bool_arg(args.prompt_injection),
+                shadow_run=_bool_arg(args.shadow_run),
+                run_trace=_bool_arg(args.run_trace),
+                metrics_capture=_bool_arg(args.metrics_capture),
+                metric_format_compatible=_bool_arg(args.metric_format_compatible),
+                estimated_days=args.estimated_days,
+            )
+        )
+        AdapterCompatibilityReportStore(db_path).save(report)
+        print("Adapter Compatibility Report")
+        print(f"id: {report.id}")
+        print(f"name: {report.name}")
+        print(f"score: {report.score}")
+        print(f"decision: {report.decision.value}")
+        print(f"blockers: {report.blockers}")
+        print(f"warnings: {report.warnings}")
+        return 0
     runner = _scenario_runner(db_path)
     result = runner.run_scenario(
         scenario_id=args.scenario_id,
@@ -368,6 +437,9 @@ def _handle_report(args: argparse.Namespace, db_path: str | Path) -> int:
         return 0
     if args.report_command == "recommendation":
         print(reporter.recommendation(args.recommendation_id))
+        return 0
+    if args.report_command == "insight":
+        print(reporter.insight(args.insight_id))
         return 0
     return 1
 
@@ -507,6 +579,57 @@ def _handle_optimization(args: argparse.Namespace, db_path: str | Path) -> int:
     return 1
 
 
+def _handle_isolation(args: argparse.Namespace, db_path: str | Path) -> int:
+    if args.isolation_command == "audit":
+        print("Scenario Isolation Audit")
+        for result in ScenarioIsolationAuditor().audit_sqlite(db_path):
+            scenarios = ",".join(result.scenario_ids) if result.scenario_ids else "-"
+            print(
+                f"{result.store_name}\t{result.status}\t"
+                f"scenarios={scenarios}\tmissing={result.missing_scenario_id_count}"
+            )
+        return 0
+    return 1
+
+
+def _handle_insight(args: argparse.Namespace, db_path: str | Path) -> int:
+    store = CrossScenarioInsightStore(db_path)
+    if args.insight_command == "compare":
+        insight = CrossScenarioInsightGenerator().compare(
+            ScenarioInsightInput(
+                scenario_id=args.source,
+                domain_tags=_csv(args.source_tags),
+                metric_names=_csv(args.source_metrics),
+                run_count=args.source_runs,
+                non_synthetic_recommendation_count=args.source_non_synthetic_recommendations,
+            ),
+            ScenarioInsightInput(
+                scenario_id=args.target,
+                domain_tags=_csv(args.target_tags),
+                metric_names=_csv(args.target_metrics),
+                run_count=args.target_runs,
+                non_synthetic_recommendation_count=args.target_non_synthetic_recommendations,
+            ),
+        )
+        store.save(insight)
+        print(f"Cross-scenario insight created: {insight.id}")
+        print(f"decision: {insight.decision.value}")
+        print(f"source: {insight.source_scenario_id}")
+        print(f"target: {insight.target_scenario_id}")
+        print(f"reason: {insight.reason}")
+        return 0
+    if args.insight_command == "list":
+        print("Cross-Scenario Insights")
+        for insight in store.list():
+            print(
+                f"{insight.id}\t{insight.decision.value}\t"
+                f"{insight.source_scenario_id}->{insight.target_scenario_id}\t"
+                f"similarity={insight.similarity_score}"
+            )
+        return 0
+    return 1
+
+
 def _scenario_runner(db_path: str | Path) -> ScenarioRunner:
     return ScenarioRunner(
         scenarios=_scenario_registry(db_path),
@@ -536,6 +659,14 @@ def _loads_json(raw: str) -> dict[str, Any]:
     if not isinstance(loaded, dict):
         raise ValueError("Expected a JSON object")
     return loaded
+
+
+def _bool_arg(raw: str) -> bool:
+    return raw.strip().lower() in {"1", "true", "yes", "y"}
+
+
+def _csv(raw: str) -> list[str]:
+    return [item.strip() for item in raw.split(",") if item.strip()]
 
 
 def _parameter_observations(parameter_name: str, raw: str) -> list[ParameterObservation]:
