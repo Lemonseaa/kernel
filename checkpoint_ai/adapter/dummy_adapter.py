@@ -42,8 +42,8 @@ class DummyAdapter(AgentAdapter):
                 error_type="adapter_error",
             )
 
-        signal_quality = 0.82
-        confidence = 0.76
+        signal_quality = 0.9 if request.config.get("shadow") else 0.82
+        confidence = 0.79 if request.config.get("shadow") else 0.76
         latency_ms = latency_ms_since(start)
         answer = (
             f"{symbol} dummy signal is mildly bullish. Momentum and quality inputs are aligned, "

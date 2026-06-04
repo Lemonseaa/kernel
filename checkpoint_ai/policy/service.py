@@ -17,8 +17,8 @@ from checkpoint_ai.prompt import (
 class ShadowRunner(Protocol):
     """Minimal V2.3 shadow runner contract."""
 
-    def run(self, proposal: PromptProposal) -> bool:
-        """Return whether the proposal passed shadow."""
+    def run(self, proposal: PromptProposal) -> bool | object:
+        """Return whether the proposal passed shadow, or an object with passed."""
 
 
 class ScenarioPolicyService:
@@ -65,7 +65,8 @@ class ScenarioPolicyService:
                 action="blocked",
             )
 
-        shadow_passed = self.shadow_runner.run(proposal)
+        shadow_output = self.shadow_runner.run(proposal)
+        shadow_passed = self._shadow_passed(shadow_output)
         self.proposals.update_metadata(
             proposal_id,
             {
@@ -127,3 +128,12 @@ class ScenarioPolicyService:
             slots=slots,
             reason=f"Applied proposal {proposal.id}: {proposal.reason}",
         )
+
+    @staticmethod
+    def _shadow_passed(shadow_output: bool | object) -> bool:
+        if isinstance(shadow_output, bool):
+            return shadow_output
+        passed = getattr(shadow_output, "passed", None)
+        if isinstance(passed, bool):
+            return passed
+        raise TypeError("shadow_runner.run must return bool or object with bool passed")
