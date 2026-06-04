@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from checkpoint_ai.adapter import AdapterRegistry, DummyAdapter
+from checkpoint_ai.adapter import AdapterRegistry, DummyAdapter, OPCAgentAdapter
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.prompt import (
     PromptPatch,
@@ -299,6 +299,7 @@ def _scenario_registry(db_path: str | Path) -> ScenarioRegistry:
 def _adapter_registry() -> AdapterRegistry:
     registry = AdapterRegistry()
     registry.register(DummyAdapter())
+    registry.register(OPCAgentAdapter())
     return registry
 
 
