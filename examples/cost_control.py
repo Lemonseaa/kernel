@@ -10,14 +10,12 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from checkpoint_ai import CheckpointAI
 from checkpoint_ai.observability.cost_tracker import CostTracker
 
 
 async def main() -> None:
     """Set budget and track cost in real-time."""
 
-    checkpoint_ai = CheckpointAI()
     cost_tracker = CostTracker()
 
     # 1. Set daily budget for each provider
@@ -25,8 +23,8 @@ async def main() -> None:
     cost_tracker.set_budget('openai', 30.0)
 
     print("Budgets set:")
-    print(f"  minimax: $50.0/day")
-    print(f"  openai: $30.0/day")
+    print("  minimax: $50.0/day")
+    print("  openai: $30.0/day")
 
     # 2. Track token usage (input_tokens, output_tokens)
     cost_tracker.track('minimax', input_tokens=1000, output_tokens=500, business_line_id='test')
@@ -37,9 +35,9 @@ async def main() -> None:
     daily_minimax = cost_tracker.get_daily_cost('minimax', business_line_id='test')
     daily_openai = cost_tracker.get_daily_cost('openai', business_line_id='test')
 
-    print(f"\nCurrent daily spending:")
-    print(f"  minimax: ${daily_minimax:.2f}")
-    print(f"  openai: ${daily_openai:.2f}")
+    print("\nCurrent daily token usage:")
+    print(f"  minimax: {daily_minimax.total_tokens} tokens")
+    print(f"  openai: {daily_openai.total_tokens} tokens")
 
 
 if __name__ == '__main__':

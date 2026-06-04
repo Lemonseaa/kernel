@@ -1,4 +1,4 @@
-"""V0.4 policy inheritance tests."""
+"""Runtime action policy inheritance tests."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import unittest
 from checkpoint_ai.control import PolicyDecision, PolicyEngine, PolicyRule, PolicyScope
 
 
-class PolicyV04Test(unittest.TestCase):
+class RuntimePolicyTest(unittest.TestCase):
     """Validate global and BusinessLine policy precedence."""
 
     def test_global_policy_applies_to_all_business_lines(self) -> None:

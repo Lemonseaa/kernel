@@ -37,6 +37,7 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     scenario_create.add_argument("--name", required=True)
     scenario_create.add_argument("--description", required=True)
     scenario_create.add_argument("--adapter", required=True)
+    scenario_create.add_argument("--business-line-id", default=None)
     scenario_create.add_argument("--adapter-config-json", default="{}")
     scenario_sub.add_parser("list")
     scenario_show = scenario_sub.add_parser("show")
@@ -121,11 +122,13 @@ def _handle_scenario(args: argparse.Namespace, db_path: str | Path) -> int:
             name=args.name,
             description=args.description,
             adapter_type=args.adapter,
+            business_line_id=args.business_line_id,
             adapter_config=_loads_json(args.adapter_config_json),
         )
         store.save(new_scenario)
         print(f"Scenario created: {new_scenario.id}")
         print(f"name: {new_scenario.name}")
+        print(f"business_line_id: {new_scenario.business_line_id or 'default'}")
         print(f"adapter: {new_scenario.adapter_type}")
         return 0
     if args.scenario_command == "list":
@@ -135,7 +138,10 @@ def _handle_scenario(args: argparse.Namespace, db_path: str | Path) -> int:
             return 0
         print("Scenarios")
         for scenario in scenarios:
-            print(f"{scenario.id}\t{scenario.adapter_type}\t{scenario.name}")
+            print(
+                f"{scenario.id}\t{scenario.business_line_id or 'default'}\t"
+                f"{scenario.adapter_type}\t{scenario.name}"
+            )
         return 0
     if args.scenario_command == "show":
         found_scenario = store.get(args.scenario_id)
@@ -146,6 +152,7 @@ def _handle_scenario(args: argparse.Namespace, db_path: str | Path) -> int:
         print(f"id: {found_scenario.id}")
         print(f"name: {found_scenario.name}")
         print(f"description: {found_scenario.description}")
+        print(f"business_line_id: {found_scenario.business_line_id or 'default'}")
         print(f"adapter: {found_scenario.adapter_type}")
         print(f"adapter_config: {_pretty(found_scenario.adapter_config)}")
         return 0

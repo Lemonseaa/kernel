@@ -69,5 +69,6 @@ python examples/evaluation_gate_workflow.py
 
 ## 下一步
 
-- 查看 [docs/ARCHITECTURE_OVERVIEW.md](../docs/ARCHITECTURE_OVERVIEW.md) 深入理解架构
+- 查看 [docs/BLUEPRINT.md](../docs/BLUEPRINT.md) 理解当前路线
+- 查看 [docs/SYSTEM_BOUNDARIES.md](../docs/SYSTEM_BOUNDARIES.md) 理解 Policy 和 Scenario/BusinessLine 边界
 - 查看 [docs/deployment](../docs/deployment/README.md) 了解部署方式

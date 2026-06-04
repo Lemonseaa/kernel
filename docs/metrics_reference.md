@@ -343,7 +343,7 @@
 |---|---|---|
 | vs CrewAI | 相当或更好 | 竞争力 |
 | vs LangChain | 相当或更好 | 竞争力 |
-| vs 自研V0.1 | 明显提升 | 持续改进 |
+| vs early internal baseline | 明显提升 | 持续改进 |
 
 ### 11.2 自身迭代
 

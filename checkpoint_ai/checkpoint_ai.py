@@ -29,6 +29,7 @@ from checkpoint_ai.notification import NotificationManager
 from checkpoint_ai.observability import CostTracker, MetricsCollector, PerformanceMonitor
 from checkpoint_ai.persistence import SQLiteStore
 from checkpoint_ai.plugins import PluginRegistry
+from checkpoint_ai.policy import ScenarioPolicy
 from checkpoint_ai.runtime import AgentRegistry, SimpleAgent
 from checkpoint_ai.scheduler import Job, JobType, Scheduler
 from checkpoint_ai.templates import TemplateApplier, TemplateRegistry, builtin_templates
@@ -38,7 +39,7 @@ from checkpoint_ai.workflow import WorkflowEngine
 
 
 class CheckpointAI:
-    """V0.1 Agent Workflow checkpointAI facade."""
+    """CheckpointAI service facade for runtime and optimization components."""
 
     def __init__(self, sqlite_path: str | Path | None = None, config: CheckpointAIConfig | None = None) -> None:
         """Create checkpoint_ai services and wire their dependencies."""
@@ -75,6 +76,7 @@ class CheckpointAI:
         self.tool_registry.register(EchoTool())
         self.tool_registry.register(FileWriteTool(root_dir=Path.cwd()))
         self.policy_engine = PolicyEngine()
+        self.scenario_policy = ScenarioPolicy()
         for policy in builtin_policies():
             self.policy_engine.add_policy(policy)
         self.notification_manager = NotificationManager()

@@ -1,6 +1,6 @@
 # CheckpointAI
 
-[![Tests](https://img.shields.io/badge/tests-112%20passed-brightgreen)](https://github.com/Lemonseaa/checkpointAI)
+[![Tests](https://img.shields.io/badge/tests-173%20passed-brightgreen)](https://github.com/Lemonseaa/checkpointAI)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-Non--Commercial-red)](LICENSE)
@@ -55,6 +55,7 @@ If the answer is yes, CheckpointAI is useful.
 
 | Concept | Meaning |
 |---|---|
+| BusinessLine | A top-level business/domain boundary for lifecycle, budgets, isolation, and reporting. |
 | Scenario | A bounded optimization domain, such as quant research or media growth. |
 | Experiment | A recorded attempt to improve behavior, with hypothesis and result. |
 | Run | One execution of an Agent team or business workflow. |
@@ -101,6 +102,7 @@ python -m mypy checkpoint_ai --show-error-codes --no-incremental
 ## Documentation
 
 - [Blueprint](docs/BLUEPRINT.md): current source of truth.
+- [System Boundaries](docs/SYSTEM_BOUNDARIES.md): policy and BusinessLine/Scenario boundaries.
 - [Architecture Overview](docs/ARCHITECTURE_OVERVIEW.md): historical architecture reference.
 - [Business Line Architecture](docs/BUSINESS_LINE_ARCHITECTURE.md): historical isolation design reference.
 - [Innovation Research](docs/INNOVATION_RESEARCH.md): historical research notes.

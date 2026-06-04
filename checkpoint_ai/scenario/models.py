@@ -16,5 +16,6 @@ class Scenario(BaseModel):
     name: str
     description: str
     adapter_type: str
+    business_line_id: str | None = None
     adapter_config: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

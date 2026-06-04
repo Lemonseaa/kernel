@@ -28,7 +28,7 @@ class WriterAgent(BaseAgent):
 
 
 class IntegrationTest(unittest.TestCase):
-    """Validate the V0.1 checkpoint_ai happy path."""
+    """Validate the checkpoint_ai runtime happy path."""
 
     def test_checkpoint_ai_runs_workflow_and_persists_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

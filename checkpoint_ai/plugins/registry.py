@@ -8,7 +8,8 @@ from typing import Any
 class PluginRegistry:
     """Register and look up plugin classes.
 
-    V0.3 deliberately avoids dynamic loading, sandboxing, and hot unloading.
+    This registry stores already-imported classes. It does not perform dynamic
+    loading, sandboxing, or hot unloading.
     """
 
     def __init__(self) -> None:

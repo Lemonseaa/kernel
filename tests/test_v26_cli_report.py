@@ -29,6 +29,8 @@ class V26CliReportTest(unittest.TestCase):
                 "CLI scenario",
                 "--adapter",
                 "dummy_stock_signal",
+                "--business-line-id",
+                "quant",
             )
             listing = self._run(db_path, "scenario", "list")
             detail = self._run(db_path, "scenario", "show", "scenario-1")
@@ -46,8 +48,11 @@ class V26CliReportTest(unittest.TestCase):
             report = self._run(db_path, "report", "latest")
 
         self.assertIn("Scenario created", create.stdout)
+        self.assertIn("business_line_id: quant", create.stdout)
         self.assertIn("scenario-1", listing.stdout)
+        self.assertIn("quant", listing.stdout)
         self.assertIn("Quant demo", detail.stdout)
+        self.assertIn("business_line_id: quant", detail.stdout)
         self.assertIn("Adapter Run Report", adapter.stdout)
         self.assertIn("signal_quality", adapter.stdout)
         self.assertIn("Run Report", report.stdout)
