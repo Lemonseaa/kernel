@@ -94,10 +94,10 @@ class ShadowRunner:
         if isinstance(configured, dict):
             return configured
         baseline = dict(shadow_metrics)
-        if "signal_quality" in baseline and isinstance(baseline["signal_quality"], int | float):
-            baseline["signal_quality"] = round(float(baseline["signal_quality"]) - 0.08, 10)
-        if "confidence" in baseline and isinstance(baseline["confidence"], int | float):
-            baseline["confidence"] = round(float(baseline["confidence"]) - 0.03, 10)
+        for key, value in list(baseline.items()):
+            if not isinstance(value, int | float) or key.endswith("_ms") or key.endswith("_chars"):
+                continue
+            baseline[key] = round(float(value) - 0.08, 10)
         return baseline
 
     @staticmethod

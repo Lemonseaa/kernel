@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1、V2.2、V2.3、V2.4、V2.5、V2.6、V2.7 已实现；当前准备进入 V2.8。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成，当前准备进入真实 demo 运行积累和 V3 前置验证。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -191,6 +191,7 @@ V1 已完成；V2.1、V2.2、V2.3、V2.4、V2.5、V2.6、V2.7 已实现；当前
 | V2.5 | AgentLoopEngine | `checkpoint_ai/loop/` |
 | V2.6 | CLI + Report | `checkpoint_ai/v2_cli.py`, `checkpoint_ai/reporting.py` |
 | V2.7 | First Demo Adapter | `checkpoint_ai/adapter/opc_agent_adapter.py` |
+| V2.8 | V2 Stable | `tests/test_v28_v2_stable.py` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -230,7 +231,7 @@ Post-V6 的 Team / Marketplace / Enterprise 不进入当前主线。
 | V2.5 | AgentLoopEngine | 已实现：单次事件闭环，不做永续黑箱 |
 | V2.6 | CLI + Report | 已实现：能查清楚发生了什么 |
 | V2.7 | First Demo Adapter | 已实现：用第一个真实 demo 贯穿验证 V2 闭环 |
-| V2.8 | V2 Stable | 端到端验收 |
+| V2.8 | V2 Stable | 已实现：端到端验收 |
 
 V2.7 不是 V2.8 前才开始做的最后一件事。它是贯穿 V2 的真实验证对象：V2.1 先用 DummyAdapter 跑通契约，后续每个 V2 模块都要逐步拿 First Demo Adapter 验证。
 
