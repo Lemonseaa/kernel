@@ -228,15 +228,51 @@ class PromptProposalStore:
     def update_status(self, proposal_id: str, status: PromptProposalStatus) -> bool:
         """Update proposal status."""
 
-        updated_at = datetime.now(UTC).isoformat()
+        proposal = self.get(proposal_id)
+        if proposal is None:
+            return False
+        proposal.status = status
+        proposal.updated_at = datetime.now(UTC)
+        return self.save(proposal)
+
+    def update_metadata(
+        self,
+        proposal_id: str,
+        metadata: dict[str, str | int | float | bool | None],
+    ) -> bool:
+        """Merge metadata onto one proposal."""
+
+        proposal = self.get(proposal_id)
+        if proposal is None:
+            return False
+        proposal.metadata = {**proposal.metadata, **metadata}
+        proposal.updated_at = datetime.now(UTC)
+        return self.save(proposal)
+
+    def save(self, proposal: PromptProposal) -> bool:
+        """Persist updates to an existing proposal."""
+
         with self._connection() as conn:
             cursor = conn.execute(
                 """
                 UPDATE prompt_proposals
-                SET status = ?, updated_at = ?
+                SET patch = ?,
+                    reason = ?,
+                    expected_metric = ?,
+                    status = ?,
+                    updated_at = ?,
+                    metadata = ?
                 WHERE id = ?
                 """,
-                (status.value, updated_at, proposal_id),
+                (
+                    json.dumps(proposal.patch.model_dump(mode="json"), ensure_ascii=False),
+                    proposal.reason,
+                    proposal.expected_metric,
+                    proposal.status.value,
+                    proposal.updated_at.isoformat(),
+                    json.dumps(proposal.metadata, ensure_ascii=False, default=str),
+                    proposal.id,
+                ),
             )
             return cursor.rowcount > 0
 
