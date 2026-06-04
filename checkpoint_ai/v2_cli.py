@@ -14,6 +14,13 @@ from checkpoint_ai.adapter import (
     QuantResearchDemoAdapter,
 )
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
+from checkpoint_ai.metrics import (
+    MetricCategory,
+    MetricDirection,
+    MetricSchema,
+    MetricSchemaRegistry,
+    MetricSchemaStore,
+)
 from checkpoint_ai.prompt import (
     PromptPatch,
     PromptProposal,
@@ -21,6 +28,11 @@ from checkpoint_ai.prompt import (
     PromptProposalStore,
     PromptSlot,
     PromptVersionStore,
+)
+from checkpoint_ai.recommendation import (
+    RecommendationStatus,
+    VersionRecommendationStore,
+    VersionRecommender,
 )
 from checkpoint_ai.reporting import ReportGenerator
 from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
@@ -94,6 +106,39 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     report_run.add_argument("run_id")
     report_proposal = report_sub.add_parser("proposal")
     report_proposal.add_argument("proposal_id")
+    report_recommendation = report_sub.add_parser("recommendation")
+    report_recommendation.add_argument("recommendation_id")
+
+    metric_schema = subparsers.add_parser("metric-schema")
+    metric_schema_sub = metric_schema.add_subparsers(dest="metric_schema_command")
+    metric_schema_set = metric_schema_sub.add_parser("set")
+    metric_schema_set.add_argument("--scenario-id", required=True)
+    metric_schema_set.add_argument("--name", required=True)
+    metric_schema_set.add_argument("--direction", required=True)
+    metric_schema_set.add_argument("--category", default=MetricCategory.BUSINESS.value)
+    metric_schema_set.add_argument("--weight", type=float, default=1.0)
+    metric_schema_set.add_argument("--threshold", type=float, default=None)
+    metric_schema_set.add_argument("--guardrail", action="store_true")
+    metric_schema_list = metric_schema_sub.add_parser("list")
+    metric_schema_list.add_argument("--scenario-id", required=True)
+    metric_schema_delete = metric_schema_sub.add_parser("delete")
+    metric_schema_delete.add_argument("--scenario-id", required=True)
+    metric_schema_delete.add_argument("--name", default=None)
+    metric_schema_default = metric_schema_sub.add_parser("load-default-quant")
+    metric_schema_default.add_argument("--scenario-id", required=True)
+
+    recommendation = subparsers.add_parser("recommendation")
+    recommendation_sub = recommendation.add_subparsers(dest="recommendation_command")
+    recommendation_run = recommendation_sub.add_parser("run")
+    recommendation_run.add_argument("--scenario-id", required=True)
+    recommendation_list = recommendation_sub.add_parser("list")
+    recommendation_list.add_argument("--scenario-id", default=None)
+    recommendation_show = recommendation_sub.add_parser("show")
+    recommendation_show.add_argument("recommendation_id")
+    recommendation_accept = recommendation_sub.add_parser("accept")
+    recommendation_accept.add_argument("recommendation_id")
+    recommendation_reject = recommendation_sub.add_parser("reject")
+    recommendation_reject.add_argument("recommendation_id")
 
 
 def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
@@ -111,6 +156,10 @@ def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
         return _handle_shadow(args, db_path)
     if args.command == "report":
         return _handle_report(args, db_path)
+    if args.command == "metric-schema":
+        return _handle_metric_schema(args, db_path)
+    if args.command == "recommendation":
+        return _handle_recommendation(args, db_path)
     return 1
 
 
@@ -288,6 +337,94 @@ def _handle_report(args: argparse.Namespace, db_path: str | Path) -> int:
         return 0
     if args.report_command == "proposal":
         print(reporter.proposal(args.proposal_id))
+        return 0
+    if args.report_command == "recommendation":
+        print(reporter.recommendation(args.recommendation_id))
+        return 0
+    return 1
+
+
+def _handle_metric_schema(args: argparse.Namespace, db_path: str | Path) -> int:
+    store = MetricSchemaStore(db_path)
+    if args.metric_schema_command == "set":
+        existing = {
+            schema.name: schema
+            for schema in store.list_for_scenario(args.scenario_id)
+        }
+        existing[args.name] = MetricSchema(
+            name=args.name,
+            direction=MetricDirection(args.direction),
+            category=MetricCategory(args.category),
+            weight=args.weight,
+            threshold=args.threshold,
+            is_guardrail=args.guardrail,
+        )
+        store.save_for_scenario(args.scenario_id, list(existing.values()))
+        print("Metric schema saved")
+        print(f"scenario_id: {args.scenario_id}")
+        print(f"name: {args.name}")
+        print(f"direction: {args.direction}")
+        print(f"category: {args.category}")
+        print(f"weight: {args.weight}")
+        return 0
+    if args.metric_schema_command == "list":
+        schemas = store.list_for_scenario(args.scenario_id)
+        print("Metric Schemas")
+        if not schemas:
+            print("No metric schemas")
+            return 0
+        for schema in schemas:
+            print(
+                f"{schema.name}\t{schema.direction.value}\t{schema.category.value}\t"
+                f"weight={schema.weight}\tthreshold={schema.threshold}\tguardrail={schema.is_guardrail}"
+            )
+        return 0
+    if args.metric_schema_command == "delete":
+        count = store.delete_for_scenario(args.scenario_id, args.name)
+        print(f"Deleted metric schemas: {count}")
+        return 0
+    if args.metric_schema_command == "load-default-quant":
+        store.save_for_scenario(args.scenario_id, MetricSchemaRegistry.default_quant().list())
+        print(f"Default quant metric schemas loaded: {args.scenario_id}")
+        return 0
+    return 1
+
+
+def _handle_recommendation(args: argparse.Namespace, db_path: str | Path) -> int:
+    store = VersionRecommendationStore(db_path)
+    if args.recommendation_command == "run":
+        recommendation = VersionRecommender(
+            shadow_results=ShadowResultStore(db_path),
+            recommendations=store,
+        ).recommend_for_scenario(args.scenario_id)
+        print(f"Recommendation created: {recommendation.id}")
+        print(f"decision: {recommendation.decision.value}")
+        print(f"confidence: {recommendation.confidence}")
+        print(f"reason: {recommendation.reason}")
+        return 0
+    if args.recommendation_command == "list":
+        recommendations = store.list(scenario_id=args.scenario_id)
+        print("Recommendations")
+        if not recommendations:
+            print("No recommendations")
+            return 0
+        for recommendation in recommendations:
+            print(
+                f"{recommendation.id}\t{recommendation.scenario_id}\t"
+                f"{recommendation.decision.value}\t{recommendation.status.value}\t"
+                f"confidence={recommendation.confidence}"
+            )
+        return 0
+    if args.recommendation_command == "show":
+        print(ReportGenerator(db_path).recommendation(args.recommendation_id))
+        return 0
+    if args.recommendation_command == "accept":
+        store.update_status(args.recommendation_id, RecommendationStatus.ACCEPTED)
+        print(f"Recommendation {args.recommendation_id} accepted")
+        return 0
+    if args.recommendation_command == "reject":
+        store.update_status(args.recommendation_id, RecommendationStatus.REJECTED)
+        print(f"Recommendation {args.recommendation_id} rejected")
         return 0
     return 1
 

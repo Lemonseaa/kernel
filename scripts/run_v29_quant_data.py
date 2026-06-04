@@ -19,7 +19,7 @@ from checkpoint_ai.adapter import AdapterRegistry, QuantResearchDemoAdapter
 from checkpoint_ai.evaluation import EvidenceEvaluation, EvidenceEvaluationEngine
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.loop import AgentLoopEngine, AgentLoopStore, LoopRun
-from checkpoint_ai.metrics import ComparisonResult
+from checkpoint_ai.metrics import ComparisonResult, MetricSchemaRegistry, MetricSchemaStore
 from checkpoint_ai.policy import ScenarioPolicy, ScenarioPolicyService
 from checkpoint_ai.prompt import (
     PromptPatch,
@@ -27,6 +27,11 @@ from checkpoint_ai.prompt import (
     PromptProposalStore,
     PromptSlot,
     PromptVersionStore,
+)
+from checkpoint_ai.recommendation import (
+    VersionRecommendation,
+    VersionRecommendationStore,
+    VersionRecommender,
 )
 from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
 from checkpoint_ai.shadow import ShadowResult, ShadowResultStore, ShadowRunner
@@ -70,6 +75,8 @@ def main() -> int:
     proposals = PromptProposalStore(db_path)
     shadow_results = ShadowResultStore(db_path)
     loop_store = AgentLoopStore(db_path)
+    metric_schemas = MetricSchemaStore(db_path)
+    recommendations = VersionRecommendationStore(db_path)
     adapters = AdapterRegistry()
     adapters.register(QuantResearchDemoAdapter())
 
@@ -81,6 +88,7 @@ def main() -> int:
     )
     scenario_store.save(scenario)
     scenario_registry.create(scenario)
+    metric_schemas.save_for_scenario(scenario.id, MetricSchemaRegistry.default_quant().list())
     versions.save_version(
         scenario_id=scenario.id,
         agent_id="strategy",
@@ -137,6 +145,7 @@ def main() -> int:
                 versions=versions,
                 results=shadow_results,
                 task="backtest_strategy",
+                metric_schema_store=metric_schemas,
             ),
         ),
         shadow_results=shadow_results,
@@ -165,10 +174,16 @@ def main() -> int:
             )
         )
 
+    shadow_items = shadow_results.query_by_scenario(scenario.id)
+    recommendation = VersionRecommender(
+        shadow_results=shadow_results,
+        recommendations=recommendations,
+    ).recommend_for_scenario(scenario.id)
     report_path.write_text(
         _render_report(
             loop_runs=loop_runs,
-            shadow_items=shadow_results.query_by_scenario(scenario.id),
+            shadow_items=shadow_items,
+            recommendation=recommendation,
             raw_count=len(raw_logs.query_by_scenario(scenario.id)),
             summary_count=len(summary_logs.query_by_scenario(scenario.id)),
             proposal_count=len(proposals.list(scenario_id=scenario.id)),
@@ -254,6 +269,7 @@ def _run_specs(limit: int) -> list[RunSpec]:
 def _render_report(
     loop_runs: list[LoopRun],
     shadow_items: list[ShadowResult],
+    recommendation: VersionRecommendation,
     raw_count: int,
     summary_count: int,
     proposal_count: int,
@@ -285,6 +301,7 @@ def _render_report(
         f"- Proposals: {proposal_count}",
         f"- Shadow results: {shadow_count}",
         f"- SQLite DB: `{db_path}` (ignored by git)",
+        "- Scenario metric schema source: persisted scenario schema",
         "",
         "## Aggregate Metrics",
         "",
@@ -295,6 +312,8 @@ def _render_report(
         f"- Drawdown worsened count: {worsened_drawdown}/{len(drawdown_diffs)}",
         f"- Policy actions: {actions}",
         f"- V3.1 evidence decisions: {evidence_counts}",
+        f"- V3.3 recommendation decision: {recommendation.decision.value}",
+        f"- V3.3 recommendation reason: {recommendation.reason}",
         "",
         "## What This Proves",
         "",

@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；当前进入 V3.1 Evidence Evaluation。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.3 当前落地 evidence evaluation、scenario metric schema、version recommendation。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -196,6 +196,8 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | V2.10 | Pre-V3 Data Contract Hardening | `checkpoint_ai/metrics/`, `checkpoint_ai/prompt/`, `checkpoint_ai/shadow/` |
 | V2.11 | System Boundary Hardening | `docs/SYSTEM_BOUNDARIES.md`, `checkpoint_ai/control/`, `checkpoint_ai/policy/` |
 | V3.1 | Evidence Evaluation | `checkpoint_ai/evaluation/evidence.py` |
+| V3.2 | Scenario MetricSchema | `checkpoint_ai/metrics/store.py` |
+| V3.3 | Version Recommender | `checkpoint_ai/recommendation/` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -349,15 +351,25 @@ V3.1 规则：
 
 这保证系统不会把“能跑通的 demo 数据”误读成“策略真的变好”。
 
-V3 后续顺序：
+V3 顺序：
 
 | 版本 | 内容 | 前提 |
 |---|---|---|
-| V3.1 | Evidence Evaluation | V2.10/V2.11 完成 |
-| V3.2 | Scenario MetricSchema 持久化和评估报告增强 | V3.1 能稳定判断证据 |
-| V3.3 | Prompt/Strategy Version Recommender | 有多个版本和足够 historical/paper evidence |
+| V3.1 | Evidence Evaluation | 已实现：能判断 improved / worse / inconclusive |
+| V3.2 | Scenario MetricSchema 持久化和评估报告增强 | 已实现：scenario 有独立 metric schema，报告显示 evidence |
+| V3.3 | Prompt/Strategy Version Recommender | 已实现：只在已有 shadow evidence 里做推荐，不生成 proposal |
 | V3.4 | Bayesian Optimization Spike | 有连续参数和可重复历史/模拟反馈 |
 | V3.5 | V3 Stable | 推荐只基于可解释证据，不从 synthetic 小样本假装学习 |
+
+V3.3 约束：
+
+```
+1. Recommendation 是可审计对象，不是执行动作
+2. 只推荐已有 proposal/shadow result，不生成新 prompt
+3. synthetic run 必须 insufficient_evidence
+4. guardrail violation 必须 reject
+5. human accept/reject 只改变 recommendation status，不自动改线上配置
+```
 
 ---
 

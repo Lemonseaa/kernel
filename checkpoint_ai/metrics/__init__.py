@@ -8,6 +8,7 @@ from checkpoint_ai.metrics.schema import (
     MetricSchema,
     MetricSchemaRegistry,
 )
+from checkpoint_ai.metrics.store import MetricSchemaStore
 
 __all__ = [
     "ComparisonResult",
@@ -16,4 +17,5 @@ __all__ = [
     "MetricEvaluation",
     "MetricSchema",
     "MetricSchemaRegistry",
+    "MetricSchemaStore",
 ]

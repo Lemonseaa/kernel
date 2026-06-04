@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from checkpoint_ai.adapter import AdapterRegistry, AgentRunRequest
-from checkpoint_ai.metrics import MetricSchemaRegistry
+from checkpoint_ai.metrics import MetricSchemaRegistry, MetricSchemaStore
 from checkpoint_ai.prompt import PromptProposal, PromptSlot, PromptVersionStore
 from checkpoint_ai.scenario import ScenarioRegistry
 from checkpoint_ai.shadow.comparison import MetricComparator, RunKind
@@ -25,6 +25,7 @@ class ShadowRunner:
         task: str,
         context: dict[str, Any] | None = None,
         metric_schemas: MetricSchemaRegistry | None = None,
+        metric_schema_store: MetricSchemaStore | None = None,
     ) -> None:
         self.scenarios = scenarios
         self.adapters = adapters
@@ -32,7 +33,8 @@ class ShadowRunner:
         self.results = results
         self.task = task
         self.context = context or {}
-        self.comparator = MetricComparator(metric_schemas)
+        self.metric_schemas = metric_schemas
+        self.metric_schema_store = metric_schema_store
 
     def run(self, proposal: PromptProposal) -> ShadowResult:
         """Run a proposal in shadow mode and persist the result."""
@@ -59,7 +61,7 @@ class ShadowRunner:
         baseline_metrics = self._baseline_metrics(run_result.metrics, request.config)
         run_kind = self._run_kind(request.config)
         provenance = self._provenance(request.config)
-        comparison = self.comparator.compare(
+        comparison = MetricComparator(self._metric_registry(proposal.scenario_id)).compare(
             baseline_metrics=baseline_metrics,
             candidate_metrics=run_result.metrics,
             run_kind=run_kind,
@@ -86,6 +88,15 @@ class ShadowRunner:
         )
         self.results.save(result)
         return result
+
+    def _metric_registry(self, scenario_id: str) -> MetricSchemaRegistry:
+        if self.metric_schema_store is not None:
+            registry = self.metric_schema_store.registry_for_scenario(scenario_id)
+            if registry.list():
+                return registry
+        if self.metric_schemas is not None:
+            return self.metric_schemas
+        return MetricSchemaRegistry.default_quant()
 
     @staticmethod
     def _apply_patch(slots: dict[PromptSlot, str], proposal: PromptProposal) -> dict[PromptSlot, str]:

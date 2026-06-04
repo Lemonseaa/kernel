@@ -160,7 +160,16 @@ def main(argv: list[str] | None = None) -> int:
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
         return handle_loop_command(args, db_path)
 
-    if args.command in {"scenario", "adapter", "prompt", "proposal", "shadow", "report"}:
+    if args.command in {
+        "scenario",
+        "adapter",
+        "prompt",
+        "proposal",
+        "shadow",
+        "report",
+        "metric-schema",
+        "recommendation",
+    }:
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
         return handle_v2_command(args, db_path)
 
