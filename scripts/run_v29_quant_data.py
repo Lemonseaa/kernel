@@ -100,6 +100,13 @@ def main() -> int:
         metadata: dict[str, Any] = {
             **spec.proposal_config,
             "baseline_metrics": run_metrics,
+            "run_kind": "synthetic",
+            "provenance": {
+                "data_source": "synthetic_prices",
+                "generated_by": "quant_research_demo",
+                "seed": spec.symbol,
+                "sample_count": 260,
+            },
         }
         return PromptProposal(
             scenario_id=scenario_id,
@@ -143,7 +150,16 @@ def main() -> int:
                 task="backtest_strategy",
                 reason=f"V2.9 data run {index}: {spec.symbol}/{spec.strategy_type}",
                 context={"symbol": spec.symbol, "strategy_type": spec.strategy_type},
-                config=spec.baseline_config,
+                config={
+                    **spec.baseline_config,
+                    "run_kind": "synthetic",
+                    "provenance": {
+                        "data_source": "synthetic_prices",
+                        "generated_by": "quant_research_demo",
+                        "seed": spec.symbol,
+                        "sample_count": 260,
+                    },
+                },
             )
         )
 
@@ -276,12 +292,13 @@ def _render_report(
         "- V2 can run policy before shadow.",
         "- V2 can compare shadow metrics against baseline metrics.",
         "- Reports now have enough raw material for V3 MetricSchema design.",
+        "- The report is explicitly marked as synthetic evidence, not a live-trading claim.",
         "",
         "## Issues Exposed Before V3",
         "",
         "- `PromptProposal` is being used to carry strategy parameter patches; V3 should introduce a generic `Proposal` or `StrategyProposal` abstraction.",
         "- `ScenarioPolicy` treats `constraints` changes as approval-level, which is acceptable for now but too coarse for parameter tuning.",
-        "- Metric direction is not encoded yet; `max_drawdown` should be lower-is-better while `sharpe` is higher-is-better.",
+        "- Metric direction is now encoded for this run; V3 should persist scenario-specific schemas instead of using defaults.",
         "- Synthetic data is useful for reproducibility, but real historical data will be needed before any strategy judgment.",
         "",
         "## V3.1 MetricSchema Draft",
@@ -310,7 +327,9 @@ def _render_report(
                 f"- status: {run.status.value}",
                 f"- policy_action: {run.policy_action}",
                 f"- proposal_id: `{run.proposal_id}`",
-                f"- metric_diff: {run.baseline_comparison}",
+                "- run_kind: synthetic",
+                "- provenance: data_source=synthetic_prices, generated_by=quant_research_demo",
+                f"- business_metric_diff: {run.baseline_comparison}",
                 "",
             ]
         )

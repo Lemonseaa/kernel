@@ -25,5 +25,9 @@ class ShadowResult(BaseModel):
     baseline_metrics: dict[str, Any] = Field(default_factory=dict)
     shadow_metrics: dict[str, Any] = Field(default_factory=dict)
     metric_diff: dict[str, float] = Field(default_factory=dict)
+    comparison_result: dict[str, Any] = Field(default_factory=dict)
+    business_metric_diff: dict[str, float] = Field(default_factory=dict)
+    run_kind: str = "synthetic"
+    provenance: dict[str, Any] = Field(default_factory=dict)
     error_type: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

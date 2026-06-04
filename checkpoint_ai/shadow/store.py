@@ -30,9 +30,10 @@ class ShadowResultStore:
                 INSERT INTO shadow_results (
                     id, proposal_id, scenario_id, agent_id, run_id, is_shadow,
                     status, passed, answer, value_summary, baseline_metrics,
-                    shadow_metrics, metric_diff, error_type, created_at
+                    shadow_metrics, metric_diff, comparison_result,
+                    business_metric_diff, run_kind, provenance, error_type, created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     proposal_id=excluded.proposal_id,
                     scenario_id=excluded.scenario_id,
@@ -46,6 +47,10 @@ class ShadowResultStore:
                     baseline_metrics=excluded.baseline_metrics,
                     shadow_metrics=excluded.shadow_metrics,
                     metric_diff=excluded.metric_diff,
+                    comparison_result=excluded.comparison_result,
+                    business_metric_diff=excluded.business_metric_diff,
+                    run_kind=excluded.run_kind,
+                    provenance=excluded.provenance,
                     error_type=excluded.error_type,
                     created_at=excluded.created_at
                 """,
@@ -107,15 +112,36 @@ class ShadowResultStore:
                     baseline_metrics TEXT NOT NULL,
                     shadow_metrics TEXT NOT NULL,
                     metric_diff TEXT NOT NULL,
+                    comparison_result TEXT NOT NULL DEFAULT '{}',
+                    business_metric_diff TEXT NOT NULL DEFAULT '{}',
+                    run_kind TEXT NOT NULL DEFAULT 'synthetic',
+                    provenance TEXT NOT NULL DEFAULT '{}',
                     error_type TEXT,
                     created_at TEXT NOT NULL
                 )
                 """
             )
+            self._ensure_columns(conn)
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_shadow_results_proposal "
                 "ON shadow_results (proposal_id)"
             )
+
+    @staticmethod
+    def _ensure_columns(conn: sqlite3.Connection) -> None:
+        existing = {
+            row[1]
+            for row in conn.execute("PRAGMA table_info(shadow_results)").fetchall()
+        }
+        columns = {
+            "comparison_result": "TEXT NOT NULL DEFAULT '{}'",
+            "business_metric_diff": "TEXT NOT NULL DEFAULT '{}'",
+            "run_kind": "TEXT NOT NULL DEFAULT 'synthetic'",
+            "provenance": "TEXT NOT NULL DEFAULT '{}'",
+        }
+        for name, definition in columns.items():
+            if name not in existing:
+                conn.execute(f"ALTER TABLE shadow_results ADD COLUMN {name} {definition}")
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_shadow_results_scenario "
                 "ON shadow_results (scenario_id)"
@@ -137,6 +163,10 @@ class ShadowResultStore:
             json.dumps(result.baseline_metrics, ensure_ascii=False, default=str),
             json.dumps(result.shadow_metrics, ensure_ascii=False, default=str),
             json.dumps(result.metric_diff, ensure_ascii=False, default=str),
+            json.dumps(result.comparison_result, ensure_ascii=False, default=str),
+            json.dumps(result.business_metric_diff, ensure_ascii=False, default=str),
+            result.run_kind,
+            json.dumps(result.provenance, ensure_ascii=False, default=str),
             result.error_type,
             result.created_at.isoformat(),
         )
@@ -157,6 +187,10 @@ class ShadowResultStore:
             baseline_metrics=json.loads(row["baseline_metrics"]),
             shadow_metrics=json.loads(row["shadow_metrics"]),
             metric_diff=json.loads(row["metric_diff"]),
+            comparison_result=json.loads(row["comparison_result"]),
+            business_metric_diff=json.loads(row["business_metric_diff"]),
+            run_kind=row["run_kind"],
+            provenance=json.loads(row["provenance"]),
             error_type=row["error_type"],
             created_at=datetime.fromisoformat(row["created_at"]).astimezone(UTC),
         )

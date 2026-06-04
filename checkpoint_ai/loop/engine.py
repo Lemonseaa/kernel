@@ -234,13 +234,14 @@ class AgentLoopEngine:
             loop_run.add_step(LoopStep.COMPARE, "没有shadow结果，无法和baseline对比。")
             return
         loop_run.shadow_result_id = shadow_result.id
-        loop_run.baseline_comparison = shadow_result.metric_diff
+        loop_run.baseline_comparison = shadow_result.business_metric_diff or shadow_result.metric_diff
         loop_run.add_step(
             LoopStep.COMPARE,
             "Shadow result已和baseline metrics对比。",
             {
                 "shadow_result_id": shadow_result.id,
-                "metric_diff": shadow_result.metric_diff,
+                "business_metric_diff": loop_run.baseline_comparison,
+                "comparison_result": shadow_result.comparison_result,
             },
         )
         self.loop_store.save(loop_run)

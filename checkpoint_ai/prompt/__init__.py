@@ -6,10 +6,21 @@ from checkpoint_ai.prompt.models import (
     PromptProposalStatus,
     PromptSlot,
     PromptVersion,
+    Proposal,
+    ProposalKind,
+    ProposalPatch,
+    ProposalStatus,
+    ProposalTargetType,
 )
-from checkpoint_ai.prompt.storage import PromptProposalStore, PromptVersionStore
+from checkpoint_ai.prompt.storage import PromptProposalStore, PromptVersionStore, ProposalStore
 
 __all__ = [
+    "Proposal",
+    "ProposalKind",
+    "ProposalPatch",
+    "ProposalStatus",
+    "ProposalStore",
+    "ProposalTargetType",
     "PromptPatch",
     "PromptProposal",
     "PromptProposalStatus",

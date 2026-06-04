@@ -5,8 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from checkpoint_ai.adapter import AdapterRegistry, AgentRunRequest
+from checkpoint_ai.metrics import MetricSchemaRegistry
 from checkpoint_ai.prompt import PromptProposal, PromptSlot, PromptVersionStore
 from checkpoint_ai.scenario import ScenarioRegistry
+from checkpoint_ai.shadow.comparison import MetricComparator, RunKind
 from checkpoint_ai.shadow.models import ShadowResult
 from checkpoint_ai.shadow.store import ShadowResultStore
 
@@ -22,6 +24,7 @@ class ShadowRunner:
         results: ShadowResultStore,
         task: str,
         context: dict[str, Any] | None = None,
+        metric_schemas: MetricSchemaRegistry | None = None,
     ) -> None:
         self.scenarios = scenarios
         self.adapters = adapters
@@ -29,6 +32,7 @@ class ShadowRunner:
         self.results = results
         self.task = task
         self.context = context or {}
+        self.comparator = MetricComparator(metric_schemas)
 
     def run(self, proposal: PromptProposal) -> ShadowResult:
         """Run a proposal in shadow mode and persist the result."""
@@ -53,7 +57,14 @@ class ShadowRunner:
         )
         run_result = adapter.run(request)
         baseline_metrics = self._baseline_metrics(run_result.metrics, request.config)
-        metric_diff = self._metric_diff(baseline_metrics, run_result.metrics)
+        run_kind = self._run_kind(request.config)
+        provenance = self._provenance(request.config)
+        comparison = self.comparator.compare(
+            baseline_metrics=baseline_metrics,
+            candidate_metrics=run_result.metrics,
+            run_kind=run_kind,
+            provenance=provenance,
+        )
         value_summary = f"shadow result: {run_result.value_summary}"
         result = ShadowResult(
             proposal_id=proposal.id,
@@ -66,7 +77,11 @@ class ShadowRunner:
             value_summary=value_summary,
             baseline_metrics=baseline_metrics,
             shadow_metrics=run_result.metrics,
-            metric_diff=metric_diff,
+            metric_diff=comparison.metric_diffs,
+            comparison_result=comparison.model_dump(mode="json"),
+            business_metric_diff=comparison.business_metric_diffs,
+            run_kind=run_kind.value,
+            provenance=provenance,
             error_type=run_result.error_type,
         )
         self.results.save(result)
@@ -101,13 +116,18 @@ class ShadowRunner:
         return baseline
 
     @staticmethod
-    def _metric_diff(
-        baseline_metrics: dict[str, Any],
-        shadow_metrics: dict[str, Any],
-    ) -> dict[str, float]:
-        diff: dict[str, float] = {}
-        for key, shadow_value in shadow_metrics.items():
-            baseline_value = baseline_metrics.get(key)
-            if isinstance(shadow_value, int | float) and isinstance(baseline_value, int | float):
-                diff[key] = round(float(shadow_value) - float(baseline_value), 10)
-        return diff
+    def _run_kind(config: dict[str, Any]) -> RunKind:
+        value = config.get("run_kind", RunKind.SYNTHETIC.value)
+        if isinstance(value, str):
+            try:
+                return RunKind(value)
+            except ValueError:
+                return RunKind.SYNTHETIC
+        return RunKind.SYNTHETIC
+
+    @staticmethod
+    def _provenance(config: dict[str, Any]) -> dict[str, Any]:
+        value = config.get("provenance")
+        if isinstance(value, dict):
+            return value
+        return {}

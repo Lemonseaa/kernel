@@ -16,6 +16,11 @@ from checkpoint_ai.prompt.models import (
     PromptProposalStatus,
     PromptSlot,
     PromptVersion,
+    Proposal,
+    ProposalKind,
+    ProposalPatch,
+    ProposalStatus,
+    ProposalTargetType,
 )
 
 
@@ -337,6 +342,131 @@ class PromptProposalStore:
             reason=row["reason"],
             expected_metric=row["expected_metric"],
             status=PromptProposalStatus(row["status"]),
+            created_at=datetime.fromisoformat(row["created_at"]).astimezone(UTC),
+            updated_at=datetime.fromisoformat(row["updated_at"]).astimezone(UTC),
+            metadata=json.loads(row["metadata"]),
+        )
+
+
+class ProposalStore:
+    """Store generic proposals without replacing legacy PromptProposalStore."""
+
+    def __init__(self, path: str | Path) -> None:
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._init_schema()
+
+    def create(self, proposal: Proposal) -> str:
+        """Create a generic proposal."""
+
+        if not proposal.reason.strip() or not proposal.expected_metric.strip():
+            raise ValueError("reason and expected_metric are required")
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO proposals (
+                    id, scenario_id, proposal_kind, target_type, target_id, patch,
+                    reason, expected_metric, status, created_at, updated_at, metadata
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                self._to_row(proposal),
+            )
+        return proposal.id
+
+    def get(self, proposal_id: str) -> Proposal | None:
+        """Return one generic proposal."""
+
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute("SELECT * FROM proposals WHERE id = ?", (proposal_id,)).fetchone()
+        return None if row is None else self._from_row(row)
+
+    def list(
+        self,
+        status: ProposalStatus | None = None,
+        scenario_id: str | None = None,
+    ) -> list[Proposal]:
+        """List generic proposals."""
+
+        clauses: list[str] = []
+        params: list[str] = []
+        if status is not None:
+            clauses.append("status = ?")
+            params.append(status.value)
+        if scenario_id is not None:
+            clauses.append("scenario_id = ?")
+            params.append(scenario_id)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute(
+                f"SELECT * FROM proposals {where} ORDER BY created_at, rowid",
+                tuple(params),
+            ).fetchall()
+        return [self._from_row(row) for row in rows]
+
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        conn = sqlite3.connect(self.path)
+        try:
+            yield conn
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _init_schema(self) -> None:
+        with self._connection() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS proposals (
+                    id TEXT PRIMARY KEY,
+                    scenario_id TEXT NOT NULL,
+                    proposal_kind TEXT NOT NULL,
+                    target_type TEXT NOT NULL,
+                    target_id TEXT NOT NULL,
+                    patch TEXT NOT NULL,
+                    reason TEXT NOT NULL,
+                    expected_metric TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    metadata TEXT NOT NULL
+                )
+                """
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_proposals_status ON proposals (status)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_proposals_scenario ON proposals (scenario_id)")
+
+    @staticmethod
+    def _to_row(proposal: Proposal) -> tuple[Any, ...]:
+        return (
+            proposal.id,
+            proposal.scenario_id,
+            proposal.proposal_kind.value,
+            proposal.target_type.value,
+            proposal.target_id,
+            json.dumps(proposal.patch.model_dump(mode="json"), ensure_ascii=False, default=str),
+            proposal.reason,
+            proposal.expected_metric,
+            proposal.status.value,
+            proposal.created_at.isoformat(),
+            proposal.updated_at.isoformat(),
+            json.dumps(proposal.metadata, ensure_ascii=False, default=str),
+        )
+
+    @staticmethod
+    def _from_row(row: sqlite3.Row) -> Proposal:
+        return Proposal(
+            id=row["id"],
+            scenario_id=row["scenario_id"],
+            proposal_kind=ProposalKind(row["proposal_kind"]),
+            target_type=ProposalTargetType(row["target_type"]),
+            target_id=row["target_id"],
+            patch=ProposalPatch(**json.loads(row["patch"])),
+            reason=row["reason"],
+            expected_metric=row["expected_metric"],
+            status=ProposalStatus(row["status"]),
             created_at=datetime.fromisoformat(row["created_at"]).astimezone(UTC),
             updated_at=datetime.fromisoformat(row["updated_at"]).astimezone(UTC),
             metadata=json.loads(row["metadata"]),
