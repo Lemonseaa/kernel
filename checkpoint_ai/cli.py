@@ -21,6 +21,7 @@ from checkpoint_ai.experiment.cli import (
 )
 from checkpoint_ai.models import Run, TaskSpec
 from checkpoint_ai.notification import ConsoleNotificationChannel, NotificationMessage
+from checkpoint_ai.v2_cli import handle_v2_command, register_v2_parsers
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -52,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     register_baseline_parser(subparsers)
     register_risk_parser(subparsers)
     register_loop_parser(subparsers)
+    register_v2_parsers(subparsers)
     args = parser.parse_args(argv)
 
     if args.command == "status":
@@ -157,6 +159,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "loop":
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
         return handle_loop_command(args, db_path)
+
+    if args.command in {"scenario", "adapter", "prompt", "proposal", "shadow", "report"}:
+        db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
+        return handle_v2_command(args, db_path)
 
     parser.print_help()
     return 0
