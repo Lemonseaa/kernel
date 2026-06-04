@@ -7,7 +7,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from checkpoint_ai.adapter import AdapterRegistry, DummyAdapter, OPCAgentAdapter
+from checkpoint_ai.adapter import (
+    AdapterRegistry,
+    DummyAdapter,
+    OPCAgentAdapter,
+    QuantResearchDemoAdapter,
+)
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.prompt import (
     PromptPatch,
@@ -300,6 +305,7 @@ def _adapter_registry() -> AdapterRegistry:
     registry = AdapterRegistry()
     registry.register(DummyAdapter())
     registry.register(OPCAgentAdapter())
+    registry.register(QuantResearchDemoAdapter())
     return registry
 
 

@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成，当前准备进入真实 demo 运行积累和 V3 前置验证。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；当前进入 V2.9 Pre-V3 Quant Demo 数据积累。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -192,6 +192,7 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成，当前准备进入真
 | V2.6 | CLI + Report | `checkpoint_ai/v2_cli.py`, `checkpoint_ai/reporting.py` |
 | V2.7 | First Demo Adapter | `checkpoint_ai/adapter/opc_agent_adapter.py` |
 | V2.8 | V2 Stable | `tests/test_v28_v2_stable.py` |
+| V2.9 | Quant Demo Data Run | `checkpoint_ai/adapter/quant_research_adapter.py` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -211,7 +212,7 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成，当前准备进入真
 | 切换 | 条件 |
 |---|---|
 | V2.1 -> V2.2 | V2.1 十条验收全部通过 |
-| V2 -> V3 | V2.8 稳定 + 至少一个 demo/real business line 有 30+ 真实 runs |
+| V2 -> V3 | V2.8 稳定 + V2.9 至少一个 demo/real business line 有 30+ 真实 runs |
 | V3 -> V4 | V3.5 稳定 + 出现第二个 business line 或 adapter 需求 |
 | V4 -> V5 | V4.5 稳定 + 能回答"系统有没有变好" |
 | V5 -> V6 | V5.8 稳定 + 连续多次低风险 proposal 通过 shadow 且被人工批准 |
@@ -232,6 +233,18 @@ Post-V6 的 Team / Marketplace / Enterprise 不进入当前主线。
 | V2.6 | CLI + Report | 已实现：能查清楚发生了什么 |
 | V2.7 | First Demo Adapter | 已实现：用第一个真实 demo 贯穿验证 V2 闭环 |
 | V2.8 | V2 Stable | 已实现：端到端验收 |
+| V2.9 | Quant Demo Data Run | Pre-V3：用可重复量化场景积累真实可比较数据 |
+
+V2.9 不是 V3，也不是 TradingAgents 正式适配。它只做一件事：用固定规则策略、固定合成数据和客观回测指标，验证 V2 的 experiment/log/proposal/policy/shadow/report 能否产出 V3 所需的数据。
+
+```
+V2.9 验收：
+1. QuantResearchDemoAdapter 输出客观 metrics
+2. metrics 至少包含 total_return / max_drawdown / sharpe / win_rate / trade_count / excess_return
+3. CLI 和 report 能看到量化 demo 运行结果
+4. V2 loop 能在量化 scenario 上跑 proposal -> policy -> shadow -> compare
+5. 不做 Bandit、BO、自动生成 prompt、完整 TradingAgents 接入
+```
 
 V2.7 不是 V2.8 前才开始做的最后一件事。它是贯穿 V2 的真实验证对象：V2.1 先用 DummyAdapter 跑通契约，后续每个 V2 模块都要逐步拿 First Demo Adapter 验证。
 
