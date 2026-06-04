@@ -21,6 +21,14 @@ from checkpoint_ai.metrics import (
     MetricSchemaRegistry,
     MetricSchemaStore,
 )
+from checkpoint_ai.optimization import (
+    OptimizationDirection,
+    ParameterBounds,
+    ParameterObservation,
+    ParameterSuggestionStatus,
+    ParameterSuggestionStore,
+    SimpleBayesianOptimizer,
+)
 from checkpoint_ai.prompt import (
     PromptPatch,
     PromptProposal,
@@ -140,6 +148,24 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     recommendation_reject = recommendation_sub.add_parser("reject")
     recommendation_reject.add_argument("recommendation_id")
 
+    optimization = subparsers.add_parser("optimization")
+    optimization_sub = optimization.add_subparsers(dest="optimization_command")
+    optimization_suggest = optimization_sub.add_parser("suggest")
+    optimization_suggest.add_argument("--scenario-id", required=True)
+    optimization_suggest.add_argument("--target-id", required=True)
+    optimization_suggest.add_argument("--parameter-name", required=True)
+    optimization_suggest.add_argument("--min", type=float, required=True)
+    optimization_suggest.add_argument("--max", type=float, required=True)
+    optimization_suggest.add_argument("--step", type=float, default=None)
+    optimization_suggest.add_argument("--direction", default=OptimizationDirection.MAXIMIZE.value)
+    optimization_suggest.add_argument("--observations-json", default="[]")
+    optimization_list = optimization_sub.add_parser("list")
+    optimization_list.add_argument("--scenario-id", default=None)
+    optimization_accept = optimization_sub.add_parser("accept")
+    optimization_accept.add_argument("suggestion_id")
+    optimization_reject = optimization_sub.add_parser("reject")
+    optimization_reject.add_argument("suggestion_id")
+
 
 def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
     """Handle V2 command groups."""
@@ -160,6 +186,8 @@ def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
         return _handle_metric_schema(args, db_path)
     if args.command == "recommendation":
         return _handle_recommendation(args, db_path)
+    if args.command == "optimization":
+        return _handle_optimization(args, db_path)
     return 1
 
 
@@ -429,6 +457,56 @@ def _handle_recommendation(args: argparse.Namespace, db_path: str | Path) -> int
     return 1
 
 
+def _handle_optimization(args: argparse.Namespace, db_path: str | Path) -> int:
+    store = ParameterSuggestionStore(db_path)
+    if args.optimization_command == "suggest":
+        observations = _parameter_observations(args.parameter_name, args.observations_json)
+        suggestion = SimpleBayesianOptimizer().suggest(
+            scenario_id=args.scenario_id,
+            target_id=args.target_id,
+            bounds=ParameterBounds(
+                parameter_name=args.parameter_name,
+                minimum=args.min,
+                maximum=args.max,
+                step=args.step,
+            ),
+            observations=observations,
+            direction=OptimizationDirection(args.direction),
+        )
+        store.save(suggestion)
+        print(f"Parameter suggestion created: {suggestion.id}")
+        print(f"scenario_id: {suggestion.scenario_id}")
+        print(f"target_id: {suggestion.target_id}")
+        print(f"parameter_name: {suggestion.parameter_name}")
+        print(f"suggested_value: {suggestion.suggested_value}")
+        print(f"expected_score: {suggestion.expected_score}")
+        print(f"confidence: {suggestion.confidence}")
+        print(f"reason: {suggestion.reason}")
+        return 0
+    if args.optimization_command == "list":
+        suggestions = store.list(scenario_id=args.scenario_id)
+        print("Parameter Suggestions")
+        if not suggestions:
+            print("No parameter suggestions")
+            return 0
+        for suggestion in suggestions:
+            print(
+                f"{suggestion.id}\t{suggestion.scenario_id}\t{suggestion.target_id}\t"
+                f"{suggestion.parameter_name}={suggestion.suggested_value}\t"
+                f"confidence={suggestion.confidence}\t{suggestion.status.value}"
+            )
+        return 0
+    if args.optimization_command == "accept":
+        store.update_status(args.suggestion_id, ParameterSuggestionStatus.ACCEPTED)
+        print(f"Parameter suggestion {args.suggestion_id} accepted")
+        return 0
+    if args.optimization_command == "reject":
+        store.update_status(args.suggestion_id, ParameterSuggestionStatus.REJECTED)
+        print(f"Parameter suggestion {args.suggestion_id} rejected")
+        return 0
+    return 1
+
+
 def _scenario_runner(db_path: str | Path) -> ScenarioRunner:
     return ScenarioRunner(
         scenarios=_scenario_registry(db_path),
@@ -458,6 +536,26 @@ def _loads_json(raw: str) -> dict[str, Any]:
     if not isinstance(loaded, dict):
         raise ValueError("Expected a JSON object")
     return loaded
+
+
+def _parameter_observations(parameter_name: str, raw: str) -> list[ParameterObservation]:
+    loaded = json.loads(raw)
+    if not isinstance(loaded, list):
+        raise ValueError("Expected observations JSON array")
+    observations: list[ParameterObservation] = []
+    for item in loaded:
+        if not isinstance(item, dict):
+            raise ValueError("Each observation must be an object")
+        observations.append(
+            ParameterObservation(
+                parameter_name=parameter_name,
+                value=float(item["value"]),
+                score=float(item["score"]),
+                run_id=str(item["run_id"]) if "run_id" in item else None,
+                evidence_id=str(item["evidence_id"]) if "evidence_id" in item else None,
+            )
+        )
+    return observations
 
 
 def _pretty(value: object) -> str:

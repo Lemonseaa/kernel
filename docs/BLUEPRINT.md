@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.3 当前落地 evidence evaluation、scenario metric schema、version recommendation。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 当前落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -198,6 +198,7 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | V3.1 | Evidence Evaluation | `checkpoint_ai/evaluation/evidence.py` |
 | V3.2 | Scenario MetricSchema | `checkpoint_ai/metrics/store.py` |
 | V3.3 | Version Recommender | `checkpoint_ai/recommendation/` |
+| V3.4 | Bayesian Optimization Spike | `checkpoint_ai/optimization/` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -358,7 +359,7 @@ V3 顺序：
 | V3.1 | Evidence Evaluation | 已实现：能判断 improved / worse / inconclusive |
 | V3.2 | Scenario MetricSchema 持久化和评估报告增强 | 已实现：scenario 有独立 metric schema，报告显示 evidence |
 | V3.3 | Prompt/Strategy Version Recommender | 已实现：只在已有 shadow evidence 里做推荐，不生成 proposal |
-| V3.4 | Bayesian Optimization Spike | 有连续参数和可重复历史/模拟反馈 |
+| V3.4 | Bayesian Optimization Spike | 已实现：只建议连续参数候选值，不自动执行 |
 | V3.5 | V3 Stable | 推荐只基于可解释证据，不从 synthetic 小样本假装学习 |
 
 V3.3 约束：
@@ -369,6 +370,16 @@ V3.3 约束：
 3. synthetic run 必须 insufficient_evidence
 4. guardrail violation 必须 reject
 5. human accept/reject 只改变 recommendation status，不自动改线上配置
+```
+
+V3.4 约束：
+
+```
+1. Bayesian Optimization 只是 spike，不是生产级优化器
+2. 只处理一维连续参数，输入必须显式给 observations
+3. 输出 ParameterSuggestion，不执行、不部署、不改 proposal
+4. 样本不足时只做 midpoint exploration
+5. suggestion accept/reject 只改变状态，不触发线上变更
 ```
 
 ---
