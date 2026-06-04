@@ -16,7 +16,7 @@ from checkpoint_ai.adapter import (
     OPCAgentAdapter,
     QuantResearchDemoAdapter,
 )
-from checkpoint_ai.console import ConsoleReadModel
+from checkpoint_ai.console import ApprovalInbox, BackupManager, ConsoleReadModel, CostEventStore
 from checkpoint_ai.insights import (
     CrossScenarioInsightGenerator,
     CrossScenarioInsightStore,
@@ -214,6 +214,21 @@ def register_v2_parsers(subparsers: argparse._SubParsersAction[argparse.Argument
     console_snapshot.add_argument("--scenario-id", default=None)
     console_snapshot.add_argument("--all-scenarios", action="store_true")
     console_snapshot.add_argument("--reason", default=None)
+    console_approvals = console_sub.add_parser("approvals")
+    console_approvals.add_argument("--scenario-id", default=None)
+    console_cost = console_sub.add_parser("cost")
+    console_cost.add_argument("--provider", required=True)
+    console_cost.add_argument("--business-line-id", required=True)
+    console_backup = console_sub.add_parser("backup")
+    console_backup_sub = console_backup.add_subparsers(dest="backup_command")
+    console_backup_create = console_backup_sub.add_parser("create")
+    console_backup_create.add_argument("--backup-dir", required=True)
+    console_backup_create.add_argument("--label", required=True)
+    console_backup_list = console_backup_sub.add_parser("list")
+    console_backup_list.add_argument("--backup-dir", required=True)
+    console_backup_restore = console_backup_sub.add_parser("restore")
+    console_backup_restore.add_argument("--backup-dir", required=True)
+    console_backup_restore.add_argument("backup_id")
 
 
 def handle_v2_command(args: argparse.Namespace, db_path: str | Path) -> int:
@@ -665,6 +680,53 @@ def _handle_console(args: argparse.Namespace, db_path: str | Path) -> int:
             for item in snapshot.pending_items:
                 print(f"- {item['source_id']}\t{item['item_type']}\t{item['summary']}")
         return 0
+    if args.console_command == "approvals":
+        print("Approval Inbox")
+        items = ApprovalInbox(db_path).list_items(scenario_id=args.scenario_id)
+        if not items:
+            print("No approval items")
+            return 0
+        for approval_item in items:
+            print(
+                f"{approval_item.source_id}\t{approval_item.scenario_id}\t"
+                f"{approval_item.item_type}\t{approval_item.summary}"
+            )
+        return 0
+    if args.console_command == "cost":
+        summary = CostEventStore(db_path).daily_summary(
+            provider=args.provider,
+            business_line_id=args.business_line_id,
+        )
+        print("Cost Summary")
+        print(f"provider: {summary.provider}")
+        print(f"business_line_id: {summary.business_line_id}")
+        print(f"input_tokens: {summary.input_tokens}")
+        print(f"output_tokens: {summary.output_tokens}")
+        print(f"total_tokens: {summary.total_tokens}")
+        print(f"estimated_cost: {summary.estimated_cost}")
+        return 0
+    if args.console_command == "backup":
+        manager = BackupManager(db_path, args.backup_dir)
+        if args.backup_command == "create":
+            backup = manager.create_backup(label=args.label)
+            print("Backup created")
+            print(f"id: {backup.id}")
+            print(f"label: {backup.label}")
+            print(f"path: {backup.path}")
+            return 0
+        if args.backup_command == "list":
+            print("Backups")
+            backups = manager.list_backups()
+            if not backups:
+                print("No backups")
+                return 0
+            for backup in backups:
+                print(f"{backup.id}\t{backup.label}\t{backup.path}")
+            return 0
+        if args.backup_command == "restore":
+            restored = manager.restore(args.backup_id)
+            print(f"Backup restored: {restored}")
+            return 0 if restored else 1
     return 1
 
 

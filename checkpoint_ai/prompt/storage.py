@@ -382,6 +382,40 @@ class ProposalStore:
             row = conn.execute("SELECT * FROM proposals WHERE id = ?", (proposal_id,)).fetchone()
         return None if row is None else self._from_row(row)
 
+    def save(self, proposal: Proposal) -> bool:
+        """Persist updates to an existing generic proposal."""
+
+        proposal.updated_at = datetime.now(UTC)
+        with self._connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE proposals
+                SET proposal_kind = ?,
+                    target_type = ?,
+                    target_id = ?,
+                    patch = ?,
+                    reason = ?,
+                    expected_metric = ?,
+                    status = ?,
+                    updated_at = ?,
+                    metadata = ?
+                WHERE id = ?
+                """,
+                (
+                    proposal.proposal_kind.value,
+                    proposal.target_type.value,
+                    proposal.target_id,
+                    json.dumps(proposal.patch.model_dump(mode="json"), ensure_ascii=False, default=str),
+                    proposal.reason,
+                    proposal.expected_metric,
+                    proposal.status.value,
+                    proposal.updated_at.isoformat(),
+                    json.dumps(proposal.metadata, ensure_ascii=False, default=str),
+                    proposal.id,
+                ),
+            )
+            return cursor.rowcount > 0
+
     def list(
         self,
         status: ProposalStatus | None = None,

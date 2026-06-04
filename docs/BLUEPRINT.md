@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 已落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike；V4 当前落地 isolation、adapter capability、compatibility contract、cross-scenario insight preview；V4.6/V5.1 开始把隐患修复和控制台 read model 落到代码。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 已落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike；V4 当前落地 isolation、adapter capability、compatibility contract、cross-scenario insight preview；V4.6/V5.1-V5.7 已把隐患修复和运营控制台 read model 落到代码。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -206,6 +206,12 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | V4.5 | V4 Stable | `tests/test_v45_v4_stable.py` |
 | V4.6 | Systemic Hardening | `tests/test_v46_systemic_hardening.py` |
 | V5.1 | Console Read Model | `checkpoint_ai/console/` |
+| V5.2 | Approval Inbox | `checkpoint_ai/console/approval.py` |
+| V5.3 | Run & Experiment Dashboard | `checkpoint_ai/console/dashboard.py` |
+| V5.4 | Cost & Resource Control | `checkpoint_ai/console/cost.py` |
+| V5.5 | Notification Routing | `checkpoint_ai/console/notification_routing.py` |
+| V5.6 | Backup / Restore | `checkpoint_ai/console/backup.py` |
+| V5.7 | V5 Stable | `tests/test_v52_v57_control_console.py` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -353,13 +359,13 @@ V5 顺序：
 
 | 版本 | 内容 | 重点 |
 |---|---|---|
-| V5.1 | Console Read Model | 已开始：统一 scenario/run/pending snapshot |
-| V5.2 | Approval Inbox | 聚合 prompt / strategy / parameter / deployment 待审批项 |
-| V5.3 | Run & Experiment Dashboard | 回答为什么跑、发生什么、有没有变好 |
-| V5.4 | Cost & Resource Control | 成本事件持久化、预算状态、资源风险 |
-| V5.5 | Notification Routing | 只推送需要人判断的审批/告警/报告 |
-| V5.6 | Backup / Restore | SQLite 和关键配置的可恢复备份 |
-| V5.7 | V5 Stable | 控制台闭环稳定，不做复杂企业平台 |
+| V5.1 | Console Read Model | 已实现：统一 scenario/run/pending snapshot |
+| V5.2 | Approval Inbox | 已实现：聚合 prompt / strategy / recommendation / parameter 待审批项 |
+| V5.3 | Run & Experiment Dashboard | 已实现：回答为什么跑、发生什么、有没有变好 |
+| V5.4 | Cost & Resource Control | 已实现：成本事件持久化、日度 summary |
+| V5.5 | Notification Routing | 已实现：只推送需要人判断的审批/告警/报告 |
+| V5.6 | Backup / Restore | 已实现：SQLite 可恢复备份，restore 前 safety backup |
+| V5.7 | V5 Stable | 已实现：snapshot + inbox + cost + backup 串联 |
 
 V5.1 验收：
 
@@ -369,6 +375,23 @@ V5.1 验收：
 3. CLI 能输出 console snapshot
 4. 默认不隐式跨 scenario
 5. 跨 scenario 必须传 allow_cross_scenario + reason
+```
+
+V5.7 后进入 V6 的准备状态：
+
+```
+已经具备：
+- 统一 ApprovalInbox，可让 V6 自动执行前先判断是否需要人工
+- CostEventStore，可让 V6 根据持久成本状态做预算约束
+- ConsoleDashboard，可让 V6 每次自动动作后生成可解释报告
+- BackupManager，可让 V6 自动动作前创建恢复点
+- NotificationRouter，可让 V6 只推送需要人处理的事件
+
+仍然不做：
+- 高风险自动上线
+- 自动跨场景迁移
+- 自动修改 TradingAgents/CrewAI
+- 多用户企业权限
 ```
 
 ---
