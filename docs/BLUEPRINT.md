@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1、V2.2、V2.3、V2.4 已实现；当前准备进入 V2.5。
+V1 已完成；V2.1、V2.2、V2.3、V2.4、V2.5 已实现；当前准备进入 V2.6。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -184,6 +184,11 @@ V1 已完成；V2.1、V2.2、V2.3、V2.4 已实现；当前准备进入 V2.5。
 | V1.4 | Baseline Compare | `checkpoint_ai/experiment/baseline.py` |
 | V1.5 | RiskScore | `checkpoint_ai/experiment/risk_score.py` |
 | V1.6 | LoopEngine | `checkpoint_ai/experiment/loop_engine.py` |
+| V2.1 | Scenario + Adapter + Logs | `checkpoint_ai/scenario/`, `checkpoint_ai/adapter/`, `checkpoint_ai/logs/` |
+| V2.2 | PromptVersionStore + PromptProposal | `checkpoint_ai/prompt/` |
+| V2.3 | ScenarioPolicy | `checkpoint_ai/policy/` |
+| V2.4 | ShadowRunner | `checkpoint_ai/shadow/` |
+| V2.5 | AgentLoopEngine | `checkpoint_ai/loop/` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -220,7 +225,7 @@ Post-V6 的 Team / Marketplace / Enterprise 不进入当前主线。
 | V2.2 | PromptVersionStore + PromptProposal | 手动提案，不做 AI 自动生成 |
 | V2.3 | Policy | BLOCKED 不跑 shadow，AUTO/APPROVAL 必须 shadow |
 | V2.4 | ShadowRunner | shadow 不影响线上 |
-| V2.5 | AgentLoopEngine | 单次事件闭环，不做永续黑箱 |
+| V2.5 | AgentLoopEngine | 已实现：单次事件闭环，不做永续黑箱 |
 | V2.6 | CLI + Report | 能查清楚发生了什么 |
 | V2.7 | First Demo Adapter | 用第一个真实 demo 贯穿验证 V2 闭环 |
 | V2.8 | V2 Stable | 端到端验收 |
