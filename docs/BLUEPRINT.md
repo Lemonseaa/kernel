@@ -174,7 +174,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；当前进入 V2.10 Pre-V3 Data Contract Hardening。
+V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；当前进入 V3.1 Evidence Evaluation。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -194,6 +194,8 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | V2.8 | V2 Stable | `tests/test_v28_v2_stable.py` |
 | V2.9 | Quant Demo Data Run | `checkpoint_ai/adapter/quant_research_adapter.py` |
 | V2.10 | Pre-V3 Data Contract Hardening | `checkpoint_ai/metrics/`, `checkpoint_ai/prompt/`, `checkpoint_ai/shadow/` |
+| V2.11 | System Boundary Hardening | `docs/SYSTEM_BOUNDARIES.md`, `checkpoint_ai/control/`, `checkpoint_ai/policy/` |
+| V3.1 | Evidence Evaluation | `checkpoint_ai/evaluation/evidence.py` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
@@ -213,7 +215,7 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | 切换 | 条件 |
 |---|---|
 | V2.1 -> V2.2 | V2.1 十条验收全部通过 |
-| V2 -> V3 | V2.8 稳定 + V2.9 至少一个 demo/real business line 有 30+ runs + V2.10 数据契约硬化完成 |
+| V2 -> V3 | V2.8 稳定 + V2.9 至少一个 demo/real business line 有 30+ runs + V2.10/V2.11 数据契约和系统边界硬化完成 |
 | V3 -> V4 | V3.5 稳定 + 出现第二个 business line 或 adapter 需求 |
 | V4 -> V5 | V4.5 稳定 + 能回答"系统有没有变好" |
 | V5 -> V6 | V5.8 稳定 + 连续多次低风险 proposal 通过 shadow 且被人工批准 |
@@ -236,6 +238,7 @@ Post-V6 的 Team / Marketplace / Enterprise 不进入当前主线。
 | V2.8 | V2 Stable | 已实现：端到端验收 |
 | V2.9 | Quant Demo Data Run | Pre-V3：用可重复量化场景积累真实可比较数据 |
 | V2.10 | Data Contract Hardening | Pre-V3：修正 proposal、metric、comparison、run provenance 契约 |
+| V2.11 | System Boundary Hardening | Pre-V3：澄清 control/policy、businessline/scenario、旧文档残留 |
 
 V2.9 不是 V3，也不是 TradingAgents 正式适配。它只做一件事：用固定规则策略、固定合成数据和客观回测指标，验证 V2 的 experiment/log/proposal/policy/shadow/report 能否产出 V3 所需的数据。
 
@@ -260,6 +263,17 @@ V2.10 验收：
 6. run_kind 标注 synthetic / historical / paper / live
 7. provenance 记录 data_source / generated_by / seed / sample_count
 8. policy 能根据 proposal type / magnitude / run_kind 做 AUTO / APPROVAL / BLOCKED
+```
+
+V2.11 来自 Pre-V3 系统扫描暴露的问题。它不是新闭环功能，而是防止旧模块边界混乱影响 V3。
+
+```
+V2.11 验收：
+1. control/ 是 runtime action policy，policy/ 是 scenario proposal policy，二者边界明确
+2. CheckpointAI facade 暴露 scenario_policy，不再只露旧 control policy
+3. Scenario 可关联 business_line_id，但 Scenario 是 V2+ 优化域
+4. 删除 V0 prompt 文档残留，避免规划混乱
+5. 旧 V0.4 policy 测试改名为 runtime policy 测试
 ```
 
 V2.7 不是 V2.8 前才开始做的最后一件事。它是贯穿 V2 的真实验证对象：V2.1 先用 DummyAdapter 跑通契约，后续每个 V2 模块都要逐步拿 First Demo Adapter 验证。
@@ -309,6 +323,41 @@ V2.7 约束：
 | V4 | Scenario isolation + AdapterRegistry + compatibility checklist | 不为了外部框架做深度 fork |
 | V5 | Control panel、Approval inbox、Report、Notification、Cost/resource control、Backup/restore | 不做复杂企业平台 |
 | V6 | Safe auto-execution、self-healing、experiment scheduling、policy preference suggestions | 不完全无人值守，不自动上线高风险策略 |
+
+---
+
+## V3 主线
+
+V3 的核心不是“开始强化学习”，而是先建立证据判断层：系统必须能判断一次 comparison 是否足够支持推荐。
+
+```
+V3.1 Evidence Evaluation：
+输入：ComparisonResult
+输出：improved / worse / inconclusive
+同时输出：confidence、reason、guardrail_violations、recommended_action
+```
+
+V3.1 规则：
+
+```
+1. synthetic run 即使指标变好，也只能是 inconclusive
+2. guardrail violation 直接 worse / reject
+3. sample_count 不足则 inconclusive
+4. objective_score 负向则 worse / reject
+5. 只有 historical / paper / live 且样本足够、置信度足够，才允许 improved
+```
+
+这保证系统不会把“能跑通的 demo 数据”误读成“策略真的变好”。
+
+V3 后续顺序：
+
+| 版本 | 内容 | 前提 |
+|---|---|---|
+| V3.1 | Evidence Evaluation | V2.10/V2.11 完成 |
+| V3.2 | Scenario MetricSchema 持久化和评估报告增强 | V3.1 能稳定判断证据 |
+| V3.3 | Prompt/Strategy Version Recommender | 有多个版本和足够 historical/paper evidence |
+| V3.4 | Bayesian Optimization Spike | 有连续参数和可重复历史/模拟反馈 |
+| V3.5 | V3 Stable | 推荐只基于可解释证据，不从 synthetic 小样本假装学习 |
 
 ---
 

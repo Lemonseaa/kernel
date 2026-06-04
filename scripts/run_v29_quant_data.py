@@ -16,8 +16,10 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from checkpoint_ai.adapter import AdapterRegistry, QuantResearchDemoAdapter
+from checkpoint_ai.evaluation import EvidenceEvaluation, EvidenceEvaluationEngine
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.loop import AgentLoopEngine, AgentLoopStore, LoopRun
+from checkpoint_ai.metrics import ComparisonResult
 from checkpoint_ai.policy import ScenarioPolicy, ScenarioPolicyService
 from checkpoint_ai.prompt import (
     PromptPatch,
@@ -27,7 +29,7 @@ from checkpoint_ai.prompt import (
     PromptVersionStore,
 )
 from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
-from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
+from checkpoint_ai.shadow import ShadowResult, ShadowResultStore, ShadowRunner
 
 
 @dataclass(frozen=True)
@@ -166,6 +168,7 @@ def main() -> int:
     report_path.write_text(
         _render_report(
             loop_runs=loop_runs,
+            shadow_items=shadow_results.query_by_scenario(scenario.id),
             raw_count=len(raw_logs.query_by_scenario(scenario.id)),
             summary_count=len(summary_logs.query_by_scenario(scenario.id)),
             proposal_count=len(proposals.list(scenario_id=scenario.id)),
@@ -250,6 +253,7 @@ def _run_specs(limit: int) -> list[RunSpec]:
 
 def _render_report(
     loop_runs: list[LoopRun],
+    shadow_items: list[ShadowResult],
     raw_count: int,
     summary_count: int,
     proposal_count: int,
@@ -263,6 +267,13 @@ def _render_report(
     improved_sharpe = len([value for value in sharpe_diffs if value > 0])
     worsened_drawdown = len([value for value in drawdown_diffs if value > 0])
     actions = _counts([run.policy_action or "unknown" for run in loop_runs])
+    evidence_by_proposal = _evidence_by_proposal(shadow_items)
+    evidence_counts = _counts(
+        [
+            f"{evaluation.decision.value}/{evaluation.recommended_action.value}"
+            for evaluation in evidence_by_proposal.values()
+        ]
+    )
     rows = [
         "# V2.9 Quant Demo Data Run Report",
         "",
@@ -283,6 +294,7 @@ def _render_report(
         f"- Sharpe improved count: {improved_sharpe}/{len(sharpe_diffs)}",
         f"- Drawdown worsened count: {worsened_drawdown}/{len(drawdown_diffs)}",
         f"- Policy actions: {actions}",
+        f"- V3.1 evidence decisions: {evidence_counts}",
         "",
         "## What This Proves",
         "",
@@ -292,6 +304,7 @@ def _render_report(
         "- V2 can run policy before shadow.",
         "- V2 can compare shadow metrics against baseline metrics.",
         "- Reports now have enough raw material for V3 MetricSchema design.",
+        "- V3.1 can classify synthetic results as evidence for the loop, not evidence for strategy approval.",
         "- The report is explicitly marked as synthetic evidence, not a live-trading claim.",
         "",
         "## Issues Exposed Before V3",
@@ -300,6 +313,7 @@ def _render_report(
         "- `ScenarioPolicy` treats `constraints` changes as approval-level, which is acceptable for now but too coarse for parameter tuning.",
         "- Metric direction is now encoded for this run; V3 should persist scenario-specific schemas instead of using defaults.",
         "- Synthetic data is useful for reproducibility, but real historical data will be needed before any strategy judgment.",
+        "- Evidence decisions are intentionally inconclusive until historical/paper/live runs provide stronger proof.",
         "",
         "## V3.1 MetricSchema Draft",
         "",
@@ -330,10 +344,33 @@ def _render_report(
                 "- run_kind: synthetic",
                 "- provenance: data_source=synthetic_prices, generated_by=quant_research_demo",
                 f"- business_metric_diff: {run.baseline_comparison}",
+                *_evidence_rows(evidence_by_proposal.get(run.proposal_id or "")),
                 "",
             ]
         )
     return "\n".join(rows)
+
+
+def _evidence_by_proposal(shadow_items: list[ShadowResult]) -> dict[str, EvidenceEvaluation]:
+    engine = EvidenceEvaluationEngine()
+    evaluations: dict[str, EvidenceEvaluation] = {}
+    for item in shadow_items:
+        if not item.comparison_result:
+            continue
+        comparison = ComparisonResult(**item.comparison_result)
+        evaluations[item.proposal_id] = engine.evaluate(comparison)
+    return evaluations
+
+
+def _evidence_rows(evaluation: EvidenceEvaluation | None) -> list[str]:
+    if evaluation is None:
+        return ["- evidence_decision: unavailable"]
+    return [
+        f"- evidence_decision: {evaluation.decision.value}",
+        f"- evidence_recommended_action: {evaluation.recommended_action.value}",
+        f"- evidence_confidence: {evaluation.confidence:.4f}",
+        f"- evidence_reason: {evaluation.reason}",
+    ]
 
 
 def _metric_values(comparisons: list[dict[str, Any]], metric: str) -> list[float]:
