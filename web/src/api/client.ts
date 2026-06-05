@@ -6,18 +6,25 @@ import type {
   AutonomyAction,
   AutonomyQueueStatus,
   BackupRecord,
+  AgentConfig,
   ConsoleSnapshot,
+  ConfigVersion,
+  ExternalAgentConnection,
   HealthReport,
+  LearningObservation,
   ProcessAutonomyActionResult,
   ReportResponse,
   RestoreResult,
   RunDetail,
   RunSummary,
+  SafetyFinding,
   Scenario,
   ShadowResult,
   TriggerShadowPayload,
   TriggerRunPayload,
-  TriggerRunResult
+  TriggerRunResult,
+  UserProfilePayload,
+  ValidationSummary
 } from "../types/api";
 
 const api = axios.create({
@@ -198,5 +205,40 @@ export async function resumeAutonomyQueue() {
 
 export async function processAutonomyAction(actionId: string) {
   const response = await api.post<ProcessAutonomyActionResult>(`/api/autonomy/actions/${actionId}/process`);
+  return response.data;
+}
+
+export async function listLearningObservations() {
+  const response = await api.get<LearningObservation[]>("/api/learning/observations");
+  return response.data;
+}
+
+export async function listSafetyFindings() {
+  const response = await api.get<SafetyFinding[]>("/api/learning/safety-findings");
+  return response.data;
+}
+
+export async function listValidationSummaries() {
+  const response = await api.get<ValidationSummary[]>("/api/learning/validations");
+  return response.data;
+}
+
+export async function listConfigVersions() {
+  const response = await api.get<ConfigVersion[]>("/api/config/versions");
+  return response.data;
+}
+
+export async function listAgentConfigs() {
+  const response = await api.get<AgentConfig[]>("/api/agent-configs");
+  return response.data;
+}
+
+export async function listExternalAgents() {
+  const response = await api.get<ExternalAgentConnection[]>("/api/external-agents");
+  return response.data;
+}
+
+export async function getUserProfile() {
+  const response = await api.get<UserProfilePayload>("/api/user-profile");
   return response.data;
 }

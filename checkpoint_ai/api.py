@@ -13,11 +13,15 @@ from checkpoint_ai.adapter import (
     OPCAgentAdapter,
     QuantResearchDemoAdapter,
 )
+from checkpoint_ai.agent_config import AgentConfig, AgentConfigStore
 from checkpoint_ai.auth import APIKeyManager, BearerTokenAuth
 from checkpoint_ai.autonomy import AutoActionQueue, AutonomyActionStore, AutonomyQueueStateStore
 from checkpoint_ai.checkpoint_ai import CheckpointAI
+from checkpoint_ai.config_version import ConfigBranchStore, ConfigVersionService, ConfigVersionStore
 from checkpoint_ai.console import ApprovalInbox, BackupManager, ConsoleDashboard, ConsoleReadModel
 from checkpoint_ai.decision import DecisionKind, DecisionLogStore, DecisionRecord
+from checkpoint_ai.external_agents import ExternalAgentConnection, ExternalAgentConnectionStore
+from checkpoint_ai.learning import ObservationStore, SafetyFindingStore, ValidationSummaryStore
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.metrics import MetricSchemaStore
 from checkpoint_ai.optimization import ParameterSuggestionStore
@@ -26,6 +30,7 @@ from checkpoint_ai.recommendation import VersionRecommendationStore
 from checkpoint_ai.reporting import ReportGenerator
 from checkpoint_ai.scenario import ScenarioRegistry, ScenarioRunner, ScenarioStore
 from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
+from checkpoint_ai.user_profile import UserProfileStore
 
 _uvicorn_server: Any
 
@@ -389,6 +394,124 @@ def create_app(
     def api_adapters(_auth: None = Depends(require_auth)) -> list[dict[str, Any]]:
         return [adapter.model_dump(mode="json") for adapter in _adapter_registry().describe()]
 
+    @app.get("/api/learning/observations")
+    def api_learning_observations(
+        scenario_id: str | None = None,
+        business_line_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            observation.model_dump(mode="json")
+            for observation in ObservationStore(active_db_path).list(
+                scenario_id=scenario_id,
+                business_line_id=business_line_id,
+            )
+        ]
+
+    @app.get("/api/learning/safety-findings")
+    def api_learning_safety_findings(
+        scenario_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            finding.model_dump(mode="json")
+            for finding in SafetyFindingStore(active_db_path).list(scenario_id=scenario_id)
+        ]
+
+    @app.get("/api/learning/validations")
+    def api_learning_validations(
+        scenario_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            validation.model_dump(mode="json")
+            for validation in ValidationSummaryStore(active_db_path).list(scenario_id=scenario_id)
+        ]
+
+    @app.get("/api/config/versions")
+    def api_config_versions(
+        scenario_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            version.model_dump(mode="json")
+            for version in ConfigVersionStore(active_db_path).list(scenario_id=scenario_id)
+        ]
+
+    @app.post("/api/config/versions/{version_id}/lock")
+    def api_lock_config_version(
+        version_id: str,
+        payload: dict[str, Any] | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        service = ConfigVersionService(ConfigVersionStore(active_db_path), ConfigBranchStore(active_db_path))
+        reason = str((payload or {}).get("reason", "Locked from control console."))
+        return service.lock_version(version_id, reason=reason).model_dump(mode="json")
+
+    @app.post("/api/config/branches")
+    def api_create_config_branch(
+        payload: dict[str, Any],
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        service = ConfigVersionService(ConfigVersionStore(active_db_path), ConfigBranchStore(active_db_path))
+        return service.create_branch(
+            scenario_id=str(payload["scenario_id"]),
+            business_line_id=str(payload["business_line_id"]),
+            name=str(payload["name"]),
+            base_version_id=str(payload["base_version_id"]),
+        ).model_dump(mode="json")
+
+    @app.get("/api/agent-configs")
+    def api_agent_configs(
+        business_line_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            config.model_dump(mode="json")
+            for config in AgentConfigStore(active_db_path).list(business_line_id=business_line_id)
+        ]
+
+    @app.post("/api/agent-configs")
+    def api_save_agent_config(payload: dict[str, Any], _auth: None = Depends(require_auth)) -> dict[str, str]:
+        config = AgentConfig(**payload)
+        config_id = AgentConfigStore(active_db_path).save(config)
+        return {"id": config_id}
+
+    @app.get("/api/external-agents")
+    def api_external_agents(
+        business_line_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            connection.model_dump(mode="json")
+            for connection in ExternalAgentConnectionStore(active_db_path).list(business_line_id=business_line_id)
+        ]
+
+    @app.post("/api/external-agents")
+    def api_save_external_agent(payload: dict[str, Any], _auth: None = Depends(require_auth)) -> dict[str, str]:
+        connection = ExternalAgentConnection(**payload)
+        connection_id = ExternalAgentConnectionStore(active_db_path).save(connection)
+        return {"id": connection_id}
+
+    @app.get("/api/user-profile")
+    def api_user_profile(_auth: None = Depends(require_auth)) -> dict[str, Any]:
+        profile = UserProfileStore(_profile_dir(active_db_path), active_db_path)
+        return {
+            "formal_profile": profile.read_formal_profile(),
+            "suggested_notes": profile.read_suggested_notes(),
+            "versions": [version.model_dump(mode="json") for version in profile.list_versions()],
+        }
+
+    @app.post("/api/user-profile")
+    def api_save_user_profile(payload: dict[str, Any], _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        profile = UserProfileStore(_profile_dir(active_db_path), active_db_path)
+        version = profile.save_formal_profile(
+            content=str(payload["content"]),
+            actor="human",
+            reason=str(payload["reason"]),
+        )
+        return version.model_dump(mode="json")
+
     @app.get("/api/reports/latest")
     def api_latest_report(
         scenario_id: str | None = None,
@@ -622,6 +745,13 @@ def _fallback_app(checkpoint_ai: CheckpointAI, auth: BearerTokenAuth) -> Fallbac
             {"method": "GET", "path": "/api/backups"},
             {"method": "GET", "path": "/api/scenarios"},
             {"method": "GET", "path": "/api/adapters"},
+            {"method": "GET", "path": "/api/learning/observations"},
+            {"method": "GET", "path": "/api/learning/safety-findings"},
+            {"method": "GET", "path": "/api/learning/validations"},
+            {"method": "GET", "path": "/api/config/versions"},
+            {"method": "GET", "path": "/api/agent-configs"},
+            {"method": "GET", "path": "/api/external-agents"},
+            {"method": "GET", "path": "/api/user-profile"},
             {"method": "GET", "path": "/api/reports/latest"},
             {"method": "GET", "path": "/api/shadows"},
             {"method": "GET", "path": "/api/autonomy/actions"},
@@ -638,6 +768,15 @@ def _adapter_registry() -> AdapterRegistry:
     registry.register(OPCAgentAdapter())
     registry.register(QuantResearchDemoAdapter())
     return registry
+
+
+def _profile_dir(db_path: Path) -> Path:
+    """Return profile directory for API-managed user preferences."""
+
+    configured = os.environ.get("CHECKPOINTAI_USER_PROFILE_DIR")
+    if configured:
+        return Path(configured)
+    return db_path.parent / "user"
 
 
 def _scenario_registry(db_path: Path) -> ScenarioRegistry:

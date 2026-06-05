@@ -169,3 +169,79 @@ export type ProcessAutonomyActionResult = {
   paused: boolean;
   action: AutonomyAction | null;
 };
+
+export type LearningObservation = {
+  id: string;
+  business_line_id: string;
+  scenario_id: string;
+  observation_type: string;
+  severity: string;
+  title: string;
+  summary: string;
+  source_ids: string[];
+  created_at: string;
+  metadata: Record<string, unknown>;
+};
+
+export type SafetyFinding = {
+  id: string;
+  business_line_id: string;
+  scenario_id: string;
+  proposal_id: string;
+  severity: string;
+  reason: string;
+  created_at: string;
+};
+
+export type ValidationSummary = {
+  id: string;
+  business_line_id: string;
+  scenario_id: string;
+  proposal_id: string;
+  improved: boolean;
+  summary: string;
+  metric_diffs: Record<string, number>;
+  recommendation: string;
+  created_at: string;
+};
+
+export type ConfigVersion = {
+  id: string;
+  business_line_id: string;
+  scenario_id: string;
+  config: Record<string, unknown>;
+  reason: string;
+  locked: boolean;
+  locked_reason?: string | null;
+  created_at: string;
+};
+
+export type AgentConfig = {
+  id: string;
+  business_line_id: string;
+  role: string;
+  config_version_id: string;
+  skills: string[];
+  tools: string[];
+  mcp_servers: string[];
+  triggers: string[];
+  constraints: string[];
+  model: string;
+};
+
+export type ExternalAgentConnection = {
+  id: string;
+  business_line_id: string;
+  scenario_id: string;
+  name: string;
+  adapter_type: string;
+  config: Record<string, unknown>;
+  capabilities: Record<string, unknown>;
+  active: boolean;
+};
+
+export type UserProfilePayload = {
+  formal_profile: string;
+  suggested_notes: string;
+  versions: Array<{ id: string; actor: string; reason: string; created_at: string }>;
+};

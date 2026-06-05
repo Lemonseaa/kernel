@@ -10,6 +10,7 @@
 | V4 | 已完成到 V4.5 | Scenario 隔离、Adapter 能力契约、Compatibility、Cross-scenario preview 可用 |
 | V5 | 已完成到 V5.15 | Web Console、Approval、Reports、Shadows、Backup、Real Data Drill 可用 |
 | V6 | 收口中 | 低风险自治控制层：queue、audit-only process、operator feedback |
+| V7 | 计划完成 | Proposal Generation Loop：自动发现、自动提案、自动验证，不做无人值守上线 |
 
 快速导航：
 
@@ -18,6 +19,8 @@
 - V5 控制台状态：看“V5 主线”
 - 进入 V6 前风险：看“V5 后风险审查”
 - 下一阶段规划：看“V6 主线”
+- V7 全阶段计划：看 `docs/V7_PLAN.md`
+- 人类偏好 / Hermes建议草稿：看 `docs/USER_PREFERENCE_PLAN.md`
 
 ---
 
@@ -388,7 +391,7 @@ V2.7 约束：
 
 ---
 
-## V3-V6 边界
+## V3-V7 边界
 
 | 阶段 | 做什么 | 不做什么 |
 |---|---|---|
@@ -396,6 +399,7 @@ V2.7 约束：
 | V4 | Scenario isolation + AdapterRegistry + compatibility checklist | 不为了外部框架做深度 fork |
 | V5 | Control panel、Approval inbox、Report、Notification、Cost/resource control、Backup/restore | 不做复杂企业平台 |
 | V6 | Safe auto-execution、self-healing、experiment scheduling、policy preference suggestions | 不完全无人值守，不自动上线高风险策略 |
+| V7 | Observer/Proposer/Validator/Safety blackboard loop，版本分支，Agent配置，外置Agent连接 | 不做 Agent 自由聊天，不让 Agent 直接执行改动 |
 
 ---
 
@@ -583,6 +587,53 @@ V6 只允许系统自动处理：已有 proposal、已通过 shadow/replay、证
 V6 不允许系统自动处理：高风险策略上线、大幅 prompt 重写、生产发布、实盘交易、跨场景迁移、删除历史数据。
 
 V6 当前实现保持 `audit_only` process drill：控制台可处理队列并写审计记录，但不会真实修改 prompt、策略或部署。
+
+---
+
+## V7 主线
+
+完整 V7 规划见 `docs/V7_PLAN.md`。
+
+V7 的核心是 “Proposal Generation Loop”：
+
+```
+Run / Metrics / Trace
+  -> Observer Hive
+  -> ObservationAggregator
+  -> Proposer Hive
+  -> ProposalRanker / ConflictDetector
+  -> Policy / Risk / Safety
+  -> Shadow / Replay
+  -> Validator
+  -> Approval Inbox / AutoActionQueue
+```
+
+V7 使用：
+
+- Hive Exploration：用于发现问题和生成候选
+- Blackboard：用于结构化共享状态
+- State Machine：用于推进流程
+- Safety / Policy / Risk：用于硬规则裁决
+
+V7 不使用：
+
+- Agent-to-Agent 自由聊天
+- CrewAI 作为核心依赖
+- Agent 直接执行改动
+- 未授权 live apply
+
+V7 阶段：
+
+```
+V7.1 Blackboard + Contracts
+V7.2 Observer Hive
+V7.3 Proposer Hive + Ranking
+V7.4 Shadow/Replay Scheduler + Validator
+V7.5 SafetyMonitor + Dynamic Balance
+V7.6 Config Versioning + Branching
+V7.7 Agent Config + External Adapter Management
+V7.8 V7 Stable
+```
 
 ---
 
@@ -794,3 +845,55 @@ CheckpointAI 负责：观察结果、发现问题、提出 patch、跑 shadow、
 如果你把 CheckpointAI 又做成 Workflow Builder，那就没创新了
 如果它专注做"Agent 有没有变好"的判断层，它就有价值
 ```
+
+---
+
+## V7 状态：Proposal Generation Loop
+
+V7 的核心不是无人值守执行，而是：
+
+```
+观察证据 -> 生成小改 proposal -> 排序去冲突 -> 安全检查 -> shadow/replay -> 验证总结 -> 进入审批/记录
+```
+
+已实现模块映射：
+
+| 能力 | 文件 |
+|---|---|
+| Blackboard 对象 | `checkpoint_ai/learning/models.py` |
+| Observation / SafetyFinding / ValidationSummary 存储 | `checkpoint_ai/learning/store.py` |
+| Observer Hive | `checkpoint_ai/learning/observers.py` |
+| Aggregator | `checkpoint_ai/learning/aggregation.py` |
+| Proposer Hive | `checkpoint_ai/learning/proposers.py` |
+| Ranker / ConflictDetector | `checkpoint_ai/learning/ranking.py` |
+| ShadowReplayScheduler | `checkpoint_ai/learning/scheduler.py` |
+| Validator | `checkpoint_ai/learning/validator.py` |
+| SafetyMonitor | `checkpoint_ai/learning/safety.py` |
+| LearningLoopService | `checkpoint_ai/learning/loop.py` |
+| Config Version / Branching | `checkpoint_ai/config_version/` |
+| Agent Config | `checkpoint_ai/agent_config/` |
+| External Agent Connections | `checkpoint_ai/external_agents/` |
+| Formal User Profile | `checkpoint_ai/user_profile/` + `user/USER_PROFILE.md` |
+
+V7 边界：
+
+```
+1. 不直接 apply live change
+2. 不把 Hermes 草稿当正式偏好
+3. 不全文重写 prompt，默认 patch-first
+4. 不跨 scenario 自动迁移经验
+5. synthetic / historical 结果只能作为验证证据，不等于可实盘/可发布
+```
+
+V7 验证：
+
+```bash
+python -m unittest tests.test_v71_v78_learning_loop -v
+python scripts/v7_learning_loop_drill.py
+```
+
+相关文档：
+
+- `docs/V7_STABLE_ACCEPTANCE.md`
+- `docs/V7_RISK_REVIEW.md`
+- `docs/V7_REAL_DATA_DRILL_REPORT.md`

@@ -1,7 +1,9 @@
 import {
   Activity,
   Archive,
+  Bot,
   CheckSquare,
+  Cog,
   DatabaseBackup,
   FileText,
   GitBranch,
@@ -9,7 +11,8 @@ import {
   LayoutDashboard,
   ListChecks,
   Play,
-  Plug
+  Plug,
+  UserRound
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -23,11 +26,16 @@ const navItems = [
   { to: "/runs", label: "Runs", icon: Activity },
   { to: "/runs/new", label: "Trigger", icon: Play },
   { to: "/shadows", label: "Shadows", icon: GitCompare },
+  { to: "/learning", label: "Learning", icon: Bot },
   { to: "/autonomy", label: "Autonomy", icon: ListChecks },
   { to: "/reports", label: "Reports", icon: FileText },
   { to: "/backup", label: "Backup", icon: DatabaseBackup },
   { to: "/scenarios", label: "Scenarios", icon: GitBranch },
+  { to: "/config", label: "Config", icon: Cog },
+  { to: "/agent-config", label: "Agent Config", icon: Bot },
   { to: "/adapters", label: "Adapters", icon: Plug },
+  { to: "/external-agents", label: "External Agents", icon: Plug },
+  { to: "/profile", label: "Profile", icon: UserRound },
   { to: "/archive", label: "Archive", icon: Archive, disabled: true }
 ];
 
