@@ -80,7 +80,7 @@ class ApprovalInbox:
                     summary=generic_proposal.reason,
                     status=generic_proposal.status.value,
                     recommended_action="review_proposal",
-                    created_at=proposal.created_at,
+                    created_at=generic_proposal.created_at,
                 )
             )
         for recommendation in self.recommendations.list(scenario_id=scenario_id):

@@ -138,6 +138,27 @@ Agent order
 
 CheckpointAI 需要界面，但不是拖节点搭 workflow 的界面，而是审批台和实验复盘台。
 
+V5.8/V5.9 已开始落地 Web Console：
+
+```
+V5.8: FastAPI console contract
+V5.9: React P0 console
+
+已覆盖：
+- Dashboard
+- Approval Inbox / Detail
+- Run History / Trigger / Detail
+- Backup 管理
+- Scenario scope 查看
+- Adapter capability 查看
+
+继续保持边界：
+- 不做 Workflow Builder
+- 不做 prompt 直接编辑器
+- 不做 policy 规则编辑器
+- 不做数据删除入口
+```
+
 ```
 Approval Inbox:
 - prompt patch
