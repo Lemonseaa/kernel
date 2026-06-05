@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { listScenarios, listShadows, triggerShadow } from "../../api/client";
+import { getApiErrorMessage, listScenarios, listShadows, triggerShadow } from "../../api/client";
 import { Card } from "../../components/Card";
 import { DataTable } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -66,6 +66,9 @@ export function ShadowListPage() {
             >
               Run Shadow
             </button>
+            {runShadow.error ? (
+              <p className="text-sm text-red-700">{getApiErrorMessage(runShadow.error)}</p>
+            ) : null}
           </div>
         </Card>
         <Card title="Latest Shadow Result">

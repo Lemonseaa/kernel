@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { approveItem, getApproval, rejectItem } from "../../api/client";
+import { approveItem, getApiErrorMessage, getApproval, rejectItem } from "../../api/client";
 import { Card } from "../../components/Card";
 import { JsonBlock } from "../../components/JsonBlock";
 import { PageHeader } from "../../components/PageHeader";
@@ -120,6 +120,9 @@ export function ApprovalDetailPage() {
           </div>
           {commentRequired ? (
             <p className="mt-3 text-xs text-muted">A decision comment is required before action.</p>
+          ) : null}
+          {approve.error || reject.error ? (
+            <p className="mt-3 text-sm text-red-700">{getApiErrorMessage(approve.error ?? reject.error)}</p>
           ) : null}
         </Card>
       </div>

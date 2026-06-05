@@ -16,6 +16,7 @@ from checkpoint_ai.adapter import (
 from checkpoint_ai.auth import APIKeyManager, BearerTokenAuth
 from checkpoint_ai.checkpoint_ai import CheckpointAI
 from checkpoint_ai.console import ApprovalInbox, BackupManager, ConsoleDashboard, ConsoleReadModel
+from checkpoint_ai.decision import DecisionKind, DecisionLogStore, DecisionRecord
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.metrics import MetricSchemaStore
 from checkpoint_ai.optimization import ParameterSuggestionStore
@@ -77,15 +78,38 @@ def create_app(
             FastAPI,
             Header,
             HTTPException,
+            Request,
         )
+        from fastapi.responses import JSONResponse  # type: ignore[import-not-found]
     except ImportError:
         return _fallback_app(active_checkpoint_ai, active_auth)
 
     app = FastAPI(title="CheckpointAI Control Console API")
 
+    @app.exception_handler(HTTPException)
+    def http_exception_handler(_request: Request, exc: HTTPException) -> JSONResponse:
+        detail = exc.detail
+        if isinstance(detail, dict) and {"code", "message", "details"}.issubset(detail):
+            return JSONResponse(status_code=exc.status_code, content=detail)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "code": f"http.{exc.status_code}",
+                "message": str(detail),
+                "details": {},
+            },
+        )
+
     def require_auth(authorization: str | None = Header(default=None)) -> None:
         if not active_auth.authenticate(authorization):
-            raise HTTPException(status_code=401, detail="Invalid or missing bearer token.")
+            raise HTTPException(
+                status_code=401,
+                detail=_api_error(
+                    "auth.invalid",
+                    "Invalid or missing bearer token.",
+                    {},
+                ),
+            )
 
     @app.get("/health")
     def health(_auth: None = Depends(require_auth)) -> dict[str, str]:
@@ -161,12 +185,31 @@ def create_app(
         payload: dict[str, Any] | None = None,
         _auth: None = Depends(require_auth),
     ) -> dict[str, Any]:
-        comment = _required_comment(payload)
-        if _approval_item(approval_id, active_db_path) is None:
-            raise HTTPException(status_code=404, detail="Approval item not found or already resolved.")
+        item = _approval_item(approval_id, active_db_path)
+        comment = _required_comment(payload, active_db_path, approval_id, item)
+        if item is None:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error(
+                    "approval.not_found",
+                    "Approval item not found or already resolved.",
+                    {"source_id": approval_id},
+                ),
+            )
         updated = ApprovalInbox(active_db_path).approve(
             approval_id,
             reason=comment,
+        )
+        _record_decision(
+            db_path=active_db_path,
+            source_id=approval_id,
+            source_type=str(item["item_type"]),
+            kind=DecisionKind.APPROVE,
+            scenario_id=str(item["scenario_id"]),
+            action="approve",
+            comment=comment,
+            before=item,
+            after={"updated": updated},
         )
         return {"id": approval_id, "updated": updated}
 
@@ -176,12 +219,31 @@ def create_app(
         payload: dict[str, Any] | None = None,
         _auth: None = Depends(require_auth),
     ) -> dict[str, Any]:
-        comment = _required_comment(payload)
-        if _approval_item(approval_id, active_db_path) is None:
-            raise HTTPException(status_code=404, detail="Approval item not found or already resolved.")
+        item = _approval_item(approval_id, active_db_path)
+        comment = _required_comment(payload, active_db_path, approval_id, item)
+        if item is None:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error(
+                    "approval.not_found",
+                    "Approval item not found or already resolved.",
+                    {"source_id": approval_id},
+                ),
+            )
         updated = ApprovalInbox(active_db_path).reject(
             approval_id,
             reason=comment,
+        )
+        _record_decision(
+            db_path=active_db_path,
+            source_id=approval_id,
+            source_type=str(item["item_type"]),
+            kind=DecisionKind.REJECT,
+            scenario_id=str(item["scenario_id"]),
+            action="reject",
+            comment=comment,
+            before=item,
+            after={"updated": updated},
         )
         return {"id": approval_id, "updated": updated}
 
@@ -246,8 +308,53 @@ def create_app(
         _auth: None = Depends(require_auth),
     ) -> dict[str, Any]:
         if str((payload or {}).get("confirm", "")).strip() != "RESTORE":
-            raise HTTPException(status_code=400, detail="Backup restore requires confirm=RESTORE.")
+            _record_decision(
+                db_path=active_db_path,
+                source_id=backup_id,
+                source_type="backup",
+                kind=DecisionKind.ERROR,
+                scenario_id=None,
+                action="restore_backup",
+                comment="Backup restore rejected because confirm=RESTORE was not provided.",
+                details={"required_confirm": "RESTORE"},
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=_api_error(
+                    "backup.restore_confirmation_required",
+                    "Backup restore requires confirm=RESTORE.",
+                    {"backup_id": backup_id},
+                ),
+            )
+        prior_decisions = DecisionLogStore(active_db_path).list(source_id=backup_id)
         restored, safety_backup = BackupManager(active_db_path, active_backup_dir).restore_with_safety(backup_id)
+        if not restored:
+            _record_decision(
+                db_path=active_db_path,
+                source_id=backup_id,
+                source_type="backup",
+                kind=DecisionKind.ERROR,
+                scenario_id=None,
+                action="restore_backup",
+                comment="Backup restore failed because the backup id was not found.",
+            )
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error("backup.not_found", "Backup not found.", {"backup_id": backup_id}),
+            )
+        for decision in prior_decisions:
+            DecisionLogStore(active_db_path).record(decision)
+        _record_decision(
+            db_path=active_db_path,
+            source_id=backup_id,
+            source_type="backup",
+            kind=DecisionKind.SYSTEM,
+            scenario_id=None,
+            action="restore_backup",
+            comment="Backup restored after explicit operator confirmation.",
+            result={"restored": restored},
+            details={"pre_restore_backup_id": safety_backup.id if safety_backup else None},
+        )
         return {
             "id": backup_id,
             "restored": restored,
@@ -325,7 +432,23 @@ def create_app(
         proposal_id = str(payload["proposal_id"])
         proposal = PromptProposalStore(active_db_path).get(proposal_id)
         if proposal is None:
-            raise HTTPException(status_code=404, detail="Prompt proposal not found.")
+            _record_decision(
+                db_path=active_db_path,
+                source_id=proposal_id,
+                source_type="prompt_proposal",
+                kind=DecisionKind.ERROR,
+                scenario_id=None,
+                action="run_shadow",
+                comment="Shadow run rejected because prompt proposal was not found.",
+            )
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error(
+                    "shadow.proposal_not_found",
+                    "Prompt proposal not found.",
+                    {"proposal_id": proposal_id},
+                ),
+            )
         result = ShadowRunner(
             scenarios=_scenario_registry(active_db_path),
             adapters=_adapter_registry(),
@@ -335,6 +458,17 @@ def create_app(
             context=dict(payload.get("context", {})),
             metric_schema_store=MetricSchemaStore(active_db_path),
         ).run(proposal)
+        if result.status == "failed":
+            _record_decision(
+                db_path=active_db_path,
+                source_id=proposal.id,
+                source_type="prompt_proposal",
+                kind=DecisionKind.ERROR,
+                scenario_id=proposal.scenario_id,
+                action="run_shadow",
+                comment="Shadow run failed and was recorded for audit.",
+                result=result.model_dump(mode="json"),
+            )
         return result.model_dump(mode="json")
 
     setattr(app, "checkpoint_ai", active_checkpoint_ai)
@@ -447,12 +581,71 @@ def _approval_detail(approval_id: str, db_path: Path) -> dict[str, Any] | None:
     return None
 
 
-def _required_comment(payload: dict[str, Any] | None) -> str:
+def _required_comment(
+    payload: dict[str, Any] | None,
+    db_path: Path,
+    source_id: str,
+    item: dict[str, Any] | None,
+) -> str:
     """Extract a required operator comment for destructive or resolving actions."""
 
     comment = str((payload or {}).get("comment", "")).strip()
     if not comment:
+        _record_decision(
+            db_path=db_path,
+            source_id=source_id,
+            source_type=str(item["item_type"]) if item else "approval",
+            kind=DecisionKind.ERROR,
+            scenario_id=str(item["scenario_id"]) if item else None,
+            action="approval_decision",
+            comment="Operator comment is required.",
+            details={"source_id": source_id},
+        )
         from fastapi import HTTPException  # type: ignore[import-not-found]
 
-        raise HTTPException(status_code=400, detail="Operator comment is required.")
+        raise HTTPException(
+            status_code=400,
+            detail=_api_error(
+                "validation.operator_comment_required",
+                "Operator comment is required.",
+                {"source_id": source_id},
+            ),
+        )
     return comment
+
+
+def _api_error(code: str, message: str, details: dict[str, Any]) -> dict[str, Any]:
+    """Return the stable API error envelope."""
+
+    return {"code": code, "message": message, "details": details}
+
+
+def _record_decision(
+    db_path: Path,
+    source_id: str,
+    source_type: str,
+    kind: DecisionKind,
+    scenario_id: str | None,
+    action: str,
+    comment: str,
+    before: dict[str, Any] | None = None,
+    after: dict[str, Any] | None = None,
+    result: dict[str, Any] | None = None,
+    details: dict[str, Any] | None = None,
+) -> None:
+    """Persist an audit record for operator and safety decisions."""
+
+    DecisionLogStore(db_path).record(
+        DecisionRecord(
+            source_id=source_id,
+            source_type=source_type,
+            kind=kind,
+            scenario_id=scenario_id,
+            action=action,
+            comment=comment,
+            before=before or {},
+            after=after or {},
+            result=result or {},
+            details=details or {},
+        )
+    )

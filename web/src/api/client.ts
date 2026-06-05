@@ -1,6 +1,7 @@
 import axios from "axios";
 import type {
   AdapterDescription,
+  ApiErrorEnvelope,
   ApprovalItem,
   BackupRecord,
   ConsoleSnapshot,
@@ -34,6 +35,19 @@ export function setApiToken(token: string) {
 
 export function getApiToken() {
   return localStorage.getItem("checkpointai.token") ?? "";
+}
+
+export function getApiErrorMessage(error: unknown) {
+  if (axios.isAxiosError<ApiErrorEnvelope>(error)) {
+    const data = error.response?.data;
+    if (data?.message) {
+      return data.message;
+    }
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return "Request failed.";
 }
 
 export async function getSnapshot(scenarioId?: string) {

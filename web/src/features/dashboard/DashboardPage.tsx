@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { getSnapshot } from "../../api/client";
+import { getApiErrorMessage, getSnapshot } from "../../api/client";
 import { Card } from "../../components/Card";
 import { DataTable } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -27,10 +27,7 @@ export function DashboardPage() {
         description="Operator view for scenario health, recent runs, approvals, and system activity."
       />
       {snapshot.isError ? (
-        <EmptyState
-          title="API unavailable"
-          body="Set a valid token and confirm the FastAPI service is running."
-        />
+        <EmptyState title="API unavailable" body={getApiErrorMessage(snapshot.error)} />
       ) : null}
       <MetricGrid
         metrics={[

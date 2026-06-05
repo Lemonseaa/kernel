@@ -4,6 +4,12 @@ export type HealthReport = {
   recommendations?: string[];
 };
 
+export type ApiErrorEnvelope = {
+  code: string;
+  message: string;
+  details: Record<string, unknown>;
+};
+
 export type ConsoleSnapshot = {
   scope: { scenario_id?: string | null; allow_cross_scenario: boolean; reason?: string | null };
   scenario_count: number;

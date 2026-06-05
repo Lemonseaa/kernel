@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { listAdapters, listScenarios, triggerRun } from "../../api/client";
+import { getApiErrorMessage, listAdapters, listScenarios, triggerRun } from "../../api/client";
 import { Card } from "../../components/Card";
 import { JsonBlock } from "../../components/JsonBlock";
 import { PageHeader } from "../../components/PageHeader";
@@ -109,9 +109,7 @@ export function NewRunPage() {
           </Card>
         </div>
       ) : null}
-      {run.error ? (
-        <p className="mt-4 text-sm text-red-700">Run failed. Check scenario, adapter, and context JSON.</p>
-      ) : null}
+      {run.error ? <p className="mt-4 text-sm text-red-700">{getApiErrorMessage(run.error)}</p> : null}
     </>
   );
 }

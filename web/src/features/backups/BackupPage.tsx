@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { createBackup, listBackups, restoreBackup } from "../../api/client";
+import { createBackup, getApiErrorMessage, listBackups, restoreBackup } from "../../api/client";
 import { Card } from "../../components/Card";
 import { DataTable } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -44,6 +44,9 @@ export function BackupPage() {
               Create
             </button>
           </div>
+          {create.error ? (
+            <p className="mt-3 text-sm text-red-700">{getApiErrorMessage(create.error)}</p>
+          ) : null}
         </Card>
       </div>
       <Card title="Backup History">
@@ -84,6 +87,9 @@ export function BackupPage() {
         ) : (
           <EmptyState title="No backups" body="Create a backup before making risky changes." />
         )}
+        {restore.error ? (
+          <p className="mt-3 text-sm text-red-700">{getApiErrorMessage(restore.error)}</p>
+        ) : null}
       </Card>
     </>
   );

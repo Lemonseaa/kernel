@@ -23,6 +23,7 @@ class AdapterCapabilities(BaseModel):
     shadow_run: CapabilitySupport = CapabilitySupport.UNSUPPORTED
     run_trace: CapabilitySupport = CapabilitySupport.UNSUPPORTED
     continuous_params: CapabilitySupport = CapabilitySupport.UNSUPPORTED
+    safe_apply: CapabilitySupport = CapabilitySupport.UNSUPPORTED
     structured_input: CapabilitySupport = CapabilitySupport.SUPPORTED
     structured_output: CapabilitySupport = CapabilitySupport.SUPPORTED
     notes: dict[str, str] = Field(default_factory=dict)
