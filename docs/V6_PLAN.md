@@ -97,13 +97,15 @@ V6 = low-risk autonomy.
 
 目标：低风险动作可排队执行，并且每一步可暂停、可审计、可撤销。
 
+状态：后端队列处理器已完成；Web Console queue view 未开始。
+
 必须实现：
 
 - queue item model
 - queue store
-- queue processor
-- pause/resume
-- Web Console queue view
+- queue processor（已完成）
+- pause/resume（已完成）
+- Web Console queue view（下一段）
 
 状态：
 
@@ -116,8 +118,8 @@ V6 = low-risk autonomy.
 验收：
 
 - queue item 有 scenario_id / proposal_id / action_type / checkpoint_id / reason
-- queue 执行结果进入 action log
-- Web Console 能看到队列和结果
+- queue 执行结果进入 action log / decision log
+- Web Console 能看到队列和结果（下一段验收）
 
 ### V6.5: Operator Feedback Loop
 
@@ -152,9 +154,10 @@ V6 = low-risk autonomy.
 1. V6.1 DecisionLog 和 API 错误契约（基础完成）
 2. V6.2 checkpoint 协议和 action log（基础完成）
 3. V6.3 eligibility gate（基础完成）
-4. V6.4 queue（下一步）
-5. V6.5 feedback loop
-6. V6.6 stable acceptance
+4. V6.4 queue backend（基础完成）
+5. V6.4 Web Console queue view（下一步）
+6. V6.5 feedback loop
+7. V6.6 stable acceptance
 
 ## V6 Non-Goals
 
