@@ -145,3 +145,27 @@ export type TriggerShadowPayload = {
   context: Record<string, unknown>;
   config?: Record<string, unknown>;
 };
+
+export type AutonomyAction = {
+  id: string;
+  scenario_id: string;
+  proposal_id: string;
+  action_type: string;
+  checkpoint_id: string;
+  reason: string;
+  status: string;
+  result: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AutonomyQueueStatus = {
+  paused: boolean;
+  pending_count: number;
+  running_count: number;
+};
+
+export type ProcessAutonomyActionResult = {
+  paused: boolean;
+  action: AutonomyAction | null;
+};

@@ -6,31 +6,45 @@ from collections.abc import Callable
 from typing import Any
 
 from checkpoint_ai.autonomy.models import AutonomyActionLog, AutonomyActionStatus
-from checkpoint_ai.autonomy.store import AutonomyActionStore
+from checkpoint_ai.autonomy.store import AutonomyActionStore, AutonomyQueueStateStore
 from checkpoint_ai.decision import DecisionKind, DecisionLogStore, DecisionRecord
 
 
 class AutoActionQueue:
     """Process pending autonomy actions with audit records."""
 
-    def __init__(self, actions: AutonomyActionStore, decisions: DecisionLogStore) -> None:
+    def __init__(
+        self,
+        actions: AutonomyActionStore,
+        decisions: DecisionLogStore,
+        state: AutonomyQueueStateStore | None = None,
+    ) -> None:
         self.actions = actions
         self.decisions = decisions
+        self.state = state
         self._paused = False
 
     def pause(self) -> None:
         """Pause queue processing."""
 
+        if self.state is not None:
+            self.state.pause()
+            return
         self._paused = True
 
     def resume(self) -> None:
         """Resume queue processing."""
 
+        if self.state is not None:
+            self.state.resume()
+            return
         self._paused = False
 
     def is_paused(self) -> bool:
         """Return whether queue processing is paused."""
 
+        if self.state is not None:
+            return self.state.is_paused()
         return self._paused
 
     def process_next(
@@ -39,11 +53,25 @@ class AutoActionQueue:
     ) -> AutonomyActionLog | None:
         """Process the oldest pending action through a caller-provided handler."""
 
-        if self._paused:
+        if self.is_paused():
             return None
         action = self._next_pending()
         if action is None:
             return None
+        return self.process(action.id, handler)
+
+    def process(
+        self,
+        action_id: str,
+        handler: Callable[[AutonomyActionLog], dict[str, Any]],
+    ) -> AutonomyActionLog | None:
+        """Process one pending action by id through a caller-provided handler."""
+
+        if self.is_paused():
+            return None
+        action = self.actions.get(action_id)
+        if action is None or action.status != AutonomyActionStatus.PENDING:
+            return action
         self.actions.update_status(action.id, AutonomyActionStatus.RUNNING)
         running = self.actions.get(action.id)
         if running is None:

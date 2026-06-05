@@ -14,6 +14,7 @@ from checkpoint_ai.adapter import (
     QuantResearchDemoAdapter,
 )
 from checkpoint_ai.auth import APIKeyManager, BearerTokenAuth
+from checkpoint_ai.autonomy import AutoActionQueue, AutonomyActionStore, AutonomyQueueStateStore
 from checkpoint_ai.checkpoint_ai import CheckpointAI
 from checkpoint_ai.console import ApprovalInbox, BackupManager, ConsoleDashboard, ConsoleReadModel
 from checkpoint_ai.decision import DecisionKind, DecisionLogStore, DecisionRecord
@@ -471,6 +472,113 @@ def create_app(
             )
         return result.model_dump(mode="json")
 
+    @app.get("/api/autonomy/actions")
+    def api_autonomy_actions(
+        scenario_id: str | None = None,
+        status: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        from checkpoint_ai.autonomy import AutonomyActionStatus
+
+        try:
+            action_status = AutonomyActionStatus(status) if status else None
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=_api_error(
+                    "autonomy.invalid_status",
+                    "Invalid autonomy action status.",
+                    {"status": status},
+                ),
+            ) from exc
+        return [
+            action.model_dump(mode="json")
+            for action in AutonomyActionStore(active_db_path).list(
+                scenario_id=scenario_id,
+                status=action_status,
+            )
+        ]
+
+    @app.get("/api/autonomy/actions/{action_id}")
+    def api_autonomy_action_detail(action_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        action = AutonomyActionStore(active_db_path).get(action_id)
+        if action is None:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error("autonomy.action_not_found", "Autonomy action not found.", {"action_id": action_id}),
+            )
+        return action.model_dump(mode="json")
+
+    @app.get("/api/autonomy/queue/status")
+    def api_autonomy_queue_status(_auth: None = Depends(require_auth)) -> dict[str, Any]:
+        actions = AutonomyActionStore(active_db_path)
+        state = AutonomyQueueStateStore(active_db_path)
+        return {
+            "paused": state.is_paused(),
+            "pending_count": len(actions.list(status=_autonomy_status("pending"))),
+            "running_count": len(actions.list(status=_autonomy_status("running"))),
+        }
+
+    @app.post("/api/autonomy/queue/pause")
+    def api_autonomy_queue_pause(_auth: None = Depends(require_auth)) -> dict[str, Any]:
+        AutonomyQueueStateStore(active_db_path).pause()
+        _record_decision(
+            db_path=active_db_path,
+            source_id="autonomy_queue",
+            source_type="autonomy_queue",
+            kind=DecisionKind.SYSTEM,
+            scenario_id=None,
+            action="pause_autonomy_queue",
+            comment="Operator paused autonomy queue processing.",
+        )
+        return api_autonomy_queue_status()
+
+    @app.post("/api/autonomy/queue/resume")
+    def api_autonomy_queue_resume(_auth: None = Depends(require_auth)) -> dict[str, Any]:
+        AutonomyQueueStateStore(active_db_path).resume()
+        _record_decision(
+            db_path=active_db_path,
+            source_id="autonomy_queue",
+            source_type="autonomy_queue",
+            kind=DecisionKind.SYSTEM,
+            scenario_id=None,
+            action="resume_autonomy_queue",
+            comment="Operator resumed autonomy queue processing.",
+        )
+        return api_autonomy_queue_status()
+
+    @app.post("/api/autonomy/actions/{action_id}/process")
+    def api_process_autonomy_action(action_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        actions = AutonomyActionStore(active_db_path)
+        action = actions.get(action_id)
+        if action is None:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error("autonomy.action_not_found", "Autonomy action not found.", {"action_id": action_id}),
+            )
+        queue = AutoActionQueue(
+            actions=actions,
+            decisions=DecisionLogStore(active_db_path),
+            state=AutonomyQueueStateStore(active_db_path),
+        )
+        if queue.is_paused():
+            return {"paused": True, "action": action.model_dump(mode="json")}
+
+        def audit_only_handler(item: Any) -> dict[str, Any]:
+            return {
+                "mode": "audit_only",
+                "applied": False,
+                "proposal_id": item.proposal_id,
+                "checkpoint_id": item.checkpoint_id,
+                "message": "No live prompt or strategy was changed by this V6 console drill.",
+            }
+
+        if action.status.value != "pending":
+            return {"paused": False, "action": action.model_dump(mode="json")}
+        processed = queue.process(action.id, audit_only_handler)
+        selected = actions.get(action_id) if processed is not None else action
+        return {"paused": False, "action": selected.model_dump(mode="json") if selected else None}
+
     setattr(app, "checkpoint_ai", active_checkpoint_ai)
     setattr(app, "auth", active_auth)
     return app
@@ -516,6 +624,8 @@ def _fallback_app(checkpoint_ai: CheckpointAI, auth: BearerTokenAuth) -> Fallbac
             {"method": "GET", "path": "/api/adapters"},
             {"method": "GET", "path": "/api/reports/latest"},
             {"method": "GET", "path": "/api/shadows"},
+            {"method": "GET", "path": "/api/autonomy/actions"},
+            {"method": "GET", "path": "/api/autonomy/queue/status"},
         ],
     )
 
@@ -548,6 +658,14 @@ def _scenario_runner(db_path: Path) -> ScenarioRunner:
         raw_logs=RawLogStore(db_path),
         summary_logs=SummaryLogStore(db_path),
     )
+
+
+def _autonomy_status(status: str) -> Any:
+    """Convert an autonomy action status string without importing at module load."""
+
+    from checkpoint_ai.autonomy import AutonomyActionStatus
+
+    return AutonomyActionStatus(status)
 
 
 def _approval_item(approval_id: str, db_path: Path) -> dict[str, Any] | None:

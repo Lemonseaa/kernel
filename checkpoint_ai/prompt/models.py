@@ -61,6 +61,7 @@ class ProposalKind(str, Enum):
     STRATEGY = "strategy"
     PARAMETER = "parameter"
     DEPLOYMENT = "deployment"
+    POLICY = "policy"
 
 
 class ProposalTargetType(str, Enum):
@@ -70,6 +71,7 @@ class ProposalTargetType(str, Enum):
     STRATEGY_PARAM = "strategy_param"
     ADAPTER_CONFIG = "adapter_config"
     DEPLOYMENT = "deployment"
+    POLICY_RULE = "policy_rule"
 
 
 class ProposalStatus(str, Enum):

@@ -181,3 +181,68 @@ class AutonomyActionStore:
             created_at=datetime.fromisoformat(row["created_at"]).astimezone(UTC),
             updated_at=datetime.fromisoformat(row["updated_at"]).astimezone(UTC),
         )
+
+
+class AutonomyQueueStateStore:
+    """Persist operator queue pause state across API requests."""
+
+    _QUEUE_ID = "default"
+
+    def __init__(self, path: str | Path) -> None:
+        self.path = Path(path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._init_schema()
+
+    def is_paused(self) -> bool:
+        """Return whether the autonomy queue is paused."""
+
+        with self._connection() as conn:
+            row = conn.execute(
+                "SELECT paused FROM autonomy_queue_state WHERE id = ?",
+                (self._QUEUE_ID,),
+            ).fetchone()
+        return bool(row[0]) if row is not None else False
+
+    def pause(self) -> None:
+        """Persist paused queue state."""
+
+        self._set_paused(True)
+
+    def resume(self) -> None:
+        """Persist running queue state."""
+
+        self._set_paused(False)
+
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        conn = sqlite3.connect(self.path)
+        try:
+            yield conn
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _set_paused(self, paused: bool) -> None:
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO autonomy_queue_state (id, paused, updated_at)
+                VALUES (?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    paused=excluded.paused,
+                    updated_at=excluded.updated_at
+                """,
+                (self._QUEUE_ID, int(paused), datetime.now(UTC).isoformat()),
+            )
+
+    def _init_schema(self) -> None:
+        with self._connection() as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS autonomy_queue_state (
+                    id TEXT PRIMARY KEY,
+                    paused INTEGER NOT NULL,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )

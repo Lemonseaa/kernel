@@ -7,6 +7,7 @@ import {
   GitBranch,
   GitCompare,
   LayoutDashboard,
+  ListChecks,
   Play,
   Plug
 } from "lucide-react";
@@ -22,6 +23,7 @@ const navItems = [
   { to: "/runs", label: "Runs", icon: Activity },
   { to: "/runs/new", label: "Trigger", icon: Play },
   { to: "/shadows", label: "Shadows", icon: GitCompare },
+  { to: "/autonomy", label: "Autonomy", icon: ListChecks },
   { to: "/reports", label: "Reports", icon: FileText },
   { to: "/backup", label: "Backup", icon: DatabaseBackup },
   { to: "/scenarios", label: "Scenarios", icon: GitBranch },

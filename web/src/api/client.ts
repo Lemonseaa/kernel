@@ -3,9 +3,12 @@ import type {
   AdapterDescription,
   ApiErrorEnvelope,
   ApprovalItem,
+  AutonomyAction,
+  AutonomyQueueStatus,
   BackupRecord,
   ConsoleSnapshot,
   HealthReport,
+  ProcessAutonomyActionResult,
   ReportResponse,
   RestoreResult,
   RunDetail,
@@ -168,5 +171,32 @@ export async function getShadow(id: string) {
 
 export async function triggerShadow(payload: TriggerShadowPayload) {
   const response = await api.post<ShadowResult>("/api/shadows", payload);
+  return response.data;
+}
+
+export async function listAutonomyActions(scenarioId?: string) {
+  const response = await api.get<AutonomyAction[]>("/api/autonomy/actions", {
+    params: scenarioId ? { scenario_id: scenarioId } : undefined
+  });
+  return response.data;
+}
+
+export async function getAutonomyQueueStatus() {
+  const response = await api.get<AutonomyQueueStatus>("/api/autonomy/queue/status");
+  return response.data;
+}
+
+export async function pauseAutonomyQueue() {
+  const response = await api.post<AutonomyQueueStatus>("/api/autonomy/queue/pause");
+  return response.data;
+}
+
+export async function resumeAutonomyQueue() {
+  const response = await api.post<AutonomyQueueStatus>("/api/autonomy/queue/resume");
+  return response.data;
+}
+
+export async function processAutonomyAction(actionId: string) {
+  const response = await api.post<ProcessAutonomyActionResult>(`/api/autonomy/actions/${actionId}/process`);
   return response.data;
 }

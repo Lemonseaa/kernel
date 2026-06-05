@@ -54,7 +54,7 @@ V6 = low-risk autonomy.
 
 目标：任何自动动作执行前必须有恢复点。
 
-状态：已完成基础 action log 和 checkpoint_id 强制要求；真实 queue 执行和 rollback processor 仍在 V6.4。
+状态：已完成基础 action log 和 checkpoint_id 强制要求；V6 处理端点保持 audit-only，不做真实上线动作。
 
 必须实现：
 
@@ -97,15 +97,15 @@ V6 = low-risk autonomy.
 
 目标：低风险动作可排队执行，并且每一步可暂停、可审计、可撤销。
 
-状态：后端队列处理器已完成；Web Console queue view 未开始。
+状态：已完成后端队列处理器、持久 pause/resume、FastAPI endpoint、Web Console queue view。
 
 必须实现：
 
 - queue item model
 - queue store
-- queue processor（已完成）
-- pause/resume（已完成）
-- Web Console queue view（下一段）
+- queue processor
+- pause/resume
+- Web Console queue view
 
 状态：
 
@@ -119,7 +119,7 @@ V6 = low-risk autonomy.
 
 - queue item 有 scenario_id / proposal_id / action_type / checkpoint_id / reason
 - queue 执行结果进入 action log / decision log
-- Web Console 能看到队列和结果（下一段验收）
+- Web Console 能看到队列和 audit-only 处理结果
 
 ### V6.5: Operator Feedback Loop
 
@@ -131,6 +131,8 @@ V6 = low-risk autonomy.
 - 生成 policy suggestion report
 - policy suggestion 进入 Approval Inbox
 - 人类批准后才允许改 policy
+
+状态：已完成 `OperatorFeedbackAnalyzer`，重复 approve/reject 只生成 `policy_proposal`，不会自动应用。
 
 验收：
 
@@ -147,6 +149,7 @@ V6 = low-risk autonomy.
 - 至少 5 次 historical low-risk auto action 成功执行并有 checkpoint
 - 任一失败 action 可回滚
 - Web Console 可查看 action log / decision log / checkpoint / report
+- V6 处理端点明确 audit-only，不更改真实 prompt、策略或部署
 - 全量 unittest / ruff / mypy / frontend lint/build/e2e 通过
 
 ## V6 Implementation Order
@@ -154,10 +157,9 @@ V6 = low-risk autonomy.
 1. V6.1 DecisionLog 和 API 错误契约（基础完成）
 2. V6.2 checkpoint 协议和 action log（基础完成）
 3. V6.3 eligibility gate（基础完成）
-4. V6.4 queue backend（基础完成）
-5. V6.4 Web Console queue view（下一步）
-6. V6.5 feedback loop
-7. V6.6 stable acceptance
+4. V6.4 queue backend 和 Web Console queue view（完成）
+5. V6.5 feedback loop（完成）
+6. V6.6 stable acceptance（执行中）
 
 ## V6 Non-Goals
 

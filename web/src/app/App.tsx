@@ -5,6 +5,7 @@ import { ApprovalDetailPage } from "../features/approvals/ApprovalDetailPage";
 import { ApprovalListPage } from "../features/approvals/ApprovalListPage";
 import { BackupPage } from "../features/backups/BackupPage";
 import { AdapterListPage } from "../features/adapters/AdapterListPage";
+import { AutonomyPage } from "../features/autonomy/AutonomyPage";
 import { NewRunPage } from "../features/runs/NewRunPage";
 import { RunDetailPage } from "../features/runs/RunDetailPage";
 import { RunListPage } from "../features/runs/RunListPage";
@@ -23,6 +24,7 @@ export function App() {
         <Route path="runs/new" element={<NewRunPage />} />
         <Route path="runs/:id" element={<RunDetailPage />} />
         <Route path="shadows" element={<ShadowListPage />} />
+        <Route path="autonomy" element={<AutonomyPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="backup" element={<BackupPage />} />
         <Route path="scenarios" element={<ScenarioListPage />} />
