@@ -219,7 +219,7 @@ Console 的目标不是让用户配置一切，而是让用户只处理需要判
 
 ## 当前进度
 
-V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条量化 demo 数据；V2.10/V2.11 已完成 Pre-V3 hardening；V3.1-V3.4 已落地 evidence evaluation、scenario metric schema、version recommendation、Bayesian Optimization spike；V4 已落地 isolation、adapter capability、compatibility contract、cross-scenario insight preview；V5.1-V5.15 已把运营控制台、Web API、Web UI、Reports、Shadows、Backup 安全恢复和真实数据演练落到代码。
+V1 已完成；V2.1-V2.11 已完成；V3.1-V3.4 已完成；V4.1-V4.5 已完成；V5.1-V5.15 已完成；V6.1-V6.4 已完成（低风险自治控制层：queue、audit-only process、operator feedback loop）。
 
 | 版本 | 模块 | 文件 |
 |---|---|---|
@@ -265,6 +265,10 @@ V1 已完成；V2.1-V2.8 已实现；V2 Stable 已完成；V2.9 已跑出 30 条
 | V5.13 | Real Data Drill | `docs/V5_REAL_DATA_DRILL.md`, `docs/V5_REAL_DATA_DRILL_REPORT.md` |
 | V5.14 | Operational Safety Hardening | `checkpoint_ai/console/backup.py`, `checkpoint_ai/api.py` |
 | V5.15 | V5 Stable Acceptance | `docs/V5_STABLE_ACCEPTANCE.md` |
+| V6.1 | Systemic Autonomy Safety Hardening | `checkpoint_ai/autonomy/`, `checkpoint_ai/events/` |
+| V6.2 | Auto Action Queue Backend | `checkpoint_ai/autonomy/queue.py` |
+| V6.3 | Autonomy Queue API + Web Console | `checkpoint_ai/api.py`, `web/src/features/autonomy/` |
+| V6.4 | Operator Feedback Loop + V6 Stable | `checkpoint_ai/autonomy/`, `docs/V6_STABLE_ACCEPTANCE.md` |
 
 历史调整：V1.7 Bandit 和 V1.8 Bayesian Optimization 移到 V3，因为它们需要真实 runs、多个 prompt 版本和足够观测。
 
