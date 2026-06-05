@@ -3,7 +3,9 @@ import {
   Archive,
   CheckSquare,
   DatabaseBackup,
+  FileText,
   GitBranch,
+  GitCompare,
   LayoutDashboard,
   Play,
   Plug
@@ -19,6 +21,8 @@ const navItems = [
   { to: "/approvals", label: "Approvals", icon: CheckSquare },
   { to: "/runs", label: "Runs", icon: Activity },
   { to: "/runs/new", label: "Trigger", icon: Play },
+  { to: "/shadows", label: "Shadows", icon: GitCompare },
+  { to: "/reports", label: "Reports", icon: FileText },
   { to: "/backup", label: "Backup", icon: DatabaseBackup },
   { to: "/scenarios", label: "Scenarios", icon: GitBranch },
   { to: "/adapters", label: "Adapters", icon: Plug },

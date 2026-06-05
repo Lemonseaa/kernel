@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { listAdapters, listScenarios, triggerRun } from "../../api/client";
 import { Card } from "../../components/Card";
@@ -24,6 +24,13 @@ export function NewRunPage() {
 
   const scenario = scenarios.data?.find((item) => item.id === scenarioId);
   const adapter = adapters.data?.find((item) => item.name === scenario?.adapter_type);
+  const taskTypes = useMemo(() => adapter?.supported_task_types ?? [], [adapter]);
+
+  useEffect(() => {
+    if (taskTypes.length && !taskTypes.includes(task)) {
+      setTask(taskTypes[0]);
+    }
+  }, [task, taskTypes]);
 
   return (
     <>
@@ -51,11 +58,21 @@ export function NewRunPage() {
             </label>
             <label className="block text-sm text-muted">
               Task
-              <input
+              <select
                 value={task}
                 onChange={(event) => setTask(event.target.value)}
                 className="mt-2 h-10 w-full rounded-md border border-border px-3 text-sm text-ink outline-none focus:border-accent"
-              />
+              >
+                {taskTypes.length ? (
+                  taskTypes.map((taskType) => (
+                    <option key={taskType} value={taskType}>
+                      {taskType}
+                    </option>
+                  ))
+                ) : (
+                  <option value={task}>{task}</option>
+                )}
+              </select>
             </label>
             <label className="block text-sm text-muted">
               Context JSON

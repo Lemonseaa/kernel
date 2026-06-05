@@ -17,10 +17,13 @@ from checkpoint_ai.auth import APIKeyManager, BearerTokenAuth
 from checkpoint_ai.checkpoint_ai import CheckpointAI
 from checkpoint_ai.console import ApprovalInbox, BackupManager, ConsoleDashboard, ConsoleReadModel
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
+from checkpoint_ai.metrics import MetricSchemaStore
 from checkpoint_ai.optimization import ParameterSuggestionStore
-from checkpoint_ai.prompt import PromptProposalStore, ProposalStore
+from checkpoint_ai.prompt import PromptProposalStore, PromptVersionStore, ProposalStore
 from checkpoint_ai.recommendation import VersionRecommendationStore
+from checkpoint_ai.reporting import ReportGenerator
 from checkpoint_ai.scenario import ScenarioRegistry, ScenarioRunner, ScenarioStore
+from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
 
 _uvicorn_server: Any
 
@@ -114,6 +117,14 @@ def create_app(
                 "recommendations": ["检查数据库是否由不完整备份恢复，必要时恢复到更新的备份。"],
             }
 
+    @app.get("/api/version")
+    def api_version(_auth: None = Depends(require_auth)) -> dict[str, str]:
+        return {"name": "CheckpointAI", "version": "v5"}
+
+    @app.get("/api/auth/check")
+    def api_auth_check(_auth: None = Depends(require_auth)) -> dict[str, bool]:
+        return {"authenticated": True}
+
     @app.get("/api/console/snapshot")
     def console_snapshot(
         scenario_id: str | None = None,
@@ -150,9 +161,12 @@ def create_app(
         payload: dict[str, Any] | None = None,
         _auth: None = Depends(require_auth),
     ) -> dict[str, Any]:
+        comment = _required_comment(payload)
+        if _approval_item(approval_id, active_db_path) is None:
+            raise HTTPException(status_code=404, detail="Approval item not found or already resolved.")
         updated = ApprovalInbox(active_db_path).approve(
             approval_id,
-            reason=str((payload or {}).get("comment", "")),
+            reason=comment,
         )
         return {"id": approval_id, "updated": updated}
 
@@ -162,9 +176,12 @@ def create_app(
         payload: dict[str, Any] | None = None,
         _auth: None = Depends(require_auth),
     ) -> dict[str, Any]:
+        comment = _required_comment(payload)
+        if _approval_item(approval_id, active_db_path) is None:
+            raise HTTPException(status_code=404, detail="Approval item not found or already resolved.")
         updated = ApprovalInbox(active_db_path).reject(
             approval_id,
-            reason=str((payload or {}).get("comment", "")),
+            reason=comment,
         )
         return {"id": approval_id, "updated": updated}
 
@@ -223,8 +240,19 @@ def create_app(
         return {**backup.model_dump(mode="json"), "path": str(backup.path)}
 
     @app.post("/api/backups/{backup_id}/restore")
-    def restore_backup(backup_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
-        return {"id": backup_id, "restored": BackupManager(active_db_path, active_backup_dir).restore(backup_id)}
+    def restore_backup(
+        backup_id: str,
+        payload: dict[str, Any] | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        if str((payload or {}).get("confirm", "")).strip() != "RESTORE":
+            raise HTTPException(status_code=400, detail="Backup restore requires confirm=RESTORE.")
+        restored, safety_backup = BackupManager(active_db_path, active_backup_dir).restore_with_safety(backup_id)
+        return {
+            "id": backup_id,
+            "restored": restored,
+            "pre_restore_backup_id": safety_backup.id if safety_backup else None,
+        }
 
     @app.get("/api/scenarios")
     def api_scenarios(_auth: None = Depends(require_auth)) -> list[dict[str, Any]]:
@@ -252,6 +280,62 @@ def create_app(
     @app.get("/api/adapters")
     def api_adapters(_auth: None = Depends(require_auth)) -> list[dict[str, Any]]:
         return [adapter.model_dump(mode="json") for adapter in _adapter_registry().describe()]
+
+    @app.get("/api/reports/latest")
+    def api_latest_report(
+        scenario_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        return {"report": ReportGenerator(active_db_path).latest(scenario_id=scenario_id)}
+
+    @app.get("/api/reports/runs/{run_id}")
+    def api_run_report(run_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        return {"report": ReportGenerator(active_db_path).run(run_id)}
+
+    @app.get("/api/reports/proposals/{proposal_id}")
+    def api_proposal_report(proposal_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        return {"report": ReportGenerator(active_db_path).proposal(proposal_id)}
+
+    @app.get("/api/reports/recommendations/{recommendation_id}")
+    def api_recommendation_report(
+        recommendation_id: str,
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        return {"report": ReportGenerator(active_db_path).recommendation(recommendation_id)}
+
+    @app.get("/api/shadows")
+    def api_shadows(
+        scenario_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            shadow.model_dump(mode="json")
+            for shadow in ShadowResultStore(active_db_path).list(scenario_id=scenario_id)
+        ]
+
+    @app.get("/api/shadows/{shadow_id}")
+    def api_shadow_detail(shadow_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        shadow = ShadowResultStore(active_db_path).get(shadow_id)
+        if shadow is None:
+            raise HTTPException(status_code=404, detail="Shadow result not found.")
+        return shadow.model_dump(mode="json")
+
+    @app.post("/api/shadows")
+    def api_run_shadow(payload: dict[str, Any], _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        proposal_id = str(payload["proposal_id"])
+        proposal = PromptProposalStore(active_db_path).get(proposal_id)
+        if proposal is None:
+            raise HTTPException(status_code=404, detail="Prompt proposal not found.")
+        result = ShadowRunner(
+            scenarios=_scenario_registry(active_db_path),
+            adapters=_adapter_registry(),
+            versions=PromptVersionStore(active_db_path),
+            results=ShadowResultStore(active_db_path),
+            task=str(payload.get("task", "analyze_signal")),
+            context=dict(payload.get("context", {})),
+            metric_schema_store=MetricSchemaStore(active_db_path),
+        ).run(proposal)
+        return result.model_dump(mode="json")
 
     setattr(app, "checkpoint_ai", active_checkpoint_ai)
     setattr(app, "auth", active_auth)
@@ -288,12 +372,16 @@ def _fallback_app(checkpoint_ai: CheckpointAI, auth: BearerTokenAuth) -> Fallbac
             {"method": "GET", "path": "/runs"},
             {"method": "GET", "path": "/metrics"},
             {"method": "GET", "path": "/api/health"},
+            {"method": "GET", "path": "/api/version"},
+            {"method": "GET", "path": "/api/auth/check"},
             {"method": "GET", "path": "/api/console/snapshot"},
             {"method": "GET", "path": "/api/approvals"},
             {"method": "GET", "path": "/api/runs"},
             {"method": "GET", "path": "/api/backups"},
             {"method": "GET", "path": "/api/scenarios"},
             {"method": "GET", "path": "/api/adapters"},
+            {"method": "GET", "path": "/api/reports/latest"},
+            {"method": "GET", "path": "/api/shadows"},
         ],
     )
 
@@ -357,3 +445,14 @@ def _approval_detail(approval_id: str, db_path: Path) -> dict[str, Any] | None:
         return parameter_suggestion.model_dump(mode="json")
 
     return None
+
+
+def _required_comment(payload: dict[str, Any] | None) -> str:
+    """Extract a required operator comment for destructive or resolving actions."""
+
+    comment = str((payload or {}).get("comment", "")).strip()
+    if not comment:
+        from fastapi import HTTPException  # type: ignore[import-not-found]
+
+        raise HTTPException(status_code=400, detail="Operator comment is required.")
+    return comment

@@ -9,6 +9,8 @@ import { NewRunPage } from "../features/runs/NewRunPage";
 import { RunDetailPage } from "../features/runs/RunDetailPage";
 import { RunListPage } from "../features/runs/RunListPage";
 import { ScenarioListPage } from "../features/scenarios/ScenarioListPage";
+import { ReportsPage } from "../features/reports/ReportsPage";
+import { ShadowListPage } from "../features/shadows/ShadowListPage";
 
 export function App() {
   return (
@@ -20,6 +22,8 @@ export function App() {
         <Route path="runs" element={<RunListPage />} />
         <Route path="runs/new" element={<NewRunPage />} />
         <Route path="runs/:id" element={<RunDetailPage />} />
+        <Route path="shadows" element={<ShadowListPage />} />
+        <Route path="reports" element={<ReportsPage />} />
         <Route path="backup" element={<BackupPage />} />
         <Route path="scenarios" element={<ScenarioListPage />} />
         <Route path="adapters" element={<AdapterListPage />} />

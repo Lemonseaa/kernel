@@ -85,6 +85,12 @@ export type BackupRecord = {
   created_at: string;
 };
 
+export type RestoreResult = {
+  id: string;
+  restored: boolean;
+  pre_restore_backup_id?: string | null;
+};
+
 export type TriggerRunPayload = {
   scenario_id: string;
   task: string;
@@ -100,4 +106,36 @@ export type TriggerRunResult = {
   metrics: Record<string, unknown>;
   value_summary: string;
   answer: string;
+};
+
+export type ReportResponse = {
+  report: string;
+};
+
+export type ShadowResult = {
+  id: string;
+  proposal_id: string;
+  scenario_id: string;
+  agent_id: string;
+  run_id: string;
+  is_shadow: boolean;
+  status: string;
+  passed: boolean;
+  answer: string;
+  value_summary: string;
+  baseline_metrics: Record<string, unknown>;
+  shadow_metrics: Record<string, unknown>;
+  metric_diff: Record<string, number>;
+  business_metric_diff: Record<string, number>;
+  run_kind: string;
+  provenance: Record<string, unknown>;
+  error_type?: string | null;
+  created_at: string;
+};
+
+export type TriggerShadowPayload = {
+  proposal_id: string;
+  task: string;
+  context: Record<string, unknown>;
+  config?: Record<string, unknown>;
 };

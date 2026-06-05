@@ -67,9 +67,10 @@ export function BackupPage() {
                     className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-ink hover:bg-slate-50 disabled:opacity-50"
                     disabled={restore.isPending}
                     onClick={() => {
-                      if (
-                        window.confirm(`Restore backup ${row.label}? This replaces current persisted state.`)
-                      ) {
+                      const confirmation = window.prompt(
+                        `Restore backup ${row.label}? Type RESTORE to replace current persisted state.`
+                      );
+                      if (confirmation === "RESTORE") {
                         restore.mutate(row.id);
                       }
                     }}

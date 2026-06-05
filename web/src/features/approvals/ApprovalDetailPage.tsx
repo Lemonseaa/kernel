@@ -34,6 +34,10 @@ export function ApprovalDetailPage() {
   });
 
   const item = approval.data;
+  const patch = item?.detail?.patch as
+    | { slot?: string; operation?: string; before?: unknown; after?: unknown }
+    | undefined;
+  const commentRequired = comment.trim().length === 0;
 
   return (
     <>
@@ -66,6 +70,22 @@ export function ApprovalDetailPage() {
                 <div className="text-xs font-medium uppercase text-muted">Created</div>
                 <p className="mt-1 text-ink">{formatDate(item.created_at)}</p>
               </div>
+              {patch ? (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div className="rounded-md border border-border bg-slate-50 p-3">
+                    <div className="mb-2 text-xs font-medium uppercase text-muted">
+                      Before {patch.slot ? `(${patch.slot})` : ""}
+                    </div>
+                    <pre className="whitespace-pre-wrap text-xs text-ink">{String(patch.before ?? "")}</pre>
+                  </div>
+                  <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
+                    <div className="mb-2 text-xs font-medium uppercase text-emerald-700">
+                      After {patch.operation ? `(${patch.operation})` : ""}
+                    </div>
+                    <pre className="whitespace-pre-wrap text-xs text-ink">{String(patch.after ?? "")}</pre>
+                  </div>
+                </div>
+              ) : null}
               <JsonBlock value={item.detail ?? item} />
             </div>
           ) : (
@@ -85,19 +105,22 @@ export function ApprovalDetailPage() {
           <div className="mt-4 flex gap-3">
             <button
               className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              disabled={!item || approve.isPending || reject.isPending}
+              disabled={!item || commentRequired || approve.isPending || reject.isPending}
               onClick={() => approve.mutate()}
             >
               Approve
             </button>
             <button
               className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-              disabled={!item || approve.isPending || reject.isPending}
+              disabled={!item || commentRequired || approve.isPending || reject.isPending}
               onClick={() => reject.mutate()}
             >
               Reject
             </button>
           </div>
+          {commentRequired ? (
+            <p className="mt-3 text-xs text-muted">A decision comment is required before action.</p>
+          ) : null}
         </Card>
       </div>
     </>

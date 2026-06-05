@@ -5,9 +5,13 @@ import type {
   BackupRecord,
   ConsoleSnapshot,
   HealthReport,
+  ReportResponse,
+  RestoreResult,
   RunDetail,
   RunSummary,
   Scenario,
+  ShadowResult,
+  TriggerShadowPayload,
   TriggerRunPayload,
   TriggerRunResult
 } from "../types/api";
@@ -98,7 +102,7 @@ export async function createBackup(label: string) {
 }
 
 export async function restoreBackup(id: string) {
-  const response = await api.post<{ id: string; restored: boolean }>(`/api/backups/${id}/restore`);
+  const response = await api.post<RestoreResult>(`/api/backups/${id}/restore`, { confirm: "RESTORE" });
   return response.data;
 }
 
@@ -116,5 +120,39 @@ export async function archiveScenario(id: string, reason: string) {
 
 export async function listAdapters() {
   const response = await api.get<AdapterDescription[]>("/api/adapters");
+  return response.data;
+}
+
+export async function getLatestReport(scenarioId?: string) {
+  const response = await api.get<ReportResponse>("/api/reports/latest", {
+    params: scenarioId ? { scenario_id: scenarioId } : undefined
+  });
+  return response.data;
+}
+
+export async function getRunReport(runId: string) {
+  const response = await api.get<ReportResponse>(`/api/reports/runs/${runId}`);
+  return response.data;
+}
+
+export async function getProposalReport(proposalId: string) {
+  const response = await api.get<ReportResponse>(`/api/reports/proposals/${proposalId}`);
+  return response.data;
+}
+
+export async function listShadows(scenarioId?: string) {
+  const response = await api.get<ShadowResult[]>("/api/shadows", {
+    params: scenarioId ? { scenario_id: scenarioId } : undefined
+  });
+  return response.data;
+}
+
+export async function getShadow(id: string) {
+  const response = await api.get<ShadowResult>(`/api/shadows/${id}`);
+  return response.data;
+}
+
+export async function triggerShadow(payload: TriggerShadowPayload) {
+  const response = await api.post<ShadowResult>("/api/shadows", payload);
   return response.data;
 }

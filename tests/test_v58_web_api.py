@@ -49,6 +49,11 @@ class V58WebApiTest(unittest.TestCase):
 
             listing = client.get("/api/approvals?scenario_id=quant", headers=self._auth(token))
             detail = client.get(f"/api/approvals/{proposal_id}", headers=self._auth(token))
+            missing_comment = client.post(
+                f"/api/approvals/{proposal_id}/approve",
+                json={"comment": ""},
+                headers=self._auth(token),
+            )
             approve = client.post(
                 f"/api/approvals/{proposal_id}/approve",
                 json={"comment": "Evidence is enough for this demo."},
@@ -65,10 +70,10 @@ class V58WebApiTest(unittest.TestCase):
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(detail.json()["item_type"], "prompt_proposal")
         self.assertEqual(detail.json()["detail"]["patch"]["after"], "json")
+        self.assertEqual(missing_comment.status_code, 400)
         self.assertEqual(approve.status_code, 200)
         self.assertTrue(approve.json()["updated"])
-        self.assertEqual(reject.status_code, 200)
-        self.assertTrue(reject.json()["updated"])
+        self.assertEqual(reject.status_code, 404)
 
     def test_runs_scenarios_adapters_backups_and_health_are_exposed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -99,7 +104,11 @@ class V58WebApiTest(unittest.TestCase):
             runs = client.get("/api/runs?scenario_id=quant", headers=headers)
             run_detail = client.get(f"/api/runs/{run.json()['run_id']}", headers=headers)
             backups = client.get("/api/backups", headers=headers)
-            restore = client.post(f"/api/backups/{backup.id}/restore", headers=headers)
+            restore = client.post(
+                f"/api/backups/{backup.id}/restore",
+                json={"confirm": "RESTORE"},
+                headers=headers,
+            )
             health = client.get("/api/health", headers=headers)
 
         self.assertEqual(scenarios.status_code, 200)
@@ -116,6 +125,7 @@ class V58WebApiTest(unittest.TestCase):
         self.assertEqual(backups.json()[0]["label"], "before-api")
         self.assertEqual(restore.status_code, 200)
         self.assertTrue(restore.json()["restored"])
+        self.assertIn("pre_restore_backup_id", restore.json())
         self.assertEqual(health.status_code, 200)
         self.assertIn("overall_status", health.json())
 

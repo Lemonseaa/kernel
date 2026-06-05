@@ -53,11 +53,20 @@ class BackupManager:
     def restore(self, backup_id: str) -> bool:
         """Restore a backup by id, creating a safety backup first."""
 
+        restored, _safety_backup = self.restore_with_safety(backup_id)
+        return restored
+
+    def restore_with_safety(self, backup_id: str) -> tuple[bool, BackupRecord | None]:
+        """Restore a backup and return the pre-restore safety backup record."""
+
         match = next((record for record in self.list_backups() if record.id == backup_id), None)
         if match is None:
-            return False
+            return False, None
+        safety_record: BackupRecord | None = None
         if self.db_path.exists():
-            safety = self.backup_dir / f"{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}__safety__{uuid.uuid4()}.db"
+            safety_id = str(uuid.uuid4())
+            safety = self.backup_dir / f"{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}__safety__{safety_id}.db"
             shutil.copy2(self.db_path, safety)
+            safety_record = BackupRecord(id=safety_id, label="safety", path=safety)
         shutil.copy2(match.path, self.db_path)
-        return True
+        return True, safety_record

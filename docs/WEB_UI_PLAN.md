@@ -31,19 +31,20 @@ UI 只做控制台，不做工作流编辑器
 ### 当前实现状态
 
 ```
-V5.8 已实现：
+V5.8-V5.15 已实现：
 - Bearer Token 保护的 console API
 - Dashboard snapshot
 - Approval list/detail/approve/reject
+- Approval 动作强制 comment，已处理项不能重复处理
 - Run list/detail/trigger
 - Backup list/create/restore
+- Restore 强制 `confirm=RESTORE`，恢复前创建 safety backup
 - Scenario list/show/archive
 - Adapter capability list
 - Health endpoint
-
-暂未实现：
-- Shadow 专用 API
-- Reports 专用 API
+- Version/auth check endpoint
+- Shadow list/detail/run API
+- Reports latest/run/proposal/recommendation API
 ```
 
 ### API Endpoints
@@ -105,6 +106,13 @@ V5.10 工具已补：
 - `npm run lint` 检查 React/TypeScript 代码
 - `npm run format:check` 检查前端格式
 - `npm run e2e` 用 Playwright + 系统 Chrome 验证控制台首屏
+
+V5.11-V5.15 已补：
+- Reports 页面：latest/run/proposal 证据报告
+- Shadows 页面：触发 shadow、查看 shadow history
+- Approval Detail 展示 patch before/after
+- Trigger Run 根据 adapter supported_task_types 选择任务
+- Restore 需要输入 `RESTORE`
 
 仍不做：
 - Workflow Builder

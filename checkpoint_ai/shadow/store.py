@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import builtins
 import json
 import sqlite3
 from collections.abc import Iterator
@@ -76,7 +77,17 @@ class ShadowResultStore:
 
         return self._query("scenario_id = ?", scenario_id)
 
-    def _query(self, clause: str, value: str) -> list[ShadowResult]:
+    def list(self, scenario_id: str | None = None) -> list[ShadowResult]:
+        """List shadow results, optionally scoped to one scenario."""
+
+        if scenario_id is not None:
+            return self.query_by_scenario(scenario_id)
+        with self._connection() as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("SELECT * FROM shadow_results ORDER BY created_at, rowid").fetchall()
+        return [self._from_row(row) for row in rows]
+
+    def _query(self, clause: str, value: str) -> builtins.list[ShadowResult]:
         with self._connection() as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
