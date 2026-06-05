@@ -387,8 +387,144 @@ V5 顺序：
 | V5.5 | Notification Routing | 已实现：只推送需要人判断的审批/告警/报告 |
 | V5.6 | Backup / Restore | 已实现：SQLite 可恢复备份，restore 前 safety backup |
 | V5.7 | V5 Stable | 已实现：snapshot + inbox + cost + backup 串联 |
+| V5.8 | Web Console Usability Hardening | 已实现：token 校验、scenario 切换、patch 视图、restore 确认 |
+| V5.9 | Web API and Control Console | 已实现：FastAPI API、React Console |
+| V5.10 | Console Tooling and Web Verification | 已实现：serve/demo seed、E2E、首屏验证 |
+| V5.11-V5.15 | Console API Hardening + Real Data Drill | 已实现：Reports、Shadows、Approval 加强、Backup 加强、真实数据演练 |
 
-V5.1 验收：
+---
+
+## V5 最终版定义
+
+V5 最终版 = 人类控制台生产可用。
+
+不是自动执行，不是新算法，不是 TradingAgents 深接入。
+
+V5 只解决一个问题：你打开控制台，能清楚看到系统在干什么、哪里要你判断、为什么要判断、判断后能安全记录和回滚。
+
+---
+
+## V5.8-V5.15 详细内容
+
+### V5.8: Web Console Usability Hardening
+
+目标：让控制台从"能打开"变成"能日常操作"。
+
+API：
+- GET /api/version
+- GET /api/auth/check
+- GET /api/reports/latest
+- GET /api/reports/runs/{id}
+- GET /api/reports/proposals/{id}
+
+前端：
+- Token 输入后立即校验
+- Dashboard 支持 scenario 下拉切换
+- Run Trigger 根据 adapter 自动展示可用 task
+- Approval Detail 用 before/after patch 视图，不只显示 JSON
+- Backup restore 要输入确认词 RESTORE
+
+E2E：
+- token check
+- scenario scope 切换
+- approval detail 展示 patch
+- backup restore 二次确认
+
+验收：人不用看 JSON，也能判断 proposal 改了什么。
+
+### V5.9: Web API and Control Console
+
+目标：FastAPI 后端 + React 前端控制台基础框架。
+
+要做：
+- FastAPI console API endpoints
+- React + Vite + shadcn/ui 控制台
+- Dashboard / Approval Inbox / Run History / Backup
+
+### V5.10: Console Tooling and Web Verification
+
+目标：工具链 + 验证。
+
+要做：
+- checkpointai api serve
+- checkpointai demo seed-console
+- npm run e2e (Playwright 首屏验证)
+
+### V5.11-V5.12: Reports + Evidence Views + Shadows
+
+目标：让控制台能完整回答"为什么运行、发生了什么、有没有变好"。
+
+要做：
+- Web Reports 页面
+- Shadow Result 页面
+- Run Detail 增强
+- Proposal Detail 增强
+
+### V5.13: Real Data Drill
+
+目标：用真实数据验证控制台不是摆设。
+
+要做：
+- demo seed-console
+- quant demo 30 runs
+- synthetic proposal/shadow/recommendation flow
+- 生成 docs/V5_REAL_DATA_DRILL_REPORT.md
+
+验收：至少 30 条 run 数据进入控制台。
+
+### V5.14: Operational Safety Hardening
+
+目标：把人为误操作风险降下来。
+
+要做：
+- approve/reject 必须写 comment
+- 已处理 approval 不允许重复处理
+- restore 前自动创建 pre-restore backup
+- 危险操作二次确认
+- 错误响应统一格式
+
+### V5.15: V5 Stable
+
+目标：V5 完整验收，不做新功能。
+
+要做：
+- 全量测试：unittest / ruff / mypy / npm lint / npm build / E2E
+- 文档：Web Console 使用手册、本地启动手册、V5 验收报告
+
+验收：可以只靠 Web Console 完成一次完整操作，不需要打开 DB 或读 CLI 输出。
+
+---
+
+## V5 完成后才能进 V6 的条件
+
+必须满足：
+- Web Console 能稳定显示真实 run/proposal/report
+- Approval Inbox 能真正辅助判断
+- Backup/restore 可靠
+- 所有危险操作有 audit trail
+- E2E 覆盖核心链路
+- 真实数据演练后没有结构性缺口
+- 能在 UI 上看懂系统为什么建议改
+
+---
+
+## V5 不做什么
+
+- 自动执行低风险 proposal
+- 自动调度实验
+- 自动改 prompt
+- TradingAgents 正式接入
+- Workflow Builder
+- Prompt 编辑器
+- Policy 编辑器
+- 多用户权限系统
+- 复杂图表大屏
+
+这些属于 V6 或之后。
+
+---
+
+## V5.1 验收
 
 ```
 1. ConsoleReadModel 能生成 scope-aware snapshot
