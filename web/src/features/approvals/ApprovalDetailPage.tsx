@@ -13,7 +13,11 @@ export function ApprovalDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [comment, setComment] = useState("");
-  const approval = useQuery({ queryKey: ["approval", id], queryFn: () => getApproval(id), enabled: Boolean(id) });
+  const approval = useQuery({
+    queryKey: ["approval", id],
+    queryFn: () => getApproval(id),
+    enabled: Boolean(id)
+  });
   const approve = useMutation({
     mutationFn: () => approveItem(id, comment),
     onSuccess: async () => {
@@ -33,15 +37,22 @@ export function ApprovalDetailPage() {
 
   return (
     <>
-      <PageHeader title="Approval Detail" description="Review the reason, expected metric, and source payload before deciding." />
+      <PageHeader
+        title="Approval Detail"
+        description="Review the reason, expected metric, and source payload before deciding."
+      />
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card title={item?.title ?? "Loading"}>
           {item ? (
             <div className="space-y-4 text-sm">
               <div className="flex flex-wrap gap-2">
                 <StatusBadge value={item.status} />
-                <span className="rounded border border-border px-2 py-0.5 text-xs text-muted">{item.item_type}</span>
-                <span className="rounded border border-border px-2 py-0.5 text-xs text-muted">{item.scenario_id}</span>
+                <span className="rounded border border-border px-2 py-0.5 text-xs text-muted">
+                  {item.item_type}
+                </span>
+                <span className="rounded border border-border px-2 py-0.5 text-xs text-muted">
+                  {item.scenario_id}
+                </span>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase text-muted">Summary</div>

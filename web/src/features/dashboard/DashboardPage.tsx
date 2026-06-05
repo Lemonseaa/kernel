@@ -22,16 +22,38 @@ export function DashboardPage() {
 
   return (
     <>
-      <PageHeader title="Dashboard" description="Operator view for scenario health, recent runs, approvals, and system activity." />
+      <PageHeader
+        title="Dashboard"
+        description="Operator view for scenario health, recent runs, approvals, and system activity."
+      />
       {snapshot.isError ? (
-        <EmptyState title="API unavailable" body="Set a valid token and confirm the FastAPI service is running." />
+        <EmptyState
+          title="API unavailable"
+          body="Set a valid token and confirm the FastAPI service is running."
+        />
       ) : null}
       <MetricGrid
         metrics={[
-          { label: "Scenarios", value: data?.scenario_count ?? "-", caption: `${data?.active_scenario_count ?? 0} active` },
-          { label: "Recent runs", value: data?.recent_run_count ?? "-", caption: `${data?.failed_run_count ?? 0} failed` },
-          { label: "Pending approvals", value: data?.pending_approval_count ?? "-", caption: "Human action queue" },
-          { label: "Scope", value: data?.scope.scenario_id ?? "all", caption: data?.operator_summary ?? "Waiting for API" }
+          {
+            label: "Scenarios",
+            value: data?.scenario_count ?? "-",
+            caption: `${data?.active_scenario_count ?? 0} active`
+          },
+          {
+            label: "Recent runs",
+            value: data?.recent_run_count ?? "-",
+            caption: `${data?.failed_run_count ?? 0} failed`
+          },
+          {
+            label: "Pending approvals",
+            value: data?.pending_approval_count ?? "-",
+            caption: "Human action queue"
+          },
+          {
+            label: "Scope",
+            value: data?.scope.scenario_id ?? "all",
+            caption: data?.operator_summary ?? "Waiting for API"
+          }
         ]}
       />
 
@@ -41,7 +63,11 @@ export function DashboardPage() {
             <DataTable<ScenarioSummary>
               rows={data.scenarios}
               columns={[
-                { key: "name", header: "Name", render: (row) => <span className="font-medium text-ink">{row.name}</span> },
+                {
+                  key: "name",
+                  header: "Name",
+                  render: (row) => <span className="font-medium text-ink">{row.name}</span>
+                },
                 { key: "adapter", header: "Adapter", render: (row) => row.adapter_type },
                 { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> }
               ]}
@@ -51,7 +77,14 @@ export function DashboardPage() {
           )}
         </Card>
 
-        <Card title="Pending Approvals" action={<Link className="text-sm text-accent" to="/approvals">View all</Link>}>
+        <Card
+          title="Pending Approvals"
+          action={
+            <Link className="text-sm text-accent" to="/approvals">
+              View all
+            </Link>
+          }
+        >
           {data?.pending_items.length ? (
             <DataTable<ApprovalItem>
               rows={data.pending_items}
@@ -76,7 +109,14 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-5">
-        <Card title="Recent Runs" action={<Link className="text-sm text-accent" to="/runs">View history</Link>}>
+        <Card
+          title="Recent Runs"
+          action={
+            <Link className="text-sm text-accent" to="/runs">
+              View history
+            </Link>
+          }
+        >
           {data?.latest_runs.length ? (
             <DataTable<RunSummary>
               rows={data.latest_runs}

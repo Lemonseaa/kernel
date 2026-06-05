@@ -20,7 +20,9 @@ export function RunDetailPage() {
             <div className="space-y-4 text-sm">
               <div className="flex flex-wrap gap-2">
                 <StatusBadge value={data.status} />
-                <span className="rounded border border-border px-2 py-0.5 text-xs text-muted">{data.scenario_id}</span>
+                <span className="rounded border border-border px-2 py-0.5 text-xs text-muted">
+                  {data.scenario_id}
+                </span>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase text-muted">Value Summary</div>

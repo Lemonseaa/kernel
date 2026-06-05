@@ -7,7 +7,9 @@ import json
 from typing import cast
 
 from checkpoint_ai import CheckpointAI
+from checkpoint_ai.api import serve_api
 from checkpoint_ai.config import CheckpointAIConfig
+from checkpoint_ai.demo import seed_console_demo
 from checkpoint_ai.dryrun import DryRunValidator
 from checkpoint_ai.experiment.cli import (
     handle_baseline_command,
@@ -30,6 +32,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="checkpointai")
     parser.add_argument("--db", default=None)
     subparsers = parser.add_subparsers(dest="command")
+    api_parser = subparsers.add_parser("api")
+    api_subparsers = api_parser.add_subparsers(dest="api_command")
+    api_serve = api_subparsers.add_parser("serve")
+    api_serve.add_argument("--host", default="127.0.0.1")
+    api_serve.add_argument("--port", type=int, default=8000)
+    api_serve.add_argument("--reload", action="store_true")
+    demo_parser = subparsers.add_parser("demo")
+    demo_subparsers = demo_parser.add_subparsers(dest="demo_command")
+    demo_seed_console = demo_subparsers.add_parser("seed-console")
+    demo_seed_console.add_argument("--backup-dir", default=None)
     subparsers.add_parser("status")
     health_parser = subparsers.add_parser("health")
     health_parser.add_argument("--json", action="store_true", default=True)
@@ -55,6 +67,20 @@ def main(argv: list[str] | None = None) -> int:
     register_loop_parser(subparsers)
     register_v2_parsers(subparsers)
     args = parser.parse_args(argv)
+
+    if args.command == "api" and args.api_command == "serve":
+        serve_api(host=args.host, port=args.port, reload=args.reload)
+        return 0
+
+    if args.command == "demo" and args.demo_command == "seed-console":
+        db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
+        result = seed_console_demo(db_path, backup_dir=args.backup_dir)
+        print("Console demo seeded")
+        print(f"scenario_id: {result['scenario_id']}")
+        print(f"run_id: {result['run_id']}")
+        print(f"proposal_id: {result['proposal_id']}")
+        print(f"backup_id: {result['backup_id']}")
+        return 0
 
     if args.command == "status":
         checkpoint_ai = CheckpointAI.from_env() if args.db is None else CheckpointAI(sqlite_path=args.db)

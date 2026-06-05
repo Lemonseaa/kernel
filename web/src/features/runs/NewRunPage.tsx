@@ -14,7 +14,8 @@ export function NewRunPage() {
   const [task, setTask] = useState("analyze_signal");
   const [context, setContext] = useState('{"symbol":"AAPL"}');
   const run = useMutation({
-    mutationFn: () => triggerRun({ scenario_id: scenarioId, task, context: JSON.parse(context) as Record<string, unknown> }),
+    mutationFn: () =>
+      triggerRun({ scenario_id: scenarioId, task, context: JSON.parse(context) as Record<string, unknown> }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["runs"] });
       await queryClient.invalidateQueries({ queryKey: ["snapshot"] });
@@ -26,7 +27,10 @@ export function NewRunPage() {
 
   return (
     <>
-      <PageHeader title="Trigger Run" description="Run an adapter manually and capture logs, metrics, and value summary." />
+      <PageHeader
+        title="Trigger Run"
+        description="Run an adapter manually and capture logs, metrics, and value summary."
+      />
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card title="Run Input">
           <div className="space-y-4">
@@ -76,12 +80,21 @@ export function NewRunPage() {
       </div>
       {run.data ? (
         <div className="mt-5">
-          <Card title="Run Result" action={<Link className="text-sm text-accent" to={`/runs/${run.data.run_id}`}>Open detail</Link>}>
+          <Card
+            title="Run Result"
+            action={
+              <Link className="text-sm text-accent" to={`/runs/${run.data.run_id}`}>
+                Open detail
+              </Link>
+            }
+          >
             <JsonBlock value={run.data} />
           </Card>
         </div>
       ) : null}
-      {run.error ? <p className="mt-4 text-sm text-red-700">Run failed. Check scenario, adapter, and context JSON.</p> : null}
+      {run.error ? (
+        <p className="mt-4 text-sm text-red-700">Run failed. Check scenario, adapter, and context JSON.</p>
+      ) : null}
     </>
   );
 }

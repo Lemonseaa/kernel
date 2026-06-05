@@ -18,13 +18,28 @@ export function AdapterListPage() {
           <DataTable<AdapterDescription>
             rows={adapters.data}
             columns={[
-              { key: "name", header: "Name", render: (row) => <span className="font-medium text-ink">{row.name}</span> },
-              { key: "tasks", header: "Task Types", render: (row) => row.supported_task_types.join(", ") || "-" },
-              { key: "capabilities", header: "Capabilities", render: (row) => <JsonBlock value={row.capabilities} /> }
+              {
+                key: "name",
+                header: "Name",
+                render: (row) => <span className="font-medium text-ink">{row.name}</span>
+              },
+              {
+                key: "tasks",
+                header: "Task Types",
+                render: (row) => row.supported_task_types.join(", ") || "-"
+              },
+              {
+                key: "capabilities",
+                header: "Capabilities",
+                render: (row) => <JsonBlock value={row.capabilities} />
+              }
             ]}
           />
         ) : (
-          <EmptyState title="No adapters" body="Register an adapter in the backend before running scenarios." />
+          <EmptyState
+            title="No adapters"
+            body="Register an adapter in the backend before running scenarios."
+          />
         )}
       </Card>
     </>

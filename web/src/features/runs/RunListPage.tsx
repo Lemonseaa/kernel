@@ -20,7 +20,14 @@ export function RunListPage() {
   return (
     <>
       <PageHeader title="Run History" description="Past adapter runs with metrics, summaries, and status." />
-      <Card title="Runs" action={<Link className="text-sm text-accent" to="/runs/new">Trigger run</Link>}>
+      <Card
+        title="Runs"
+        action={
+          <Link className="text-sm text-accent" to="/runs/new">
+            Trigger run
+          </Link>
+        }
+      >
         {runs.data?.length ? (
           <DataTable<RunSummary>
             rows={runs.data}
@@ -37,7 +44,11 @@ export function RunListPage() {
               { key: "scenario", header: "Scenario", render: (row) => row.scenario_id },
               { key: "task", header: "Task", render: (row) => row.task },
               { key: "status", header: "Status", render: (row) => <StatusBadge value={row.status} /> },
-              { key: "summary", header: "Value", render: (row) => row.value_summary || row.failed_summary || "-" },
+              {
+                key: "summary",
+                header: "Value",
+                render: (row) => row.value_summary || row.failed_summary || "-"
+              },
               { key: "created", header: "Created", render: (row) => formatDate(row.created_at) }
             ]}
           />

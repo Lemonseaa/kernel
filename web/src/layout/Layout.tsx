@@ -1,4 +1,13 @@
-import { Activity, Archive, CheckSquare, DatabaseBackup, GitBranch, LayoutDashboard, Play, Plug } from "lucide-react";
+import {
+  Activity,
+  Archive,
+  CheckSquare,
+  DatabaseBackup,
+  GitBranch,
+  LayoutDashboard,
+  Play,
+  Plug
+} from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getHealth } from "../api/client";
@@ -66,7 +75,9 @@ export function Layout() {
             <div className="flex items-center gap-3">
               <span className="md:hidden text-base font-semibold text-ink">CheckpointAI</span>
               {token ? (
-                <StatusBadge value={health.data?.overall_status ?? (health.isError ? "unhealthy" : "checking")} />
+                <StatusBadge
+                  value={health.data?.overall_status ?? (health.isError ? "unhealthy" : "checking")}
+                />
               ) : (
                 <StatusBadge value="token required" />
               )}

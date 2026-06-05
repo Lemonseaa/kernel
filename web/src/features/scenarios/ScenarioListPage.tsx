@@ -22,7 +22,10 @@ export function ScenarioListPage() {
 
   return (
     <>
-      <PageHeader title="Scenarios" description="Scenario scope controls isolation for runs, proposals, prompts, and reports." />
+      <PageHeader
+        title="Scenarios"
+        description="Scenario scope controls isolation for runs, proposals, prompts, and reports."
+      />
       <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
         <Card title="Scenario List">
           {scenarios.data?.length ? (
@@ -68,7 +71,10 @@ export function ScenarioListPage() {
               ]}
             />
           ) : (
-            <EmptyState title="No scenarios" body="Scenarios are created through backend setup or CLI in this phase." />
+            <EmptyState
+              title="No scenarios"
+              body="Scenarios are created through backend setup or CLI in this phase."
+            />
           )}
         </Card>
         <Card title="Selected Scenario">

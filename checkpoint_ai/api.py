@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,22 @@ from checkpoint_ai.optimization import ParameterSuggestionStore
 from checkpoint_ai.prompt import PromptProposalStore, ProposalStore
 from checkpoint_ai.recommendation import VersionRecommendationStore
 from checkpoint_ai.scenario import ScenarioRegistry, ScenarioRunner, ScenarioStore
+
+_uvicorn_server: Any
+
+try:
+    import uvicorn as _uvicorn
+except ImportError:  # pragma: no cover - exercised only when optional server dependency is absent.
+    class _MissingUvicorn:
+        """Clear failure object for environments without uvicorn installed."""
+
+        @staticmethod
+        def run(*_args: Any, **_kwargs: Any) -> None:
+            raise RuntimeError("uvicorn is required to serve the CheckpointAI API")
+
+    _uvicorn_server = _MissingUvicorn()
+else:
+    _uvicorn_server = _uvicorn
 
 
 @dataclass(slots=True)
@@ -46,7 +63,7 @@ def create_app(
     """Create a FastAPI app when available, otherwise return a fallback app."""
 
     active_checkpoint_ai = checkpoint_ai or CheckpointAI.from_env()
-    active_auth = BearerTokenAuth(auth_manager or APIKeyManager())
+    active_auth = BearerTokenAuth(auth_manager or APIKeyManager(initial_tokens=_initial_tokens_from_env()))
     active_db_path = Path(db_path or active_checkpoint_ai.config.sqlite_path)
     active_backup_dir = Path(backup_dir or active_db_path.parent / "backups")
     if force_fallback:
@@ -239,6 +256,25 @@ def create_app(
     setattr(app, "checkpoint_ai", active_checkpoint_ai)
     setattr(app, "auth", active_auth)
     return app
+
+
+def serve_api(host: str = "127.0.0.1", port: int = 8000, reload: bool = False) -> None:
+    """Serve the FastAPI control console API."""
+
+    _uvicorn_server.run(
+        "checkpoint_ai.api:create_app",
+        host=host,
+        port=port,
+        reload=reload,
+        factory=True,
+    )
+
+
+def _initial_tokens_from_env() -> list[str]:
+    """Read comma-separated API tokens from environment."""
+
+    raw = os.environ.get("CHECKPOINTAI_API_TOKENS") or os.environ.get("CHECKPOINTAI_API_TOKEN") or ""
+    return [token.strip() for token in raw.split(",") if token.strip()]
 
 
 def _fallback_app(checkpoint_ai: CheckpointAI, auth: BearerTokenAuth) -> FallbackApp:

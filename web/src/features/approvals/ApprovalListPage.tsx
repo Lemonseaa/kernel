@@ -19,7 +19,10 @@ export function ApprovalListPage() {
 
   return (
     <>
-      <PageHeader title="Approval Inbox" description="Human action queue for proposals, recommendations, and parameter suggestions." />
+      <PageHeader
+        title="Approval Inbox"
+        description="Human action queue for proposals, recommendations, and parameter suggestions."
+      />
       <Card title="Pending Items">
         {approvals.data?.length ? (
           <DataTable<ApprovalItem>
