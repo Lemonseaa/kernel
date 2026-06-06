@@ -238,9 +238,195 @@ Frontend: React + Vite
 UI: Tailwind + shadcn/ui
 State: Zustand（UI状态，如当前scenario、筛选条件、侧边栏状态）
 HTTP: TanStack Query（替代手写Zustand异步状态）
-Charts: Recharts
+Charts: 先用轻量 SVG components，复杂后再引入 Recharts
 Tables: TanStack Table
 E2E: Playwright（优先使用本机 Chrome channel，避免强依赖浏览器下载）
+```
+
+## V7.9 新增重点
+
+### 1. Workflow Map
+
+目标：把外部工作流从黑盒变成可视化、可审计、可诊断的结构图。
+
+页面/组件：
+
+```
+web/src/features/workflow-map/
+├── WorkflowOverviewPage.tsx
+├── RunTracePage.tsx
+├── NodeDetailPanel.tsx
+├── WorkflowDiffPage.tsx
+└── TraceCoveragePanel.tsx
+
+web/src/components/workflow/
+├── WorkflowGraph.tsx
+├── WorkflowNodeCard.tsx
+├── WorkflowEdgeLayer.tsx
+├── StageMap.tsx
+└── OptimizationOverlay.tsx
+```
+
+后端 API：
+
+```
+GET /api/workflows
+GET /api/workflows/{workflow_id}/manifest
+GET /api/workflows/{workflow_id}/map
+GET /api/workflows/{workflow_id}/coverage
+GET /api/workflows/{workflow_id}/diff
+GET /api/runs/{run_id}/workflow-trace
+GET /api/workflow-nodes/{node_id}
+```
+
+硬规则：
+
+```
+1. Workflow Map 不是编辑器
+2. 控制流和数据流必须区分
+3. node 必须显示类型、状态、成本、耗时、风险、可优化项
+4. 黑盒节点必须明显标注
+5. 低 Trace Coverage 不能进入自动优化
+```
+
+### 2. Workflow Design Assistant
+
+目标：用表格梳理 + 模式推荐 + 草图生成，帮助用户生成可被 CheckpointAI 管理的工作流草案。
+
+页面/组件：
+
+```
+web/src/features/workflow-design/
+├── IntentTablePage.tsx
+├── MethodologyFormPage.tsx
+├── StageMapDraftPage.tsx
+├── PatternRecommendationPage.tsx
+├── WorkflowDraftPage.tsx
+└── ManifestPreviewPage.tsx
+```
+
+流程：
+
+```
+Intent Table
+  -> Methodology Form
+  -> Stage Map
+  -> Pattern Recommendation
+  -> Workflow Draft
+  -> Manifest Preview
+```
+
+Pattern 不是全局选择，而是每个阶段的局部推荐。
+
+支持混合：
+
+```
+Sequential / Parallel Exploration / Supervisor Dispatch / Critic-Refine
+Voting / Debate / Tournament / Champion-Challenger / Human Gate
+Data Quality Gate / Shadow Replay / Fallback / Budget Gate
+Router / Conditional Branch / Ensemble / A/B Test / Simulation Loop
+```
+
+### 3. Methodology Profile
+
+目标：让用户显式定义自己的审美、风险偏好、判断标准和行业方法论。
+
+页面/组件：
+
+```
+web/src/features/methodology/
+├── MethodologyProfileListPage.tsx
+├── MethodologyProfileDetailPage.tsx
+├── MethodologyProfileEditor.tsx
+└── MethodologyAlignmentPanel.tsx
+```
+
+硬规则：
+
+```
+1. 人类确认后才成为正式 Methodology Profile
+2. Hermes 只能生成建议草稿
+3. Agent 不可自动修改
+4. Proposal Detail 必须显示 Methodology Alignment
+5. 违反方法论的 proposal 即使指标提升，也不能自动通过
+```
+
+### 4. Optimization Visualization
+
+目标：每次修改后的效果必须用图表直观展示。
+
+页面/组件：
+
+```
+web/src/features/visualizations/
+├── ProposalImpactPage.tsx
+├── ScenarioMetricTrendPage.tsx
+├── VersionPerformancePage.tsx
+└── ProposalQualityPage.tsx
+
+web/src/components/charts/
+├── MetricBarChart.tsx
+├── MetricTrendChart.tsx
+├── ImprovementDeltaChart.tsx
+└── OutcomeDistributionChart.tsx
+```
+
+后端 API：
+
+```
+GET /api/visualizations/proposals/{proposal_id}/impact
+GET /api/visualizations/scenarios/{scenario_id}/metrics
+GET /api/visualizations/scenarios/{scenario_id}/proposal-quality
+GET /api/visualizations/config-versions/performance
+```
+
+硬规则：
+
+```
+1. business metrics 和 system metrics 分开
+2. 图表必须显示 run_kind
+3. synthetic evidence 必须标 advisory
+4. 颜色方向必须尊重 MetricSchema
+```
+
+### 5. LLM Provider Console
+
+目标：从 env-only 配置升级为可视化模型厂商操作台。
+
+页面/组件：
+
+```
+web/src/features/llm/
+├── ProviderListPage.tsx
+├── ProviderDetailPage.tsx
+├── ModelListPage.tsx
+├── RoleRoutingPage.tsx
+└── ProviderHealthPage.tsx
+```
+
+后端 API：
+
+```
+GET /api/llm/providers
+POST /api/llm/providers
+PATCH /api/llm/providers/{provider_id}
+POST /api/llm/providers/{provider_id}/test
+GET /api/llm/models
+POST /api/llm/models
+PATCH /api/llm/models/{model_id}
+GET /api/llm/routing
+PATCH /api/llm/routing/{role}
+GET /api/llm/health
+GET /api/llm/costs
+```
+
+安全规则：
+
+```
+1. UI 不显示明文 API key
+2. disabled provider 不能被 router 选择
+3. 超预算 provider 不能进入自动探索
+4. provider health 失败时必须降级或提示
 ```
 
 ## 本地启动
@@ -300,11 +486,16 @@ P1（重要）：
 7. Shadow Result
 8. Reports
 9. Backup
+10. Workflow Map
+11. Workflow Design Assistant
+12. Methodology Profile
+13. Optimization Visualization
+14. LLM Provider Console
 
 P2（可后续）：
-10. Scenario 管理
-11. Metric Schema
-12. Adapter 查看
+15. Scenario 管理
+16. Metric Schema
+17. Adapter 查看
 ```
 
 ---

@@ -215,6 +215,105 @@ list_config() -> ExternalConfig
 - 0 个未授权真实 apply
 - 报告能回答：发现了什么、为什么改、改了什么、验证结果、是否变好、是否阻断
 
+### V7.9: Workflow Map + Optimization Visualization + LLM Provider Console + Burn-in
+
+目标：不急着进入 V8，先让 V7 对一个人长期自用真正可判断、可配置、可复盘。
+
+#### Workflow Contract + Trace Coverage
+
+验收：
+
+- WorkflowManifest 可表达 workflow_id / version / nodes / edges / inputs / outputs / config_refs / metric_refs / trace_schema
+- WorkflowNode 可表达 agent / llm / tool / datasource / decision / human_gate / api / output
+- WorkflowEdge 可区分 control flow / data flow
+- WorkflowTrace 可记录 node status / latency / cost / metrics / errors
+- Trace Coverage 可计算工作流透明度
+- Replayability Score 可判断是否适合自动优化
+- 黑盒工作流只能观察，不进入自动优化
+
+#### Workflow Map
+
+验收：
+
+- UI 有 Workflow Map 一级板块
+- Level 1 展示 Stage Map
+- Level 2 展示 Agent / Tool / LLM / Data Source 结构
+- Level 3 展示单次 Run Trace
+- 图上显示控制流、数据流、风险点、人类门控点、可优化点
+- Node Detail 显示运行次数、成功率、平均耗时、成本、errors、相关 proposals
+- Workflow Diff 显示修改前后 node / edge / prompt / model / parameter / policy 变化
+
+#### Workflow Design Assistant
+
+验收：
+
+- UI 有 Intent Table
+- UI 有 Methodology Form
+- 系统可从表单生成 WorkflowDraft
+- 系统可为每个阶段推荐局部 Pattern，而不是全局选择一个协作模式
+- 支持混合 pattern：Sequential / Parallel Exploration / Voting / Critic-Refine / Debate / Human Gate / Shadow Replay / Fallback / Budget Gate 等
+- 生成 WorkflowManifest / AgentConfigDraft / MetricSchemaDraft / PolicyDraft
+- 不做拖拽 workflow builder
+
+#### Methodology Profile
+
+验收：
+
+- MethodologyProfile 可按 business_line / scenario / workflow 隔离
+- 记录 value_order / risk_preference / style_preference / decision_rules / forbidden_patterns / preferred_methods / evaluation_rubric
+- MethodologyProfile 必须由人确认
+- Hermes 只能生成 suggested notes，不能直接写正式方法论
+- Proposal 必须输出 methodology_alignment
+- 违反方法论的 proposal 即使指标提升，也不能自动通过
+
+#### Optimization Visualization
+
+验收：
+
+- Proposal Impact 图：展示 before/after business metrics，改善绿色，恶化红色
+- Metric Trend 图：展示 scenario 历史 runs 指标趋势，并标记 proposal / shadow / lock version
+- Baseline vs Candidate 图：展示 baseline 和 candidate 的关键指标对比
+- Proposal Quality 图：展示 improved / worse / inconclusive / blocked 分布
+- Version Performance 图：展示 config version 表现、lock 点、rollback 点
+- business metrics / system metrics / data quality metrics 分开显示
+- run_kind 必须显示：synthetic / historical / paper / live
+
+约束：
+
+- 图表用于判断，不用于装饰
+- synthetic 图表不能暗示可实盘或可发布
+- 第一版优先轻量 SVG components；复杂后再引入 Recharts
+
+#### LLM Provider Console
+
+验收：
+
+- Provider 配置对象：provider_id/name/type/base_url/enabled/timeout/max_retries/daily_budget/notes
+- Model 配置对象：model_id/provider_id/model_name/context_window/tools/json/vision/input_price/output_price/latency_score/quality_tier
+- UI 可查看、创建、禁用 provider
+- UI 可查看、创建、禁用 model
+- UI 可为 Observer / Proposer / Validator / SafetyMonitor / Hermes 绑定模型
+- 支持 provider health check：available / degraded / unavailable
+- 支持 masked API key，不在 UI 显示明文
+- 支持 OpenAI-compatible 接入大多数厂商：DeepSeek / Qwen / Kimi / Zhipu / SiliconFlow / OpenRouter / Ollama
+
+约束：
+
+- 不为每个厂商都先写 native provider
+- OpenAI-compatible 先作为统一接入口
+- native provider 只在有特殊能力或协议差异时实现
+
+#### Burn-in
+
+验收：
+
+- 至少 50 条 historical / semi-real run
+- 至少 10 个 observation
+- 至少 5 个 proposal
+- 至少 3 个 shadow/replay validation
+- 至少 1 个 config version 被人类确认 lock
+- 产出 V7.9 数据报告：哪些 observation 有价值、哪些 proposal 是噪音、哪些图表支持判断、哪些 provider/model 表现不稳定
+
 ## Non-Goals
 
 - 不做 Agent 自由聊天系统

@@ -4,7 +4,7 @@
 > Status: historical reference.
 >
 > This document captures the V0/V1 architecture when CheckpointAI was still framed as a general Multi-Agent OS.
-> The current direction is defined in [BLUEPRINT.md](BLUEPRINT.md): CheckpointAI is now a code-first Agent experiment and optimization system, not a low-code Workflow Builder, Dify clone, or generic Agent Runtime.
+> The current direction is defined in [BLUEPRINT.md](BLUEPRINT.md): CheckpointAI is now a workflow optimization framework, not a low-code Workflow Builder, Dify clone, or generic Agent Runtime.
 > Keep this document for reusable ideas such as isolation, provider abstraction, policy, cost, and observability; do not treat it as the current product roadmap.
 
 **版本：V1**

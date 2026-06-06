@@ -18,7 +18,7 @@ calls, configure the selected provider API key.
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `CHECKPOINT_AI_DB_PATH` | `checkpoint_ai.db` | SQLite database path. Docker defaults to `/app/data/checkpoint_ai.db`. |
-| `CHECKPOINT_AI_DEFAULT_PROVIDER` | `minimax` | Default provider: `minimax` or `openai`. |
+| `CHECKPOINT_AI_DEFAULT_PROVIDER` | `minimax` | Default provider: currently `minimax` or `openai`. |
 | `CHECKPOINT_AI_DRY_RUN` | `false` | Use dry-run provider and simulated tool behavior. |
 | `CHECKPOINT_AI_MINIMAX_API_KEY` | empty | MiniMax API key. |
 | `CHECKPOINT_AI_MINIMAX_MODEL` | `MiniMax-M2.7-highspeed` | MiniMax model name. |
@@ -34,6 +34,46 @@ calls, configure the selected provider API key.
 | `CHECKPOINT_AI_LLM_CACHE_ENABLED` | `true` | Enable prompt/model response cache. |
 | `CHECKPOINT_AI_LLM_CACHE_MAX_SIZE` | `128` | Maximum cached LLM responses. |
 | `CHECKPOINT_AI_LLM_CACHE_TTL_SECONDS` | `300` | Cache TTL in seconds. |
+
+## LLM Provider Scope
+
+Current implementation is MVP-level:
+
+```
+1. MiniMax native provider
+2. OpenAI-compatible provider
+3. Provider selection via env
+4. Basic timeout / retry / cache
+```
+
+This does not yet mean CheckpointAI has a full model vendor console.
+
+Most providers can be connected through the OpenAI-compatible path by setting:
+
+```
+CHECKPOINT_AI_DEFAULT_PROVIDER=openai
+CHECKPOINT_AI_OPENAI_BASE_URL=<provider-compatible-base-url>
+CHECKPOINT_AI_OPENAI_API_KEY=<provider-api-key>
+CHECKPOINT_AI_OPENAI_MODEL=<provider-model-name>
+```
+
+Examples of providers that may use this path:
+
+```
+OpenAI, DeepSeek, Qwen/DashScope, Kimi/Moonshot, Zhipu,
+SiliconFlow, OpenRouter, Ollama/LM Studio, Together, Fireworks, Groq
+```
+
+V7.9 will add a proper LLM Provider Console:
+
+- provider records
+- model records
+- role-based model routing
+- provider health checks
+- masked API keys
+- provider/model cost summaries
+
+Until that is implemented, use `.env` for provider configuration.
 | `CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS` | `5` | Slow-task alert threshold. |
 | `CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS` | `30` | Container heartbeat log interval. |
 | `CHECKPOINT_AI_HA_ENABLED` | `false` | Enable lease-based HA manager. |
