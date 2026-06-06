@@ -1,5 +1,7 @@
 # CheckpointAI Blueprint
 
+**Workflow Optimization Console**
+
 ## One Line
 
 CheckpointAI 是一个工作流优化框架。
