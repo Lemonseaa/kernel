@@ -64,16 +64,16 @@ OpenAI, DeepSeek, Qwen/DashScope, Kimi/Moonshot, Zhipu,
 SiliconFlow, OpenRouter, Ollama/LM Studio, Together, Fireworks, Groq
 ```
 
-V7.9 will add a proper LLM Provider Console:
+The previous LLM Provider Console plan is frozen. CheckpointAI should not become a full provider platform.
 
-- provider records
-- model records
-- role-based model routing
-- provider health checks
-- masked API keys
-- provider/model cost summaries
+For now, provider configuration stays intentionally simple:
 
-Until that is implemented, use `.env` for provider configuration.
+- use OpenAI-compatible endpoints where possible
+- use `.env` for local configuration
+- only add provider metadata required by the Evidence Adapter path
+- prefer LiteLLM/OpenRouter-style external routing instead of rebuilding provider infrastructure
+
+If a future evidence workflow needs richer model routing, add the smallest configuration needed for that workflow only.
 | `CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS` | `5` | Slow-task alert threshold. |
 | `CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS` | `30` | Container heartbeat log interval. |
 | `CHECKPOINT_AI_HA_ENABLED` | `false` | Enable lease-based HA manager. |

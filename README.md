@@ -1,17 +1,17 @@
 # CheckpointAI
 
-**Workflow Optimization Console**
+**External Workflow Evidence Harness**
 
 [![Tests](https://img.shields.io/badge/tests-173%20passed-brightgreen)](https://github.com/Lemonseaa/checkpointAI)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-Non--Commercial-red)](LICENSE)
 
-CheckpointAI is a workflow optimization framework.
+CheckpointAI is an evidence harness for external workflows.
 
-It connects to external Agent teams, automation workflows, and business processes, then makes their behavior observable, comparable, reversible, and evidence-based.
+It connects to external Agent teams, automation workflows, and business processes, then turns their runs and changes into observable, visualizable, comparable, reviewable, and reversible evidence.
 
-It is not a low-code workflow builder, Agent runtime replacement, or Dify clone. Its job is to turn workflow changes from black-box guesses into traceable experiments.
+It is not a low-code workflow builder, Agent runtime replacement, Dify clone, Nexent clone, or TradingAgents clone. Its job is to judge whether workflow changes actually improved outcomes.
 
 ## License
 
@@ -24,7 +24,7 @@ Commercial authorization contact: liminxi634@163.com
 ```text
 Dify = prototype tool / workflow reference / plugin ecosystem reference
 TradingAgents = quant Agent team template / multi-role research workflow reference
-CheckpointAI = workflow observation layer + optimization layer + evidence layer + approval layer
+CheckpointAI = evidence harness + workflow visualization + review layer + approval layer + rollback layer
 ```
 
 The authoritative roadmap is [docs/BLUEPRINT.md](docs/BLUEPRINT.md).
@@ -32,22 +32,21 @@ The authoritative roadmap is [docs/BLUEPRINT.md](docs/BLUEPRINT.md).
 ## Core Question
 
 ```text
-Can I know why a workflow should change, what changed, whether it improved, and whether it violates my risk boundary or methodology?
+Can I prove whether an external workflow change made things better, worse, or inconclusive?
 ```
 
 If the answer is yes, CheckpointAI is useful.
 
 ## What CheckpointAI Does
 
-- Converts external workflows into observable workflow contracts and maps.
-- Captures run traces, tool calls, parameters, outputs, costs, errors, and metrics.
+- Ingests external workflow runs through an Evidence Adapter.
+- Normalizes workflow contracts, traces, configs, artifacts, and metrics.
+- Visualizes imported workflow structure, run paths, black-box nodes, trace coverage, metric coverage, cost, latency, and errors.
 - Records experiments with hypothesis, baseline, change, result, and conclusion.
 - Compares prompt / strategy / workflow / model / tool-policy versions against baselines.
-- Runs shadow or replay tests before applying changes.
-- Generates bounded patch proposals instead of uncontrolled rewrites.
-- Applies evidence, risk, and methodology gates before approval or low-risk automation.
-- Visualizes workflow structure, black-box nodes, metric trends, and before/after impact.
-- Provides a governance console for approvals, reports, backups, rollback, and provider health.
+- Runs shadow or replay checks before humans accept changes.
+- Applies evidence, risk, and methodology gates before approval.
+- Produces evidence reports that support approve / reject / rollback decisions.
 
 ## What CheckpointAI Does Not Do
 
@@ -57,6 +56,7 @@ If the answer is yes, CheckpointAI is useful.
 - It does not blindly fork TradingAgents or any external framework.
 - It does not optimize fully black-box workflows that expose no trace, metrics, or configurable surface.
 - It does not automatically deploy live trading, publish content, delete history, or bypass human final control.
+- It does not build a full plugin marketplace or full model provider platform.
 - It does not promise automatic profit, automatic followers, or real learning from tiny samples.
 
 ## Main Concepts
@@ -65,14 +65,15 @@ If the answer is yes, CheckpointAI is useful.
 |---|---|
 | BusinessLine | A top-level business/domain boundary for lifecycle, budgets, isolation, and reporting. |
 | Scenario | A bounded optimization domain, such as quant research or media growth. |
+| EvidenceAdapter | Ingests external workflow run JSON and normalizes it into CheckpointAI evidence. |
 | WorkflowContract | The structured interface that exposes a workflow's nodes, edges, inputs, outputs, metrics, and configurable surfaces. |
-| WorkflowMap | A visual map of stages, nodes, run traces, black-box areas, and optimization candidates. |
+| WorkflowVisualization | Diagnostic map of imported workflows: nodes, run paths, black boxes, coverage, risk, cost, latency, and errors. |
 | Experiment | A recorded attempt to improve behavior, with hypothesis and result. |
 | Run | One execution of an Agent team or business workflow. |
 | Trace | Structured record of each Agent step, tool call, parameter, and output. |
 | Baseline | The current version or benchmark used for comparison. |
-| Patch | A bounded change to prompt, workflow, tool policy, strategy, or parameters. |
-| Shadow / Replay | Test a candidate version before applying it. |
+| Candidate | A proposed workflow/config/strategy version compared against a baseline. |
+| Shadow / Replay | Test a candidate version before humans accept it. |
 | Evidence Gate | Blocks recommendations when data is not strong enough. |
 | Risk Gate | Decides whether a change is automatic, approval-required, or blocked. |
 | Methodology Profile | Human-owned preferences, standards, risk boundaries, style, and decision rules. |
@@ -87,7 +88,7 @@ Media Team:
 trend/content/publishing/traffic-feedback agents + CheckpointAI experiment control
 
 Workflow Team:
-external automation or Agent workflow + CheckpointAI workflow map + trace + impact visualization
+external automation or Agent workflow + CheckpointAI evidence adapter + workflow visualization + report + decision log
 ```
 
 ## Quick Start
@@ -116,6 +117,7 @@ python -m mypy checkpoint_ai --show-error-codes --no-incremental
 ## Documentation
 
 - [Blueprint](docs/BLUEPRINT.md): current source of truth.
+- [Strategic Reset Plan](docs/STRATEGIC_RESET_PLAN.md): current execution plan.
 - [System Boundaries](docs/SYSTEM_BOUNDARIES.md): policy and BusinessLine/Scenario boundaries.
 - [Architecture Overview](docs/ARCHITECTURE_OVERVIEW.md): historical architecture reference.
 - [Business Line Architecture](docs/BUSINESS_LINE_ARCHITECTURE.md): historical isolation design reference.
