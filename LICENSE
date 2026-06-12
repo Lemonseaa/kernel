@@ -1,43 +1,129 @@
-Loop Harness Non-Commercial License
+Loop Harness Source-Available Non-Commercial License
+Version 1.0
 
-Copyright (c) 2024-2026 Loop Harness Contributors
+Copyright (c) 2024-2026 Loop Harness Contributors.
+All rights reserved except as expressly granted in this license.
 
-Permission is granted to use, copy, modify, and distribute this software and
-associated documentation files (the "Software") for non-commercial purposes
-only, subject to the conditions below.
+This license allows non-commercial use of Loop Harness while reserving all
+commercial rights to the copyright holder.
 
-1. Non-Commercial Use
+1. Definitions
 
-You may use the Software for personal, educational, research, evaluation, and
-internal non-commercial purposes.
+"Software" means the Loop Harness source code, documentation, examples,
+configuration files, scripts, and related materials distributed with this
+license.
 
-2. Commercial Use Requires Authorization
+"You" means any individual or legal entity receiving, using, copying,
+modifying, or distributing the Software.
 
-Commercial use is not permitted without prior written authorization from the
-copyright holder.
+"Non-Commercial Use" means use that is not primarily intended for commercial
+advantage, monetary compensation, paid services, revenue generation, or
+business operations for clients or customers.
 
-Commercial use includes, but is not limited to:
+"Commercial Use" includes, without limitation:
 
-- using the Software to provide paid products or services;
-- using the Software in revenue-generating business operations;
-- selling, sublicensing, hosting, or distributing the Software as part of a
-  commercial product or service;
-- using the Software to operate a production system for commercial clients or
-  customers.
+- using the Software to provide paid products, services, consulting, hosted
+  services, managed services, or internal business operations;
+- using the Software in a production system that supports revenue-generating
+  activity;
+- selling, sublicensing, leasing, hosting, or distributing the Software as
+  part of a paid product or service;
+- using the Software to serve commercial clients, customers, or business
+  partners;
+- incorporating the Software into a proprietary or commercial platform,
+  workflow, agent system, or automation service.
 
-To request commercial authorization, contact the copyright holder.
+2. Non-Commercial License Grant
 
-3. Redistribution
+Subject to this license, the copyright holder grants You a limited,
+worldwide, non-exclusive, non-transferable, royalty-free license to use, copy,
+modify, and distribute the Software solely for Non-Commercial Use.
 
-Any permitted redistribution must include this license notice and retain the
-copyright notice.
+Permitted Non-Commercial Use includes personal learning, academic research,
+evaluation, experimentation, and non-commercial internal testing.
 
-4. No Warranty
+3. Commercial Authorization Required
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
-OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Commercial Use is not permitted under this license without prior written
+authorization from the copyright holder.
+
+To request commercial authorization, contact:
+
+liminxi634@163.com
+
+Commercial authorization may be granted under a separate written agreement.
+No rights for Commercial Use are granted unless such written authorization is
+provided.
+
+4. Redistribution Conditions
+
+Any permitted redistribution, whether modified or unmodified, must:
+
+- include this license text;
+- retain all copyright, license, and attribution notices;
+- clearly mark any material modifications You made;
+- not imply endorsement by the copyright holder;
+- not remove or obscure the name "Loop Harness" except where necessary to
+  identify a modified fork.
+
+5. Restrictions
+
+You may not:
+
+- use the Software for Commercial Use without prior written authorization;
+- sublicense the Software except as expressly permitted by a separate written
+  agreement;
+- remove copyright, license, or attribution notices;
+- use the Software to create a competing commercial service or hosted
+  platform without authorization;
+- use the Software in a way that violates applicable law or third-party
+  rights.
+
+6. Contributions
+
+Unless otherwise agreed in writing, any contribution submitted to the project
+is provided under this same license. By submitting a contribution, You
+represent that You have the right to contribute it and that it may be used,
+modified, and distributed under this license.
+
+7. Third-Party Components
+
+The Software may depend on third-party libraries, tools, or services. Those
+components are licensed under their own terms. This license does not modify,
+replace, or grant rights under any third-party license.
+
+8. Ownership
+
+The Software is licensed, not sold. The copyright holder retains all rights,
+title, and interest in and to the Software, including all rights not expressly
+granted by this license.
+
+9. Termination
+
+Your rights under this license terminate automatically if You violate its
+terms. Upon termination, You must stop using, copying, modifying, and
+distributing the Software, and You must destroy any copies in Your possession
+or control, except where retention is required by law.
+
+10. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT,
+SECURITY, RELIABILITY, OR ACCURACY.
+
+11. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE COPYRIGHT
+HOLDER, AUTHORS, OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, LOSSES,
+LIABILITIES, COSTS, OR EXPENSES, INCLUDING DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES, ARISING FROM OR
+RELATING TO THE SOFTWARE OR THIS LICENSE, WHETHER IN CONTRACT, TORT, STRICT
+LIABILITY, OR OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+12. No Legal Advice
+
+This license text is provided as a project license and does not constitute
+legal advice. If You are unsure whether Your intended use is permitted, obtain
+independent legal advice or request written authorization from the copyright
+holder.

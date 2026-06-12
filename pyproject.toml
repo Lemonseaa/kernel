@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Loop Harness - external workflow evidence harness."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Non-Commercial; commercial use requires authorization" }
+license = { text = "Loop Harness Source-Available Non-Commercial License" }
 authors = [
     { name = "Lemonsea", email = "lemonsea@example.com" }
 ]
