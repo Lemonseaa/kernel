@@ -1,0 +1,46 @@
+{
+  "workflow_id": "quant_backtest_v1",
+  "run_id": "quant_baseline_001",
+  "run_kind": "historical",
+  "started_at": "2026-06-11T10:00:00Z",
+  "finished_at": "2026-06-11T10:03:00Z",
+  "nodes": [
+    {"id": "load_data", "name": "Load market data", "type": "data"},
+    {"id": "strategy", "name": "Moving average strategy", "type": "agent"},
+    {"id": "broker", "name": "Broker simulation", "type": "external"},
+    {"id": "report", "name": "Backtest report", "type": "output"}
+  ],
+  "edges": [
+    {"source": "load_data", "target": "strategy"},
+    {"source": "strategy", "target": "broker"},
+    {"source": "strategy", "target": "report"}
+  ],
+  "trace": [
+    {"node_id": "load_data", "status": "succeeded", "duration_ms": 120, "metrics": {"sample_count": 120}},
+    {"node_id": "strategy", "status": "succeeded", "duration_ms": 340, "metrics": {"sharpe": 0.9}},
+    {"node_id": "report", "status": "succeeded", "duration_ms": 80}
+  ],
+  "metrics": {
+    "total_return": 0.18,
+    "sharpe": 0.9,
+    "max_drawdown": 0.14,
+    "sample_count": 120,
+    "latency_ms": 540
+  },
+  "metric_schema": {
+    "total_return": {"direction": "higher", "category": "business", "weight": 0.25},
+    "sharpe": {"direction": "higher", "category": "business", "weight": 0.45},
+    "max_drawdown": {
+      "direction": "lower",
+      "category": "guardrail",
+      "weight": 0.3,
+      "threshold": 0.25,
+      "is_guardrail": true
+    },
+    "sample_count": {"direction": "higher", "category": "data_quality", "weight": 0.0},
+    "latency_ms": {"direction": "lower", "category": "system", "weight": 0.0}
+  },
+  "config": {"strategy": "moving_average", "fast_window": 8, "slow_window": 21},
+  "artifacts": [{"type": "csv", "path": "artifacts/quant_baseline_001.csv"}],
+  "metadata": {"data_source": "fixture_history"}
+}

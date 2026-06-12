@@ -11,6 +11,7 @@ from checkpoint_ai.api import serve_api
 from checkpoint_ai.config import CheckpointAIConfig
 from checkpoint_ai.demo import seed_console_demo
 from checkpoint_ai.dryrun import DryRunValidator
+from checkpoint_ai.evidence.cli import handle_evidence_command, register_evidence_parser
 from checkpoint_ai.experiment.cli import (
     handle_baseline_command,
     handle_experiment_command,
@@ -21,9 +22,9 @@ from checkpoint_ai.experiment.cli import (
     register_loop_parser,
     register_risk_parser,
 )
+from checkpoint_ai.human_cli import handle_human_command, register_human_parsers
 from checkpoint_ai.models import Run, TaskSpec
 from checkpoint_ai.notification import ConsoleNotificationChannel, NotificationMessage
-from checkpoint_ai.v2_cli import handle_v2_command, register_v2_parsers
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -51,9 +52,6 @@ def main(argv: list[str] | None = None) -> int:
     bl_parser = subparsers.add_parser("bl")
     bl_subparsers = bl_parser.add_subparsers(dest="bl_command")
     bl_subparsers.add_parser("list")
-    schedule_parser = subparsers.add_parser("schedule")
-    schedule_subparsers = schedule_parser.add_subparsers(dest="schedule_command")
-    schedule_subparsers.add_parser("list")
     notify_parser = subparsers.add_parser("notify")
     notify_parser.add_argument("--title", required=True)
     notify_parser.add_argument("--body", required=True)
@@ -65,7 +63,8 @@ def main(argv: list[str] | None = None) -> int:
     register_baseline_parser(subparsers)
     register_risk_parser(subparsers)
     register_loop_parser(subparsers)
-    register_v2_parsers(subparsers)
+    register_evidence_parser(subparsers)
+    register_human_parsers(subparsers)
     args = parser.parse_args(argv)
 
     if args.command == "api" and args.api_command == "serve":
@@ -88,7 +87,6 @@ def main(argv: list[str] | None = None) -> int:
             "runs": len(checkpoint_ai.store.list_runs()),
             "business_lines": len(checkpoint_ai.business_lines.list()),
             "events": len(checkpoint_ai.event_bus.events),
-            "alerts": len(checkpoint_ai.alert_manager.alerts),
             "health": checkpoint_ai.health_checker.generate_diagnostic_report().overall_status,
         }
         print(json.dumps(status, ensure_ascii=False))
@@ -120,16 +118,6 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "health":
         checkpoint_ai = CheckpointAI.from_env() if args.db is None else CheckpointAI(sqlite_path=args.db)
         print(json.dumps(checkpoint_ai.health_checker.generate_diagnostic_report().to_dict(), ensure_ascii=False))
-        return 0
-
-    if args.command == "schedule" and args.schedule_command == "list":
-        checkpoint_ai = CheckpointAI.from_env() if args.db is None else CheckpointAI(sqlite_path=args.db)
-        jobs = checkpoint_ai.scheduler.list_jobs()
-        if not jobs:
-            print("No scheduled jobs")
-            return 0
-        for job in jobs:
-            print(f"{job.id}\t{job.name}\t{job.job_type.value}\t{job.next_run_at}")
         return 0
 
     if args.command == "notify":
@@ -186,6 +174,10 @@ def main(argv: list[str] | None = None) -> int:
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
         return handle_loop_command(args, db_path)
 
+    if args.command == "evidence":
+        db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
+        return handle_evidence_command(args, db_path)
+
     if args.command in {
         "scenario",
         "adapter",
@@ -201,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
         "console",
     }:
         db_path = args.db or CheckpointAIConfig.from_env().sqlite_path
-        return handle_v2_command(args, db_path)
+        return handle_human_command(args, db_path)
 
     parser.print_help()
     return 0

@@ -1,11 +1,16 @@
-"""checkpointAI entrypoint."""
+"""Compatibility facade for historical runtime features.
+
+New code should prefer `checkpoint_ai.EvidenceHarness` for external workflow
+evidence ingestion, visualization, comparison, and reporting. This facade keeps
+older runtime/workflow tests and API paths import-compatible while the product
+direction moves away from an internal Agent platform.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Callable, Coroutine, overload
 
-from checkpoint_ai.alerts import AlertManager
 from checkpoint_ai.businessline import (
     BusinessLine,
     BusinessLineConfig,
@@ -21,25 +26,21 @@ from checkpoint_ai.dryrun import DryRunContext, DryRunProvider
 from checkpoint_ai.evaluation import EvaluationGate, EvaluationRunner
 from checkpoint_ai.events import AuditLogger, Event, EventBus, EventType
 from checkpoint_ai.experiment import ExperimentLedger
-from checkpoint_ai.ha import HAManager, SQLiteHAStateStore
 from checkpoint_ai.llm import ProviderRegistry
 from checkpoint_ai.memory import ContextManager, PersistentMemory, WorkingMemory
 from checkpoint_ai.models import Run, RunState, Task, TaskSpec, TaskState
 from checkpoint_ai.notification import NotificationManager
 from checkpoint_ai.observability import CostTracker, MetricsCollector, PerformanceMonitor
 from checkpoint_ai.persistence import SQLiteStore
-from checkpoint_ai.plugins import PluginRegistry
 from checkpoint_ai.policy import ScenarioPolicy
 from checkpoint_ai.runtime import AgentRegistry, SimpleAgent
-from checkpoint_ai.scheduler import Job, JobType, Scheduler
-from checkpoint_ai.templates import TemplateApplier, TemplateRegistry, builtin_templates
 from checkpoint_ai.tools import EchoTool, FileWriteTool, ToolPermission, ToolRegistry
 from checkpoint_ai.webhook import WebhookSender
 from checkpoint_ai.workflow import WorkflowEngine
 
 
 class CheckpointAI:
-    """CheckpointAI service facade for runtime and optimization components."""
+    """Compatibility service facade for legacy runtime components."""
 
     def __init__(self, sqlite_path: str | Path | None = None, config: CheckpointAIConfig | None = None) -> None:
         """Create checkpoint_ai services and wire their dependencies."""
@@ -50,8 +51,8 @@ class CheckpointAI:
         self.event_bus = EventBus()
         self.audit_logger = AuditLogger()
         self.metrics = MetricsCollector()
-        self.scheduler = Scheduler()
         self.webhook_sender: WebhookSender | None = None
+        self.ha_manager = None
         self.llm_provider = self.config.llm_provider
         self.response_cache = (
             LLMResponseCache(
@@ -82,28 +83,12 @@ class CheckpointAI:
         self.notification_manager = NotificationManager()
         self.human_gate = HumanApprovalGate(event_bus=self.event_bus, notification_manager=self.notification_manager)
         self.human_gate.subscribe_to_cost_events()
-        self.alert_manager = AlertManager(self.event_bus, self.notification_manager)
         self.evaluation_runner = EvaluationRunner()
         self.evaluation_gate = EvaluationGate(self.evaluation_runner)
         self.store = SQLiteStore(active_sqlite_path)
         self.experiments = ExperimentLedger(active_sqlite_path)
         self.health_checker = HealthChecker(checkpoint_ai=self)
         self.business_lines = BusinessLineRegistry(self.store)
-        self.ha_manager = (
-            HAManager(
-                instance_id=self.config.instance_id,
-                store=SQLiteHAStateStore(active_sqlite_path),
-                lease_ttl_seconds=self.config.ha_lease_ttl_seconds,
-                event_bus=self.event_bus,
-            )
-            if self.config.ha_enabled
-            else None
-        )
-        if self.ha_manager is not None:
-            self.ha_manager.try_become_primary()
-        self.plugins = PluginRegistry()
-        self.templates = TemplateRegistry(builtin_templates())
-        self.template_applier = TemplateApplier()
         self.cost_tracker = CostTracker(self.event_bus)
         self.memory = ContextManager(WorkingMemory(), PersistentMemory(self.store))
         self.workflow = WorkflowEngine(
@@ -160,17 +145,6 @@ class CheckpointAI:
         """Return one BusinessLine."""
 
         return self.business_lines.get(business_line_id)
-
-    def create_business_line_from_template(
-        self,
-        name: str,
-        template_id: str,
-    ) -> BusinessLine:
-        """Create a BusinessLine from a registered template."""
-
-        template = self.templates.get(template_id)
-        business_line = self.template_applier.apply(name, template)
-        return self.business_lines.create(name=business_line.name, config=business_line.config)
 
     def list_business_lines(
         self,
@@ -392,42 +366,3 @@ class CheckpointAI:
         """Subscribe to checkpoint_ai events."""
 
         self.event_bus.subscribe(event_type_or_handler, handler)
-
-    def schedule(
-        self,
-        name: str,
-        tasks: list[TaskSpec],
-        interval_seconds: int | None = None,
-        cron: str | None = None,
-    ) -> Job:
-        """Schedule a workflow for later execution."""
-
-        if interval_seconds is not None:
-            job_type = JobType.INTERVAL
-        elif cron is not None:
-            job_type = JobType.CRON
-        else:
-            raise ValueError("schedule requires interval_seconds or cron.")
-        job = Job(
-            name=name,
-            job_type=job_type,
-            task_specs=tasks,
-            interval_seconds=interval_seconds,
-            cron=cron,
-        )
-        self.scheduler.add_job(job)
-        self.event_bus.emit("schedule:created", {"job_id": job.id, "name": job.name})
-        return job
-
-    async def run_scheduled(self) -> int:
-        """Run due scheduled jobs."""
-
-        async def run_job(job: Job) -> None:
-            await self._run_from_specs(job.user_request or job.name, job.task_specs)
-
-        count = 0
-        for job in self.scheduler.due_jobs():
-            await run_job(job)
-            job.mark_ran()
-            count += 1
-        return count

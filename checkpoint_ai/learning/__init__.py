@@ -1,4 +1,9 @@
-"""V7 learning-loop public exports."""
+"""Transitional evidence-review learning loop exports.
+
+This package must not become an autonomous self-improvement engine. Keep it
+focused on evidence-backed observations, small candidate proposals, shadow
+validation, and safety findings.
+"""
 
 from checkpoint_ai.learning.aggregation import ObservationAggregator
 from checkpoint_ai.learning.loop import LearningLoopService
@@ -24,6 +29,9 @@ from checkpoint_ai.learning.store import (
     ValidationSummaryStore,
 )
 from checkpoint_ai.learning.validator import Validator
+
+CLEANUP_STATUS = "rewrite"
+REPLACEMENT_PATH = "ARIS-style evidence review / audit loop"
 
 __all__ = [
     "ConflictDetector",

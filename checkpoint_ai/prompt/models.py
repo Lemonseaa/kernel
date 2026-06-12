@@ -62,6 +62,7 @@ class ProposalKind(str, Enum):
     PARAMETER = "parameter"
     DEPLOYMENT = "deployment"
     POLICY = "policy"
+    EVIDENCE = "evidence"
 
 
 class ProposalTargetType(str, Enum):

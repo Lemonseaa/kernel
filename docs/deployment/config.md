@@ -34,6 +34,9 @@ calls, configure the selected provider API key.
 | `CHECKPOINT_AI_LLM_CACHE_ENABLED` | `true` | Enable prompt/model response cache. |
 | `CHECKPOINT_AI_LLM_CACHE_MAX_SIZE` | `128` | Maximum cached LLM responses. |
 | `CHECKPOINT_AI_LLM_CACHE_TTL_SECONDS` | `300` | Cache TTL in seconds. |
+| `CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS` | `5` | Slow-task alert threshold. |
+| `CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS` | `30` | Container heartbeat log interval. |
+| `CHECKPOINT_AI_REDIS_PORT` | `6379` | Optional Redis host port when profile is enabled. |
 
 ## LLM Provider Scope
 
@@ -74,14 +77,6 @@ For now, provider configuration stays intentionally simple:
 - prefer LiteLLM/OpenRouter-style external routing instead of rebuilding provider infrastructure
 
 If a future evidence workflow needs richer model routing, add the smallest configuration needed for that workflow only.
-| `CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS` | `5` | Slow-task alert threshold. |
-| `CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS` | `30` | Container heartbeat log interval. |
-| `CHECKPOINT_AI_HA_ENABLED` | `false` | Enable lease-based HA manager. |
-| `CHECKPOINT_AI_INSTANCE_ID` | generated id | Stable instance id for HA leases. |
-| `CHECKPOINT_AI_HA_LEASE_TTL_SECONDS` | `30` | Primary lease TTL. |
-| `CHECKPOINT_AI_HA_HEARTBEAT_SECONDS` | `10` | Heartbeat interval for HA service loops. |
-| `CHECKPOINT_AI_LB_PORT` | `8080` | Optional HA load balancer host port. |
-| `CHECKPOINT_AI_REDIS_PORT` | `6379` | Optional Redis host port when profile is enabled. |
 
 ## Example
 

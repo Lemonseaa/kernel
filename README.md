@@ -2,7 +2,7 @@
 
 **External Workflow Evidence Harness**
 
-[![Tests](https://img.shields.io/badge/tests-173%20passed-brightgreen)](https://github.com/Lemonseaa/checkpointAI)
+[![Tests](https://img.shields.io/badge/tests-256%20passed-brightgreen)](https://github.com/Lemonseaa/checkpointAI)
 [![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/docker-ready-blue)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-Non--Commercial-red)](LICENSE)
@@ -98,6 +98,48 @@ pip install -e .
 checkpointai status
 ```
 
+Evidence harness example:
+
+```bash
+checkpointai evidence ingest examples/evidence/quant_baseline_run.json
+checkpointai evidence ingest examples/evidence/quant_candidate_run.json
+checkpointai evidence visualize --run quant_candidate_001
+checkpointai evidence compare --baseline quant_baseline_001 --candidate quant_candidate_001
+checkpointai evidence report --run quant_candidate_001
+```
+
+Python API:
+
+```python
+from checkpoint_ai import EvidenceHarness
+
+harness = EvidenceHarness(".runtime/evidence.db")
+harness.ingest_file("examples/evidence/quant_baseline_run.json")
+harness.ingest_file("examples/evidence/quant_candidate_run.json")
+report = harness.compare("quant_baseline_001", "quant_candidate_001")
+print(report.recommendation)
+```
+
+HTTP API:
+
+```text
+POST /api/evidence/runs
+GET  /api/evidence/runs?workflow_id=...
+GET  /api/evidence/runs/{run_id}/visualization
+GET  /api/evidence/runs/{run_id}/report
+POST /api/evidence/compare
+```
+
+Quant drill example:
+
+```bash
+checkpointai evidence quant-drill --candidates 30 --comparisons 5
+```
+
+This creates a deterministic semi-real historical drill: one baseline, thirty candidate
+runs, five baseline/candidate comparisons, workflow visualization data, and a paper-trade
+recommendation. It validates the evidence chain; it is not a live trading signal.
+
 Docker:
 
 ```bash
@@ -114,11 +156,31 @@ python -m ruff check checkpoint_ai tests scripts
 python -m mypy checkpoint_ai --show-error-codes --no-incremental
 ```
 
+Repository structure:
+
+```text
+checkpoint_ai/evidence/        Mainline Evidence Harness code.
+docs/core_innovation/          CheckpointAI-owned product ideas.
+docs/borrowed_wheels/          External wheels and replacement strategy.
+docs/business_lines/           Quant, content, and demo domain docs.
+tests/evidence/                Mainline evidence tests.
+tests/business_lines/quant/    Quant validation tests.
+tests/support/                 Support module regression tests.
+tests/legacy/                  Historical compatibility tests.
+examples/evidence/             Evidence input examples.
+examples/support/              Current support examples.
+scripts/ops/                   Operational scripts.
+scripts/business_lines/quant/  Quant business-line scripts.
+```
+
 ## Documentation
 
+- [Docs Index](docs/README.md): where each kind of document belongs.
 - [Blueprint](docs/BLUEPRINT.md): current source of truth.
 - [Strategic Reset Plan](docs/STRATEGIC_RESET_PLAN.md): current execution plan.
+- [Core Innovation](docs/core_innovation/README.md): evidence harness, workflow visualization, metric schema, and human methodology.
+- [Borrowed Wheels](docs/borrowed_wheels/README.md): external projects, replacement wheels, and adapter compatibility.
+- [Business Lines](docs/business_lines/README.md): quant, content, and temporary demo applications.
+- [Legacy Replacement Matrix](docs/borrowed_wheels/legacy_replacement_matrix.md): replacement, rewrite, keep, and isolation decisions for old modules.
 - [System Boundaries](docs/SYSTEM_BOUNDARIES.md): policy and BusinessLine/Scenario boundaries.
-- [Architecture Overview](docs/ARCHITECTURE_OVERVIEW.md): historical architecture reference.
-- [Business Line Architecture](docs/BUSINESS_LINE_ARCHITECTURE.md): historical isolation design reference.
-- [Innovation Research](docs/INNOVATION_RESEARCH.md): historical research notes.
+- [Archive](docs/archive/README.md): historical architecture and research references.

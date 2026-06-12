@@ -10,15 +10,15 @@ python -m ruff check checkpoint_ai tests scripts
 python -m mypy checkpoint_ai --show-error-codes --no-incremental
 python -m compileall -q checkpoint_ai tests scripts
 python -m unittest discover -s tests -v
-python scripts/benchmark.py --runs 20
-python scripts/stress_test.py --runs 50 --concurrency 5
-python scripts/security_audit.py
+python scripts/ops/benchmark.py --runs 20
+python scripts/ops/stress_test.py --runs 50 --concurrency 5
+python scripts/ops/security_audit.py
 ```
 
 Or run the complete local acceptance suite:
 
 ```bash
-python scripts/final_acceptance.py
+python scripts/ops/final_acceptance.py
 ```
 
 ## Coverage
@@ -46,6 +46,6 @@ SAST replacement. Before production, also review:
 
 ## Performance Baseline
 
-`scripts/benchmark.py` measures small workflow latency.
+`scripts/ops/benchmark.py` measures small workflow latency.
 
-`scripts/stress_test.py` runs concurrent lightweight workflows and reports failures and elapsed time.
+`scripts/ops/stress_test.py` runs concurrent lightweight workflows and reports failures and elapsed time.

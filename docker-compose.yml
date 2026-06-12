@@ -23,70 +23,14 @@ services:
       CHECKPOINT_AI_LLM_CACHE_TTL_SECONDS: ${CHECKPOINT_AI_LLM_CACHE_TTL_SECONDS:-300}
       CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS: ${CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS:-5}
       CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS: ${CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS:-30}
-      CHECKPOINT_AI_HA_ENABLED: ${CHECKPOINT_AI_HA_ENABLED:-false}
-      CHECKPOINT_AI_INSTANCE_ID: ${CHECKPOINT_AI_INSTANCE_ID:-checkpointai-primary}
-      CHECKPOINT_AI_HA_LEASE_TTL_SECONDS: ${CHECKPOINT_AI_HA_LEASE_TTL_SECONDS:-30}
-      CHECKPOINT_AI_HA_HEARTBEAT_SECONDS: ${CHECKPOINT_AI_HA_HEARTBEAT_SECONDS:-10}
     volumes:
       - checkpointai-data:/app/data
     healthcheck:
-      test: ["CMD", "python", "scripts/health_check.py"]
+      test: ["CMD", "python", "scripts/ops/health_check.py"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
-    restart: unless-stopped
-
-  checkpointai-secondary:
-    build:
-      context: .
-    container_name: checkpointai-secondary
-    profiles: ["ha"]
-    environment:
-      CHECKPOINT_AI_DB_PATH: ${CHECKPOINT_AI_DB_PATH:-/app/data/checkpoint_ai.db}
-      CHECKPOINT_AI_DEFAULT_PROVIDER: ${CHECKPOINT_AI_DEFAULT_PROVIDER:-minimax}
-      CHECKPOINT_AI_DRY_RUN: ${CHECKPOINT_AI_DRY_RUN:-false}
-      CHECKPOINT_AI_MINIMAX_API_KEY: ${CHECKPOINT_AI_MINIMAX_API_KEY:-}
-      CHECKPOINT_AI_MINIMAX_MODEL: ${CHECKPOINT_AI_MINIMAX_MODEL:-MiniMax-M2.7-highspeed}
-      CHECKPOINT_AI_MINIMAX_BASE_URL: ${CHECKPOINT_AI_MINIMAX_BASE_URL:-https://api.minimax.chat/v1}
-      CHECKPOINT_AI_MINIMAX_TIMEOUT_SECONDS: ${CHECKPOINT_AI_MINIMAX_TIMEOUT_SECONDS:-30}
-      CHECKPOINT_AI_MINIMAX_MAX_RETRIES: ${CHECKPOINT_AI_MINIMAX_MAX_RETRIES:-2}
-      CHECKPOINT_AI_OPENAI_API_KEY: ${CHECKPOINT_AI_OPENAI_API_KEY:-}
-      CHECKPOINT_AI_OPENAI_MODEL: ${CHECKPOINT_AI_OPENAI_MODEL:-gpt-4.1-mini}
-      CHECKPOINT_AI_OPENAI_BASE_URL: ${CHECKPOINT_AI_OPENAI_BASE_URL:-https://api.openai.com/v1}
-      CHECKPOINT_AI_OPENAI_TIMEOUT_SECONDS: ${CHECKPOINT_AI_OPENAI_TIMEOUT_SECONDS:-30}
-      CHECKPOINT_AI_OPENAI_MAX_RETRIES: ${CHECKPOINT_AI_OPENAI_MAX_RETRIES:-2}
-      CHECKPOINT_AI_MAX_CONCURRENCY: ${CHECKPOINT_AI_MAX_CONCURRENCY:-1}
-      CHECKPOINT_AI_LLM_CACHE_ENABLED: ${CHECKPOINT_AI_LLM_CACHE_ENABLED:-true}
-      CHECKPOINT_AI_LLM_CACHE_MAX_SIZE: ${CHECKPOINT_AI_LLM_CACHE_MAX_SIZE:-128}
-      CHECKPOINT_AI_LLM_CACHE_TTL_SECONDS: ${CHECKPOINT_AI_LLM_CACHE_TTL_SECONDS:-300}
-      CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS: ${CHECKPOINT_AI_SLOW_TASK_THRESHOLD_SECONDS:-5}
-      CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS: ${CHECKPOINT_AI_SERVICE_HEARTBEAT_SECONDS:-30}
-      CHECKPOINT_AI_HA_ENABLED: "true"
-      CHECKPOINT_AI_INSTANCE_ID: checkpointai-secondary
-      CHECKPOINT_AI_HA_LEASE_TTL_SECONDS: ${CHECKPOINT_AI_HA_LEASE_TTL_SECONDS:-30}
-      CHECKPOINT_AI_HA_HEARTBEAT_SECONDS: ${CHECKPOINT_AI_HA_HEARTBEAT_SECONDS:-10}
-    volumes:
-      - checkpointai-data:/app/data
-    healthcheck:
-      test: ["CMD", "python", "scripts/health_check.py"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped
-
-  checkpointai-lb:
-    image: nginx:1.27-alpine
-    container_name: checkpointai-lb
-    profiles: ["ha"]
-    ports:
-      - "${CHECKPOINT_AI_LB_PORT:-8080}:8080"
-    volumes:
-      - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - checkpointai
-      - checkpointai-secondary
     restart: unless-stopped
 
   redis:

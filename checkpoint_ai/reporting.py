@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -233,7 +234,7 @@ class ReportGenerator:
             return list(self.raw_logs._memory.values())
         import sqlite3
 
-        with sqlite3.connect(self.raw_logs.path) as conn:
+        with closing(sqlite3.connect(self.raw_logs.path)) as conn:
             conn.row_factory = sqlite3.Row
             for row in conn.execute("SELECT run_id FROM raw_logs ORDER BY created_at, rowid").fetchall():
                 raw = self.raw_logs.get(row["run_id"])

@@ -12,6 +12,8 @@ import { RunDetailPage } from "../features/runs/RunDetailPage";
 import { RunListPage } from "../features/runs/RunListPage";
 import { ScenarioListPage } from "../features/scenarios/ScenarioListPage";
 import { ConfigVersionPage } from "../features/config/ConfigVersionPage";
+import { EvidencePage } from "../features/evidence/EvidencePage";
+import { EvidenceRunDetailPage } from "../features/evidence/EvidenceRunDetailPage";
 import { ExternalAgentPage } from "../features/external-agents/ExternalAgentPage";
 import { LearningPage } from "../features/learning/LearningPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
@@ -25,6 +27,8 @@ export function App() {
         <Route index element={<DashboardPage />} />
         <Route path="approvals" element={<ApprovalListPage />} />
         <Route path="approvals/:id" element={<ApprovalDetailPage />} />
+        <Route path="evidence" element={<EvidencePage />} />
+        <Route path="evidence/runs/:runId" element={<EvidenceRunDetailPage />} />
         <Route path="runs" element={<RunListPage />} />
         <Route path="runs/new" element={<NewRunPage />} />
         <Route path="runs/:id" element={<RunDetailPage />} />

@@ -1,4 +1,10 @@
-"""Experiment Ledger exports."""
+"""Experiment Ledger exports.
+
+The ledger, baseline, feedback, quality, and risk models remain useful for
+evidence accounting. The historical LoopEngine is kept for compatibility only;
+new orchestration should prefer bounded evidence runs and workflow-run JSON
+ingestion.
+"""
 
 from checkpoint_ai.experiment.baseline import Baseline, BaselineManager
 from checkpoint_ai.experiment.compare import CompareResult, SimpleComparer
@@ -9,6 +15,9 @@ from checkpoint_ai.experiment.loop_engine import LoopEngine, Tick, TickStatus
 from checkpoint_ai.experiment.models import Experiment, ExperimentStatus
 from checkpoint_ai.experiment.risk_score import ActionRisk, RiskScore, RiskScorer
 from checkpoint_ai.experiment.storage import SQLiteExperimentStorage
+
+CLEANUP_STATUS = "evidence_support"
+REPLACEMENT_PATH = "evidence ledger / bounded evidence runs"
 
 __all__ = [
     "ActionRisk",

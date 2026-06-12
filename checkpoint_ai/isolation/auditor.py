@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from typing import Literal
 
@@ -41,7 +42,7 @@ class ScenarioIsolationAuditor:
         if not path.exists():
             return []
         results: list[IsolationCheckResult] = []
-        with sqlite3.connect(path) as conn:
+        with closing(sqlite3.connect(path)) as conn:
             conn.row_factory = sqlite3.Row
             existing_tables = {
                 row["name"]

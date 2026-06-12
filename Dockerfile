@@ -19,6 +19,6 @@ RUN mkdir -p /app/data
 ENV CHECKPOINT_AI_DB_PATH=/app/data/checkpoint_ai.db
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python scripts/health_check.py
+    CMD python scripts/ops/health_check.py
 
-CMD ["python", "scripts/run_checkpointai_service.py"]
+CMD ["python", "scripts/ops/run_checkpointai_service.py"]

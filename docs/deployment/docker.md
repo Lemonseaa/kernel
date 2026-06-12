@@ -8,7 +8,7 @@ docker-compose build
 ```
 
 The image uses `python:3.11-slim`, installs the project in editable mode, and runs
-`scripts/run_checkpointai_service.py`.
+`scripts/ops/run_checkpointai_service.py`.
 
 ## Start
 
@@ -25,7 +25,7 @@ The service reads configuration from Docker Compose environment values. Compose 
 Docker runs:
 
 ```bash
-python scripts/health_check.py
+python scripts/ops/health_check.py
 ```
 
 That script executes a small in-process workflow and exits non-zero if the run fails.

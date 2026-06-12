@@ -28,7 +28,7 @@ the `checkpointai-data` Docker volume.
 ```bash
 docker-compose ps
 docker-compose exec checkpointai python -m unittest discover -s tests -v
-docker-compose exec checkpointai python scripts/health_check.py
+docker-compose exec checkpointai python scripts/ops/health_check.py
 ```
 
 Use `docker-compose logs checkpointai` when health is not green.

@@ -71,7 +71,62 @@ External Workflow
 | Cross-scenario learning automation | pause |
 | Auto live trading / auto publishing | blocked |
 
-这些模块已有代码不立刻删除。先标记 legacy / frozen，等新 Evidence path 跑通后按引用关系清理。
+这些模块按引用关系分批清理。第一批已经删除内部平台轮子，后续继续保持 Evidence path 独立。
+
+第一批已删除范围：
+
+```text
+plugins / templates / ha / scheduler
+alerts
+```
+
+删除含义：
+
+```text
+1. 不再提供内部插件市场
+2. 不再提供内部模板系统
+3. 不再提供内部 cron/scheduler 平台
+4. 不再提供内部 HA manager
+5. 不再提供内部告警平台；保留成本事件和人类审批信号
+6. 这些能力以后通过外部轮子、部署平台或控制台通知解决
+```
+
+已确认的替代方向：
+
+| Area | Prefer |
+|---|---|
+| Scheduler | cron / APScheduler / external orchestrator |
+| HA / durable workflow | deployment platform / Temporal when needed |
+| Plugin / tools | MCP servers / guarded external tool connectors |
+| LLM provider breadth | LiteLLM-style adapter/proxy instead of internal provider console |
+| Workflow orchestration | Prefect / Temporal / external harness projects instead of internal workflow engine |
+
+参考项目分工：
+
+```text
+docs/borrowed_wheels/reference_projects.md
+```
+
+该文件专门区分：
+
+```text
+1. 战略借鉴项目：Archon / ARIS / learn-harness-engineering / Nexent
+2. 替代旧模块的轮子：APScheduler / Temporal / Prefect / LiteLLM / MCP servers
+```
+
+第二批执行层边界：
+
+```text
+runtime / workflow / external_agents / adapter
+```
+
+处理原则：
+
+```text
+runtime 和 workflow 是旧 Kernel 执行层：冻结，不再作为主线扩展。
+external_agents 是旧外部 Agent 连接层：冻结，未来只在需要时改成 EvidenceAdapter。
+adapter 仍被 demo、shadow、V2-V7 测试使用：不冻结删除，标记为 rewrite 过渡层。
+```
 
 ---
 
@@ -168,6 +223,26 @@ Decision Recommendation
 
 目标：用真实或半真实量化回测数据验证 Evidence Loop。
 
+Current implementation:
+
+```bash
+checkpointai evidence quant-drill --candidates 30 --comparisons 5
+```
+
+This command is deterministic and local. It creates:
+
+```text
+1 baseline historical run
+30 candidate historical runs
+5 baseline/candidate comparisons
+workflow visualization data for every run
+quant review fields: return_delta / drawdown_delta / sample_sufficient / overfit_risk
+paper_trade_recommendation: enter_paper / continue_shadow / reject
+```
+
+It is a semi-real drill for validating the evidence chain. It is not a live trading
+strategy and should not be interpreted as production trading advice.
+
 最小场景：
 
 ```text
@@ -257,6 +332,18 @@ Approval decision
 Rollback / backup entry
 ```
 
+Primary API:
+
+```text
+POST /api/evidence/runs
+GET  /api/evidence/runs?workflow_id=...
+GET  /api/evidence/runs/{run_id}/visualization
+GET  /api/evidence/runs/{run_id}/report
+POST /api/evidence/compare
+```
+
+旧 `/api/runs` 和 scenario adapter routes 只作为兼容控制台路径，不作为新 workflow visualization 主线。
+
 暂不做：
 
 ```text
@@ -271,25 +358,59 @@ Workflow generation assistant
 
 ## Code Cleanup Rule
 
-不要一开始大删代码。
+不要一开始大删代码，也不要继续维护重复轮子。
 
-顺序：
+CheckpointAI adopts replacement cleanup:
 
 ```text
-1. Freeze old platform directions
-2. Build Evidence Adapter
-3. Run Quant Backtest Drill
-4. Mark unused legacy modules
-5. Delete only after new path has tests and data
+1. classify old modules
+2. choose replace / rewrite / keep / isolate
+3. keep evidence path independent from legacy modules
+4. delete only after a replacement path exists
 ```
 
-删除标准：
+Detailed matrix:
 
 ```text
-1. Not referenced by Evidence Adapter path
-2. Not used by tests
-3. Only serves old Multi-Agent OS direction
-4. Duplicates mature external tools
+docs/borrowed_wheels/legacy_replacement_matrix.md
+```
+
+### Phase R1.5: Legacy Isolation & Replacement Matrix
+
+目标：从今天开始防止新 Evidence Harness 被旧 Multi-Agent OS 架构污染。
+
+第一轮不大删代码，只做边界：
+
+```text
+1. classify modules into replace / rewrite / keep / isolate
+2. forbid evidence module imports from legacy platform modules
+3. mark mature external wheels for replacement
+4. keep core evidence modules explicit
+5. run tests after each pruning batch
+```
+
+Evidence path allowed dependencies:
+
+```text
+metrics
+evaluation.evidence
+shadow.comparison
+decision/reporting when needed
+standard library
+```
+
+Evidence path must not depend on:
+
+```text
+runtime
+workflow
+plugins
+scheduler
+ha
+learning
+autonomy
+insights
+templates
 ```
 
 ---

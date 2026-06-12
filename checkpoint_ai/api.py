@@ -20,12 +20,22 @@ from checkpoint_ai.checkpoint_ai import CheckpointAI
 from checkpoint_ai.config_version import ConfigBranchStore, ConfigVersionService, ConfigVersionStore
 from checkpoint_ai.console import ApprovalInbox, BackupManager, ConsoleDashboard, ConsoleReadModel
 from checkpoint_ai.decision import DecisionKind, DecisionLogStore, DecisionRecord
+from checkpoint_ai.evidence import EvidenceBaselineStore
 from checkpoint_ai.external_agents import ExternalAgentConnection, ExternalAgentConnectionStore
+from checkpoint_ai.harness import EvidenceHarness
 from checkpoint_ai.learning import ObservationStore, SafetyFindingStore, ValidationSummaryStore
 from checkpoint_ai.logs import RawLogStore, SummaryLogStore
 from checkpoint_ai.metrics import MetricSchemaStore
 from checkpoint_ai.optimization import ParameterSuggestionStore
-from checkpoint_ai.prompt import PromptProposalStore, PromptVersionStore, ProposalStore
+from checkpoint_ai.prompt import (
+    PromptProposalStore,
+    PromptVersionStore,
+    Proposal,
+    ProposalKind,
+    ProposalPatch,
+    ProposalStore,
+    ProposalTargetType,
+)
 from checkpoint_ai.recommendation import VersionRecommendationStore
 from checkpoint_ai.reporting import ReportGenerator
 from checkpoint_ai.scenario import ScenarioRegistry, ScenarioRunner, ScenarioStore
@@ -53,8 +63,8 @@ else:
 class FallbackApp:
     """Small app object used when FastAPI is not installed."""
 
-    checkpoint_ai: CheckpointAI
     auth: BearerTokenAuth
+    app_state: dict[str, Any] = field(default_factory=dict)
     routes: list[dict[str, str]] = field(default_factory=list)
 
     def authenticate(self, authorization: str | None) -> bool:
@@ -154,6 +164,205 @@ def create_app(
     @app.get("/api/auth/check")
     def api_auth_check(_auth: None = Depends(require_auth)) -> dict[str, bool]:
         return {"authenticated": True}
+
+    @app.post("/api/evidence/runs")
+    def ingest_evidence_run(
+        payload: dict[str, Any],
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        result = EvidenceHarness(active_db_path).ingest_payload(payload)
+        return {
+            "run_id": result.run.run_id,
+            "workflow_id": result.run.workflow_id,
+            "run_kind": result.run.run_kind.value,
+            "trace_coverage": result.visualization.trace_coverage,
+            "metric_coverage": result.visualization.metric_coverage,
+            "black_box_node_ids": result.visualization.black_box_node_ids,
+            "recommendation": result.report.recommendation.value,
+            "summary": result.report.summary,
+        }
+
+    @app.get("/api/evidence/runs")
+    def list_evidence_runs(
+        workflow_id: str | None = None,
+        _auth: None = Depends(require_auth),
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "run": stored.run.model_dump(mode="json"),
+                "visualization": stored.visualization.model_dump(mode="json"),
+                "report": stored.report.model_dump(mode="json"),
+            }
+            for stored in EvidenceHarness(active_db_path).list_runs(workflow_id=workflow_id)
+        ]
+
+    @app.get("/api/evidence/runs/{run_id}")
+    def evidence_run_detail(run_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        stored = EvidenceHarness(active_db_path).store.get_run(run_id)
+        if stored is None:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error("evidence.run_not_found", "Evidence run not found.", {"run_id": run_id}),
+            )
+        return {
+            "run": stored.run.model_dump(mode="json"),
+            "visualization": stored.visualization.model_dump(mode="json"),
+            "report": stored.report.model_dump(mode="json"),
+        }
+
+    @app.get("/api/evidence/runs/{run_id}/visualization")
+    def evidence_visualization(run_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        try:
+            return EvidenceHarness(active_db_path).visualize(run_id).model_dump(mode="json")
+        except ValueError:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error("evidence.run_not_found", "Evidence run not found.", {"run_id": run_id}),
+            ) from None
+
+    @app.get("/api/evidence/runs/{run_id}/report")
+    def evidence_report(run_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        try:
+            return EvidenceHarness(active_db_path).report(run_id).model_dump(mode="json")
+        except ValueError:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error("evidence.run_not_found", "Evidence run not found.", {"run_id": run_id}),
+            ) from None
+
+    @app.post("/api/evidence/workflows/{workflow_id}/baseline")
+    def set_evidence_baseline(
+        workflow_id: str,
+        payload: dict[str, Any],
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        baseline_run_id = str(payload.get("baseline_run_id", ""))
+        reason = str(payload.get("reason", "")).strip()
+        if not baseline_run_id or not reason:
+            raise HTTPException(
+                status_code=400,
+                detail=_api_error(
+                    "evidence.baseline_missing_field",
+                    "baseline_run_id and reason are required.",
+                    {},
+                ),
+            )
+        stored = EvidenceHarness(active_db_path).store.get_run(baseline_run_id)
+        if stored is None or stored.run.workflow_id != workflow_id:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error(
+                    "evidence.run_not_found",
+                    "Baseline run not found for workflow.",
+                    {"workflow_id": workflow_id, "baseline_run_id": baseline_run_id},
+                ),
+            )
+        return EvidenceBaselineStore(active_db_path).set_baseline(
+            workflow_id=workflow_id,
+            baseline_run_id=baseline_run_id,
+            reason=reason,
+        ).model_dump(mode="json")
+
+    @app.get("/api/evidence/workflows/{workflow_id}/baseline")
+    def get_evidence_baseline(workflow_id: str, _auth: None = Depends(require_auth)) -> dict[str, Any]:
+        baseline = EvidenceBaselineStore(active_db_path).get_baseline(workflow_id)
+        if baseline is None:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error(
+                    "evidence.baseline_not_found",
+                    "Evidence baseline not found.",
+                    {"workflow_id": workflow_id},
+                ),
+            )
+        return baseline.model_dump(mode="json")
+
+    @app.post("/api/evidence/compare")
+    def compare_evidence_runs(
+        payload: dict[str, Any],
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        try:
+            candidate_run_id = str(payload["candidate_run_id"])
+            baseline_run_id = payload.get("baseline_run_id")
+            if baseline_run_id is None:
+                candidate = EvidenceHarness(active_db_path).store.get_run(candidate_run_id)
+                if candidate is None:
+                    raise ValueError(f"Unknown candidate run: {candidate_run_id}")
+                baseline = EvidenceBaselineStore(active_db_path).get_baseline(candidate.run.workflow_id)
+                if baseline is None:
+                    raise KeyError("baseline_run_id")
+                baseline_run_id = baseline.baseline_run_id
+            return EvidenceHarness(active_db_path).compare(
+                baseline_run_id=str(baseline_run_id),
+                candidate_run_id=candidate_run_id,
+            ).model_dump(mode="json")
+        except KeyError as exc:
+            missing = str(exc).strip("'")
+            raise HTTPException(
+                status_code=400,
+                detail=_api_error("evidence.compare_missing_field", "Missing comparison field.", {"field": missing}),
+            ) from None
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=404,
+                detail=_api_error("evidence.run_not_found", str(exc), {}),
+            ) from None
+
+    @app.post("/api/evidence/proposals")
+    def create_evidence_proposal(
+        payload: dict[str, Any],
+        _auth: None = Depends(require_auth),
+    ) -> dict[str, Any]:
+        baseline_run_id = str(payload.get("baseline_run_id", ""))
+        candidate_run_id = str(payload.get("candidate_run_id", ""))
+        scenario_id = str(payload.get("scenario_id", "") or "evidence")
+        if not baseline_run_id or not candidate_run_id:
+            raise HTTPException(
+                status_code=400,
+                detail=_api_error(
+                    "evidence.proposal_missing_field",
+                    "baseline_run_id and candidate_run_id are required.",
+                    {},
+                ),
+            )
+        harness = EvidenceHarness(active_db_path)
+        report = harness.compare(baseline_run_id=baseline_run_id, candidate_run_id=candidate_run_id)
+        quality = report.evidence.get("quality", {})
+        if report.recommendation.value != "approve" or quality.get("status") == "rejected":
+            raise HTTPException(
+                status_code=400,
+                detail=_api_error(
+                    "evidence.proposal_not_allowed",
+                    "Evidence comparison is not strong enough to create an approval proposal.",
+                    {
+                        "recommendation": report.recommendation.value,
+                        "quality": quality,
+                    },
+                ),
+            )
+        proposal = Proposal(
+            scenario_id=scenario_id,
+            proposal_kind=ProposalKind.EVIDENCE,
+            target_type=ProposalTargetType.DEPLOYMENT,
+            target_id=f"{report.workflow_id}:{candidate_run_id}",
+            patch=ProposalPatch(
+                operation="replace",
+                before={"baseline_run_id": baseline_run_id},
+                after={"candidate_run_id": candidate_run_id},
+            ),
+            reason=report.summary,
+            expected_metric="objective_score",
+            metadata={
+                "workflow_id": report.workflow_id,
+                "baseline_run_id": baseline_run_id,
+                "candidate_run_id": candidate_run_id,
+                "quality": quality,
+                "comparison": report.comparison.model_dump(mode="json") if report.comparison else None,
+            },
+        )
+        ProposalStore(active_db_path).create(proposal)
+        return proposal.model_dump(mode="json")
 
     @app.get("/api/console/snapshot")
     def console_snapshot(
@@ -730,8 +939,11 @@ def _fallback_app(checkpoint_ai: CheckpointAI, auth: BearerTokenAuth) -> Fallbac
     """Return a fallback route manifest when FastAPI is unavailable."""
 
     return FallbackApp(
-        checkpoint_ai=checkpoint_ai,
         auth=auth,
+        app_state={
+            "sqlite_path": str(checkpoint_ai.config.sqlite_path),
+            "mode": "fallback",
+        },
         routes=[
             {"method": "GET", "path": "/health"},
             {"method": "GET", "path": "/runs"},
@@ -739,6 +951,14 @@ def _fallback_app(checkpoint_ai: CheckpointAI, auth: BearerTokenAuth) -> Fallbac
             {"method": "GET", "path": "/api/health"},
             {"method": "GET", "path": "/api/version"},
             {"method": "GET", "path": "/api/auth/check"},
+            {"method": "POST", "path": "/api/evidence/runs"},
+            {"method": "GET", "path": "/api/evidence/runs"},
+            {"method": "GET", "path": "/api/evidence/runs/{run_id}"},
+            {"method": "GET", "path": "/api/evidence/runs/{run_id}/visualization"},
+            {"method": "GET", "path": "/api/evidence/runs/{run_id}/report"},
+            {"method": "POST", "path": "/api/evidence/workflows/{workflow_id}/baseline"},
+            {"method": "GET", "path": "/api/evidence/workflows/{workflow_id}/baseline"},
+            {"method": "POST", "path": "/api/evidence/compare"},
             {"method": "GET", "path": "/api/console/snapshot"},
             {"method": "GET", "path": "/api/approvals"},
             {"method": "GET", "path": "/api/runs"},

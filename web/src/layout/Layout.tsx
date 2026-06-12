@@ -6,6 +6,7 @@ import {
   Cog,
   DatabaseBackup,
   FileText,
+  FileSearch,
   GitBranch,
   GitCompare,
   LayoutDashboard,
@@ -23,6 +24,7 @@ import { useUiStore } from "../stores/uiStore";
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/approvals", label: "Approvals", icon: CheckSquare },
+  { to: "/evidence", label: "Evidence", icon: FileSearch },
   { to: "/runs", label: "Runs", icon: Activity },
   { to: "/runs/new", label: "Trigger", icon: Play },
   { to: "/shadows", label: "Shadows", icon: GitCompare },

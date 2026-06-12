@@ -57,7 +57,7 @@ Common causes:
 Run:
 
 ```bash
-docker-compose exec checkpointai python scripts/health_check.py
+docker-compose exec checkpointai python scripts/ops/health_check.py
 ```
 
 The script prints the failed run state when the lightweight workflow cannot complete.

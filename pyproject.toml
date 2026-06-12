@@ -1,7 +1,7 @@
 [project]
 name = "checkpointai"
 version = "1.0.0"
-description = "CheckpointAI - code-first experiment and optimization system for Agent teams."
+description = "CheckpointAI - external workflow evidence harness."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Non-Commercial; commercial use requires authorization" }
@@ -9,6 +9,9 @@ authors = [
     { name = "Lemonsea", email = "lemonsea@example.com" }
 ]
 keywords = [
+    "workflow-evidence",
+    "evidence-harness",
+    "workflow-visualization",
     "agent-optimization",
     "experiment-ledger",
     "ai-agents",

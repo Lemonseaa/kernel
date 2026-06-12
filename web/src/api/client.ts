@@ -9,6 +9,9 @@ import type {
   AgentConfig,
   ConsoleSnapshot,
   ConfigVersion,
+  EvidenceReport,
+  EvidenceBaseline,
+  EvidenceProposal,
   ExternalAgentConnection,
   HealthReport,
   LearningObservation,
@@ -24,7 +27,9 @@ import type {
   TriggerRunPayload,
   TriggerRunResult,
   UserProfilePayload,
-  ValidationSummary
+  ValidationSummary,
+  StoredEvidenceRun,
+  WorkflowVisualization
 } from "../types/api";
 
 const api = axios.create({
@@ -107,6 +112,62 @@ export async function listRuns(scenarioId?: string) {
 
 export async function getRun(id: string) {
   const response = await api.get<RunDetail>(`/api/runs/${id}`);
+  return response.data;
+}
+
+export async function listEvidenceRuns(workflowId?: string) {
+  const response = await api.get<StoredEvidenceRun[]>("/api/evidence/runs", {
+    params: workflowId ? { workflow_id: workflowId } : undefined
+  });
+  return response.data;
+}
+
+export async function getEvidenceRun(runId: string) {
+  const response = await api.get<StoredEvidenceRun>(`/api/evidence/runs/${runId}`);
+  return response.data;
+}
+
+export async function getEvidenceVisualization(runId: string) {
+  const response = await api.get<WorkflowVisualization>(`/api/evidence/runs/${runId}/visualization`);
+  return response.data;
+}
+
+export async function getEvidenceReport(runId: string) {
+  const response = await api.get<EvidenceReport>(`/api/evidence/runs/${runId}/report`);
+  return response.data;
+}
+
+export async function compareEvidenceRuns(baselineRunId: string, candidateRunId: string) {
+  const response = await api.post<EvidenceReport>("/api/evidence/compare", {
+    baseline_run_id: baselineRunId,
+    candidate_run_id: candidateRunId
+  });
+  return response.data;
+}
+
+export async function getEvidenceBaseline(workflowId: string) {
+  const response = await api.get<EvidenceBaseline>(`/api/evidence/workflows/${workflowId}/baseline`);
+  return response.data;
+}
+
+export async function setEvidenceBaseline(workflowId: string, baselineRunId: string, reason: string) {
+  const response = await api.post<EvidenceBaseline>(`/api/evidence/workflows/${workflowId}/baseline`, {
+    baseline_run_id: baselineRunId,
+    reason
+  });
+  return response.data;
+}
+
+export async function createEvidenceProposal(
+  baselineRunId: string,
+  candidateRunId: string,
+  scenarioId = "evidence"
+) {
+  const response = await api.post<EvidenceProposal>("/api/evidence/proposals", {
+    baseline_run_id: baselineRunId,
+    candidate_run_id: candidateRunId,
+    scenario_id: scenarioId
+  });
   return response.data;
 }
 

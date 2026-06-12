@@ -78,6 +78,113 @@ export type RunDetail = {
   core_questions: Record<string, string>;
 };
 
+export type WorkflowNode = {
+  id: string;
+  name?: string | null;
+  type: string;
+  metadata: Record<string, unknown>;
+};
+
+export type WorkflowEdge = {
+  source: string;
+  target: string;
+  type: string;
+  metadata: Record<string, unknown>;
+};
+
+export type WorkflowVisualization = {
+  workflow_id: string;
+  run_id: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  run_path: string[];
+  total_nodes: number;
+  traced_node_ids: string[];
+  metric_node_ids: string[];
+  black_box_node_ids: string[];
+  error_node_ids: string[];
+  trace_coverage: number;
+  metric_coverage: number;
+  node_costs: Record<string, number>;
+  node_latencies_ms: Record<string, number>;
+};
+
+export type EvidenceReport = {
+  workflow_id: string;
+  run_id?: string | null;
+  baseline_run_id?: string | null;
+  candidate_run_id?: string | null;
+  run_kind: string;
+  trace_coverage: number;
+  metric_coverage: number;
+  black_box_node_ids: string[];
+  business_metrics: Record<string, number>;
+  system_metrics: Record<string, number>;
+  data_quality_metrics: Record<string, number>;
+  comparison?: ComparisonResult | null;
+  recommendation: string;
+  summary: string;
+  evidence: EvidencePayload;
+};
+
+export type EvidencePayload = {
+  quality?: EvidenceQuality;
+  [key: string]: unknown;
+};
+
+export type EvidenceQuality = {
+  status: "accepted" | "warning" | "rejected" | string;
+  score: number;
+  reasons: string[];
+};
+
+export type ComparisonResult = {
+  metric_diffs: Record<string, number>;
+  business_metric_diffs: Record<string, number>;
+  system_metric_diffs: Record<string, number>;
+  data_quality_metric_diffs: Record<string, number>;
+  metric_evaluations: Record<string, unknown>;
+  objective_score: number;
+  guardrail_violations: string[];
+  improved: boolean;
+  summary: string;
+  run_kind: string;
+  provenance: Record<string, unknown>;
+};
+
+export type EvidenceRun = {
+  workflow_id: string;
+  run_id: string;
+  run_kind: string;
+  metrics: Record<string, number>;
+  metadata: Record<string, unknown>;
+};
+
+export type StoredEvidenceRun = {
+  run: EvidenceRun;
+  visualization: WorkflowVisualization;
+  report: EvidenceReport;
+};
+
+export type EvidenceBaseline = {
+  workflow_id: string;
+  baseline_run_id: string;
+  reason: string;
+  created_at?: string | null;
+};
+
+export type EvidenceProposal = {
+  id: string;
+  scenario_id: string;
+  proposal_kind: string;
+  target_type: string;
+  target_id: string;
+  reason: string;
+  expected_metric: string;
+  status: string;
+  metadata: Record<string, unknown>;
+};
+
 export type AdapterDescription = {
   name: string;
   supported_task_types: string[];

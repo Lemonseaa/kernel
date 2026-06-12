@@ -1,48 +1,31 @@
 # High Availability
 
-V1.0 adds lease-based high availability primitives and a multi-instance Docker Compose shape.
+CheckpointAI no longer ships an internal HA manager.
 
-## What HA Means In V1.0
+HA is an external deployment responsibility because the product direction is an Evidence Harness, not a durable workflow platform.
 
-- Instances share state through the same SQLite database path.
-- Each instance has a `CHECKPOINT_AI_INSTANCE_ID`.
-- `HAManager` uses a primary lease with TTL.
-- A backup instance can acquire primary when the current primary lease expires.
-- Docker Compose includes a secondary instance and an optional Nginx load balancer profile.
+## Recommended Approach
 
-This is an MVP HA model for checkpointAI operations. It is not a cross-region HA system.
+Use infrastructure that already solves process supervision and failover:
 
-## Configuration
-
-```bash
-CHECKPOINT_AI_HA_ENABLED=true
-CHECKPOINT_AI_INSTANCE_ID=checkpointai-primary
-CHECKPOINT_AI_HA_LEASE_TTL_SECONDS=30
-CHECKPOINT_AI_HA_HEARTBEAT_SECONDS=10
+```text
+Docker / systemd / platform restart policy
+reverse proxy or load balancer
+managed database or external durable workflow system when needed
+Temporal only if durable orchestration becomes a real requirement
 ```
 
-## Start Multi-Instance Deployment
+## Current Docker Shape
+
+`docker-compose.yml` runs one CheckpointAI service with a restart policy and health check.
 
 ```bash
-docker-compose --profile ha up -d
-docker-compose ps
+docker compose up -d
+docker compose ps
+python scripts/ops/health_check.py
 ```
 
-Services:
+## Boundary
 
-- `checkpointai`: primary candidate.
-- `checkpointai-secondary`: backup candidate.
-- `checkpointai-lb`: optional Nginx load balancer on port `8080`.
+Do not rebuild primary leases, leader election, or cross-region failover inside CheckpointAI unless the Evidence Harness path proves it needs durable workflow execution.
 
-## Failover Behavior
-
-1. Primary acquires the lease.
-2. Backup sees an active primary and remains backup.
-3. If primary stops and the lease expires, backup can acquire primary.
-4. The current primary is visible through `HAManager.status()`.
-
-## Verify Locally Without Docker
-
-```bash
-python -m unittest tests.test_ha -v
-```

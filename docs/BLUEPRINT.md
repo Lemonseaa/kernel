@@ -143,6 +143,34 @@ docs/STRATEGIC_RESET_PLAN.md
 
 ---
 
+## Current Implemented Evidence Chain
+
+当前代码已经跑通：
+
+```text
+external run ingest
+single run detail API
+workflow visualization UI
+node evidence inspector
+evidence quality gate
+pinned workflow baseline
+baseline vs candidate comparison
+metric delta visualization
+evidence comparison -> approval proposal
+repeatable quant-shaped evidence drill
+```
+
+仍然不能宣称：
+
+```text
+真实交易 alpha
+自动实盘部署
+真实账号增长
+长期自主学习已被证明
+```
+
+---
+
 ## First Real Drill
 
 优先接量化回测数据。
@@ -174,11 +202,18 @@ docs/STRATEGIC_RESET_PLAN.md
 
 | Document | Role |
 |---|---|
+| `docs/README.md` | 文档结构入口 |
 | `docs/BLUEPRINT.md` | 当前方向总纲 |
 | `docs/STRATEGIC_RESET_PLAN.md` | 新执行计划 |
-| `docs/metrics_reference.md` | 指标参考 |
-| `docs/adapter_checklist.md` | Adapter 接入评估清单 |
-| `docs/USER_PREFERENCE_PLAN.md` | 人类偏好 / Hermes 草稿机制 |
+| `docs/core_innovation/` | CheckpointAI 自己必须掌握的核心创新 |
+| `docs/core_innovation/metrics_reference.md` | 指标参考 |
+| `docs/core_innovation/user_preference.md` | 人类偏好 / Hermes 草稿机制 |
+| `docs/borrowed_wheels/` | 外部参考项目、替代轮子、接入检查 |
+| `docs/borrowed_wheels/legacy_replacement_matrix.md` | 旧模块替换/重写/保留/隔离矩阵 |
+| `docs/borrowed_wheels/reference_projects.md` | 外部参考项目：哪些借鉴、哪些替代、哪些不做 |
+| `docs/borrowed_wheels/adapter_checklist.md` | Adapter 接入评估清单 |
+| `docs/business_lines/` | 量化、自媒体、demo 等业务落地层 |
 | `docs/deployment/` | 部署与运维资料 |
+| `docs/archive/` | 历史架构和研究材料，只作审计背景 |
 
 历史报告和验收文档只作为审计记录，不作为下一阶段路线图。
