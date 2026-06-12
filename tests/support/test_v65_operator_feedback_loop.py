@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.autonomy import OperatorFeedbackAnalyzer
-from checkpoint_ai.console import ApprovalInbox
-from checkpoint_ai.decision import DecisionKind, DecisionLogStore, DecisionRecord
-from checkpoint_ai.prompt import ProposalKind, ProposalStore, ProposalTargetType
+from loop_harness.autonomy import OperatorFeedbackAnalyzer
+from loop_harness.console import ApprovalInbox
+from loop_harness.decision import DecisionKind, DecisionLogStore, DecisionRecord
+from loop_harness.prompt import ProposalKind, ProposalStore, ProposalTargetType
 
 
 class V65OperatorFeedbackLoopTest(unittest.TestCase):

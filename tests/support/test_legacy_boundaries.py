@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai import (
+from loop_harness import (
     adapter,
     auth,
     autonomy,

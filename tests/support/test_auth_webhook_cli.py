@@ -7,11 +7,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.api import create_app
-from checkpoint_ai.auth import APIKeyManager, BearerTokenAuth
-from checkpoint_ai.events import EventBus, EventType
-from checkpoint_ai.webhook import WebhookHandler, WebhookReceiver, WebhookSender
+from loop_harness import LoopHarness
+from loop_harness.api import create_app
+from loop_harness.auth import APIKeyManager, BearerTokenAuth
+from loop_harness.events import EventBus, EventType
+from loop_harness.webhook import WebhookHandler, WebhookReceiver, WebhookSender
 from tests.helpers import project_root
 
 
@@ -72,28 +72,28 @@ class AuthWebhookCliTest(unittest.TestCase):
         self.assertTrue(sender.deliveries[0].success)
         self.assertEqual(attempts[-1]["payload"]["event_type"], "task.failed")
 
-    def test_checkpoint_ai_configure_webhooks_sends_supported_events(self) -> None:
+    def test_loop_harness_configure_webhooks_sends_supported_events(self) -> None:
         attempts: list[dict[str, object]] = []
 
         def transport(url: str, payload: dict[str, object], headers: dict[str, str]) -> object:
             attempts.append({"url": url, "payload": payload, "headers": headers})
             return {"status": 200}
 
-        checkpoint_ai = CheckpointAI()
-        sender = checkpoint_ai.configure_webhooks(
+        loop_harness = LoopHarness()
+        sender = loop_harness.configure_webhooks(
             ["https://example.test/webhook"],
             transport=transport,
         )
 
-        checkpoint_ai.event_bus.emit(EventType.RUN_COMPLETED, {"run_id": "run-1", "state": "succeeded"})
+        loop_harness.event_bus.emit(EventType.RUN_COMPLETED, {"run_id": "run-1", "state": "succeeded"})
 
-        self.assertIs(checkpoint_ai.webhook_sender, sender)
+        self.assertIs(loop_harness.webhook_sender, sender)
         self.assertEqual(attempts[0]["payload"]["event_type"], "run.completed")
 
     def test_webhook_receiver_can_trigger_workflow(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            handler = WebhookHandler(checkpoint_ai)
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            handler = WebhookHandler(loop_harness)
             receiver = WebhookReceiver(handler=handler)
 
             result = receiver.receive(
@@ -107,22 +107,22 @@ class AuthWebhookCliTest(unittest.TestCase):
             )
 
             self.assertEqual(result["status"], "accepted")
-            self.assertEqual(checkpoint_ai.store.list_runs()[0]["user_request"], "external workflow")
+            self.assertEqual(loop_harness.store.list_runs()[0]["user_request"], "external workflow")
 
     def test_cli_status_run_list_business_line_list_and_health(self) -> None:
         root = project_root()
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
-            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
-            run = checkpoint_ai.create_run("cli run")
-            checkpoint_ai.create_business_line("cli business")
-            checkpoint_ai.store.save_run(run)
+            db_path = Path(tmp) / "loop_harness.db"
+            loop_harness = LoopHarness(sqlite_path=db_path)
+            run = loop_harness.create_run("cli run")
+            loop_harness.create_business_line("cli business")
+            loop_harness.store.save_run(run)
 
             commands = [
-                ["./checkpointai", "--db", str(db_path), "status"],
-                ["./checkpointai", "--db", str(db_path), "run", "list"],
-                ["./checkpointai", "--db", str(db_path), "bl", "list"],
-                ["./checkpointai", "--db", str(db_path), "health"],
+                ["./loopharness", "--db", str(db_path), "status"],
+                ["./loopharness", "--db", str(db_path), "run", "list"],
+                ["./loopharness", "--db", str(db_path), "bl", "list"],
+                ["./loopharness", "--db", str(db_path), "health"],
             ]
             outputs: list[str] = []
             for command in commands:

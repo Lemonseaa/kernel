@@ -8,19 +8,19 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from checkpoint_ai.adapter import AdapterCapabilities, CapabilitySupport
-from checkpoint_ai.api import create_app
-from checkpoint_ai.auth import APIKeyManager
-from checkpoint_ai.autonomy import (
+from loop_harness.adapter import AdapterCapabilities, CapabilitySupport
+from loop_harness.api import create_app
+from loop_harness.auth import APIKeyManager
+from loop_harness.autonomy import (
     AutoExecutionEligibility,
     AutonomyActionStatus,
     AutonomyActionStore,
 )
-from checkpoint_ai.console import BackupManager
-from checkpoint_ai.decision import DecisionKind, DecisionLogStore
-from checkpoint_ai.demo import seed_console_demo
-from checkpoint_ai.prompt import PromptProposalStatus, PromptProposalStore
-from checkpoint_ai.shadow import ShadowResult, ShadowResultStore
+from loop_harness.console import BackupManager
+from loop_harness.decision import DecisionKind, DecisionLogStore
+from loop_harness.demo import seed_console_demo
+from loop_harness.prompt import PromptProposalStatus, PromptProposalStore
+from loop_harness.shadow import ShadowResult, ShadowResultStore
 
 
 class V61SystemicRiskFixTest(unittest.TestCase):

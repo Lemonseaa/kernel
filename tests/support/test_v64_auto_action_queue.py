@@ -6,12 +6,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.autonomy import (
+from loop_harness.autonomy import (
     AutoActionQueue,
     AutonomyActionStatus,
     AutonomyActionStore,
 )
-from checkpoint_ai.decision import DecisionKind, DecisionLogStore
+from loop_harness.decision import DecisionKind, DecisionLogStore
 
 
 class V64AutoActionQueueTest(unittest.TestCase):

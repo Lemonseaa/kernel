@@ -1,4 +1,4 @@
-# CheckpointAI 系统评估指标体系
+# LoopHarness 系统评估指标体系
 
 > Status: historical metric reference.
 >
@@ -13,7 +13,7 @@
 
 ## 概述
 
-本文档定义了CheckpointAI系统的完整评估指标体系，包括241个指标，分为11大类。每个指标标注了合理范围作为评估基准。
+本文档定义了LoopHarness系统的完整评估指标体系，包括241个指标，分为11大类。每个指标标注了合理范围作为评估基准。
 
 ---
 

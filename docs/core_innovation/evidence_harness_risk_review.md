@@ -2,7 +2,7 @@
 
 ## Proven In This Batch
 
-CheckpointAI can now:
+LoopHarness can now:
 
 ```text
 ingest external workflow runs
@@ -18,7 +18,7 @@ run a repeatable quant-shaped evidence drill
 
 ## Still Not Proven
 
-CheckpointAI has not proven:
+LoopHarness has not proven:
 
 ```text
 real trading alpha

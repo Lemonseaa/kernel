@@ -1,5 +1,5 @@
 {
-  "name": "checkpointai-console",
+  "name": "loopharness-console",
   "private": true,
   "version": "0.1.0",
   "type": "module",

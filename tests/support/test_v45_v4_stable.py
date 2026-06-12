@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import (
+from loop_harness.adapter import (
     AdapterCompatibilityDecision,
     AdapterCompatibilityEvaluator,
     AdapterCompatibilityInput,
@@ -14,15 +14,15 @@ from checkpoint_ai.adapter import (
     DummyAdapter,
     QuantResearchDemoAdapter,
 )
-from checkpoint_ai.insights import (
+from loop_harness.insights import (
     CrossScenarioInsightDecision,
     CrossScenarioInsightGenerator,
     ScenarioInsightInput,
 )
-from checkpoint_ai.isolation import ScenarioIsolationAuditor
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.metrics import MetricDirection, MetricSchema, MetricSchemaStore
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
+from loop_harness.isolation import ScenarioIsolationAuditor
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.metrics import MetricDirection, MetricSchema, MetricSchemaStore
+from loop_harness.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
 
 
 class V45V4StableTest(unittest.TestCase):

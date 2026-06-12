@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import (
+from loop_harness.adapter import (
     AdapterCapabilities,
     AdapterRegistry,
     AgentAdapter,
@@ -15,9 +15,9 @@ from checkpoint_ai.adapter import (
     CapabilitySupport,
     DummyAdapter,
 )
-from checkpoint_ai.prompt import PromptPatch, PromptProposal, PromptSlot, PromptVersionStore
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry
-from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
+from loop_harness.prompt import PromptPatch, PromptProposal, PromptSlot, PromptVersionStore
+from loop_harness.scenario import Scenario, ScenarioRegistry
+from loop_harness.shadow import ShadowResultStore, ShadowRunner
 
 
 class V42AdapterRegistryTest(unittest.TestCase):

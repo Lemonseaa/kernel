@@ -8,9 +8,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.api import create_app
-from checkpoint_ai.auth import APIKeyManager
+from loop_harness import LoopHarness
+from loop_harness.api import create_app
+from loop_harness.auth import APIKeyManager
 
 
 class EvidenceToProposalTest(unittest.TestCase):
@@ -69,7 +69,7 @@ class EvidenceToProposalTest(unittest.TestCase):
         manager = APIKeyManager()
         token = manager.generate_token("web")
         app = create_app(
-            checkpoint_ai=CheckpointAI(sqlite_path=db_path),
+            loop_harness=LoopHarness(sqlite_path=db_path),
             auth_manager=manager,
             db_path=db_path,
         )

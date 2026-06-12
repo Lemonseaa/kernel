@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.evidence import EvidenceBaselineStore, EvidenceStore
-from checkpoint_ai.prompt import ProposalStore
+from loop_harness.evidence import EvidenceBaselineStore, EvidenceStore
+from loop_harness.prompt import ProposalStore
 
 
 class EvidenceDrillScriptTest(unittest.TestCase):

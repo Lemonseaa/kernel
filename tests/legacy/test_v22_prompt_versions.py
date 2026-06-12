@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from checkpoint_ai.prompt import (
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStatus,
@@ -16,7 +16,7 @@ from checkpoint_ai.prompt import (
     PromptSlot,
     PromptVersionStore,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry
+from loop_harness.scenario import Scenario, ScenarioRegistry
 
 
 class V22PromptVersionTest(unittest.TestCase):

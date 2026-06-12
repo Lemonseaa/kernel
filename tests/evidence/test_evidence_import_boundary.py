@@ -14,25 +14,25 @@ class EvidenceImportBoundaryTest(unittest.TestCase):
     def test_evidence_modules_do_not_import_legacy_platform_modules(self) -> None:
         root = project_root()
         evidence_paths = [
-            *(root / "checkpoint_ai" / "evidence").glob("*.py"),
-            root / "checkpoint_ai" / "harness.py",
+            *(root / "loop_harness" / "evidence").glob("*.py"),
+            root / "loop_harness" / "harness.py",
         ]
         forbidden = {
-            "checkpoint_ai.adapter",
-            "checkpoint_ai.agent_config",
-            "checkpoint_ai.alerts",
-            "checkpoint_ai.autonomy",
-            "checkpoint_ai.businessline",
-            "checkpoint_ai.external_agents",
-            "checkpoint_ai.ha",
-            "checkpoint_ai.insights",
-            "checkpoint_ai.learning",
-            "checkpoint_ai.loop",
-            "checkpoint_ai.plugins",
-            "checkpoint_ai.runtime",
-            "checkpoint_ai.scheduler",
-            "checkpoint_ai.templates",
-            "checkpoint_ai.workflow",
+            "loop_harness.adapter",
+            "loop_harness.agent_config",
+            "loop_harness.alerts",
+            "loop_harness.autonomy",
+            "loop_harness.businessline",
+            "loop_harness.external_agents",
+            "loop_harness.ha",
+            "loop_harness.insights",
+            "loop_harness.learning",
+            "loop_harness.loop",
+            "loop_harness.plugins",
+            "loop_harness.runtime",
+            "loop_harness.scheduler",
+            "loop_harness.templates",
+            "loop_harness.workflow",
         }
         violations: list[str] = []
 
@@ -52,15 +52,15 @@ class EvidenceImportBoundaryTest(unittest.TestCase):
         """The human CLI should enter through EvidenceHarness, not raw service plumbing."""
 
         root = project_root()
-        cli_path = root / "checkpoint_ai" / "evidence" / "cli.py"
+        cli_path = root / "loop_harness" / "evidence" / "cli.py"
         tree = ast.parse(cli_path.read_text(encoding="utf-8"))
         imported_modules = {
             module for node in ast.walk(tree) if (module := self._imported_module(node)) is not None
         }
 
-        self.assertIn("checkpoint_ai.harness", imported_modules)
-        self.assertNotIn("checkpoint_ai.evidence.service", imported_modules)
-        self.assertNotIn("checkpoint_ai.evidence.storage", imported_modules)
+        self.assertIn("loop_harness.harness", imported_modules)
+        self.assertNotIn("loop_harness.evidence.service", imported_modules)
+        self.assertNotIn("loop_harness.evidence.storage", imported_modules)
 
     @staticmethod
     def _imported_module(node: ast.AST) -> str | None:

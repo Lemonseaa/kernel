@@ -7,9 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.experiment import Experiment, ExperimentLedger, ExperimentStatus
-from checkpoint_ai.experiment.data_quality import DataQualityGate, QualityStatus
-from checkpoint_ai.experiment.feedback import Feedback, FeedbackCollector, FeedbackSource
+from loop_harness.experiment import Experiment, ExperimentLedger, ExperimentStatus
+from loop_harness.experiment.data_quality import DataQualityGate, QualityStatus
+from loop_harness.experiment.feedback import Feedback, FeedbackCollector, FeedbackSource
 from tests.helpers import project_root
 
 
@@ -20,7 +20,7 @@ class FeedbackCollectorTest(unittest.TestCase):
         """Feedback is persisted, associated to an experiment, and updates after_metrics."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             ledger = ExperimentLedger(db_path)
             experiment = Experiment(
                 business_line_id="content",
@@ -53,14 +53,14 @@ class FeedbackCollectorTest(unittest.TestCase):
         self.assertEqual(updated.after_metrics["engagement"], 12.5)
         self.assertIn("engagement", updated.result_summary)
 
-    def test_checkpointai_feedback_cli_add_list_and_result(self) -> None:
+    def test_loopharness_feedback_cli_add_list_and_result(self) -> None:
         """CLI can add feedback, list feedback, and calculate experiment result."""
 
         root = project_root()
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             demo = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "run-demo"],
+                ["./loopharness", "--db", str(db_path), "experiment", "run-demo"],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -76,7 +76,7 @@ class FeedbackCollectorTest(unittest.TestCase):
 
             add_result = subprocess.run(
                 [
-                    "./checkpointai",
+                    "./loopharness",
                     "--db",
                     str(db_path),
                     "experiment",
@@ -96,14 +96,14 @@ class FeedbackCollectorTest(unittest.TestCase):
                 check=False,
             )
             list_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "feedback", "list", experiment_id],
+                ["./loopharness", "--db", str(db_path), "experiment", "feedback", "list", experiment_id],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "result", experiment_id],
+                ["./loopharness", "--db", str(db_path), "experiment", "result", experiment_id],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -160,7 +160,7 @@ class FeedbackCollectorTest(unittest.TestCase):
         """Rejected feedback is recorded for audit but excluded from experiment metrics."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             ledger = ExperimentLedger(db_path)
             experiment = Experiment(
                 business_line_id="quant",
@@ -202,14 +202,14 @@ class FeedbackCollectorTest(unittest.TestCase):
         self.assertEqual(result["after_metrics"]["ic_value"], 5.0)
         self.assertEqual(rejected_items, [])
 
-    def test_checkpointai_quality_cli_reports_stats_and_rejections(self) -> None:
+    def test_loopharness_quality_cli_reports_stats_and_rejections(self) -> None:
         """CLI feedback add prints quality status and exposes rejected feedback."""
 
         root = project_root()
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             demo = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "run-demo"],
+                ["./loopharness", "--db", str(db_path), "experiment", "run-demo"],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -225,7 +225,7 @@ class FeedbackCollectorTest(unittest.TestCase):
 
             pass_result = subprocess.run(
                 [
-                    "./checkpointai",
+                    "./loopharness",
                     "--db",
                     str(db_path),
                     "experiment",
@@ -246,7 +246,7 @@ class FeedbackCollectorTest(unittest.TestCase):
             )
             reject_result = subprocess.run(
                 [
-                    "./checkpointai",
+                    "./loopharness",
                     "--db",
                     str(db_path),
                     "experiment",
@@ -266,14 +266,14 @@ class FeedbackCollectorTest(unittest.TestCase):
                 check=False,
             )
             stats_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "quality", "stats", experiment_id],
+                ["./loopharness", "--db", str(db_path), "experiment", "quality", "stats", experiment_id],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             rejected_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "quality", "rejected"],
+                ["./loopharness", "--db", str(db_path), "experiment", "quality", "rejected"],
                 cwd=root,
                 capture_output=True,
                 text=True,

@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AgentRunRequest, AgentRunResult
-from checkpoint_ai.console import (
+from loop_harness.adapter import AgentRunRequest, AgentRunResult
+from loop_harness.console import (
     ApprovalInbox,
     BackupManager,
     ConsoleDashboard,
@@ -16,14 +16,14 @@ from checkpoint_ai.console import (
     CostEventStore,
     NotificationRouter,
 )
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.notification import NotificationManager
-from checkpoint_ai.optimization import (
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.notification import NotificationManager
+from loop_harness.optimization import (
     OptimizationDirection,
     ParameterSuggestion,
     ParameterSuggestionStore,
 )
-from checkpoint_ai.prompt import (
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStatus,
@@ -35,13 +35,13 @@ from checkpoint_ai.prompt import (
     ProposalStore,
     ProposalTargetType,
 )
-from checkpoint_ai.recommendation import (
+from loop_harness.recommendation import (
     RecommendationDecision,
     RecommendationStatus,
     VersionRecommendation,
     VersionRecommendationStore,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioStore
+from loop_harness.scenario import Scenario, ScenarioStore
 from tests.helpers import project_root
 
 
@@ -328,7 +328,7 @@ class V52V57ControlConsoleTest(unittest.TestCase):
     def _run(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         root = project_root()
         result = subprocess.run(
-            ["./checkpointai", "--db", str(db_path), *args],
+            ["./loopharness", "--db", str(db_path), *args],
             cwd=root,
             capture_output=True,
             text=True,

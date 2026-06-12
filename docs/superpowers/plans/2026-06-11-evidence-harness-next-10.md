@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Turn CheckpointAI's Evidence Harness from a working console into a realistic external-workflow optimization loop.
+**Goal:** Turn LoopHarness's Evidence Harness from a working console into a realistic external-workflow optimization loop.
 
 **Architecture:** The core path is external workflow ingestion → visualization → evidence quality → baseline comparison → proposal → shadow/replay → approval/action → learning record. Reuse existing backend Evidence API, adapter contracts, approval inbox, and UI shell. Do not rebuild Dify, workflow engines, model consoles, or plugin marketplaces.
 
-**Tech Stack:** Python, FastAPI, SQLite, React, TypeScript, Tailwind, Playwright, existing CheckpointAI modules.
+**Tech Stack:** Python, FastAPI, SQLite, React, TypeScript, Tailwind, Playwright, existing LoopHarness modules.
 
 ---
 
@@ -18,9 +18,9 @@ It focuses on the product's core innovation:
 
 ```text
 External workflow comes in
-CheckpointAI makes it observable
-CheckpointAI compares changes against baseline
-CheckpointAI tells the human what improved, what worsened, and what is still unsafe
+LoopHarness makes it observable
+LoopHarness compares changes against baseline
+LoopHarness tells the human what improved, what worsened, and what is still unsafe
 ```
 
 ---
@@ -30,8 +30,8 @@ CheckpointAI tells the human what improved, what worsened, and what is still uns
 **Purpose:** The UI needs a single endpoint that returns one run with visualization, report, comparison context, and action summary.
 
 **Files:**
-- Modify: `checkpoint_ai/api.py`
-- Modify: `checkpoint_ai/evidence/store.py`
+- Modify: `loop_harness/api.py`
+- Modify: `loop_harness/evidence/store.py`
 - Test: `tests/support/test_v58_web_api.py`
 
 **Implementation steps:**
@@ -84,9 +84,9 @@ cd web && npm run e2e
 **Purpose:** The system must reject or warn on low-quality evidence before comparison becomes trusted.
 
 **Files:**
-- Create: `checkpoint_ai/evidence/quality.py`
-- Modify: `checkpoint_ai/evidence/models.py`
-- Modify: `checkpoint_ai/evidence/service.py`
+- Create: `loop_harness/evidence/quality.py`
+- Modify: `loop_harness/evidence/models.py`
+- Modify: `loop_harness/evidence/service.py`
 - Test: `tests/evidence/test_evidence_quality.py`
 
 **Implementation steps:**
@@ -135,9 +135,9 @@ cd web && npm run e2e
 **Purpose:** Comparing random runs is not enough. Each workflow needs a current baseline.
 
 **Files:**
-- Create: `checkpoint_ai/evidence/baseline_store.py`
-- Modify: `checkpoint_ai/evidence/service.py`
-- Modify: `checkpoint_ai/api.py`
+- Create: `loop_harness/evidence/baseline_store.py`
+- Modify: `loop_harness/evidence/service.py`
+- Modify: `loop_harness/api.py`
 - Test: `tests/evidence/test_evidence_baseline.py`
 
 **Implementation steps:**
@@ -190,10 +190,10 @@ cd web && npm run e2e
 **Purpose:** A comparison that improves metrics should create a human-reviewable proposal, not just a report.
 
 **Files:**
-- Modify: `checkpoint_ai/evidence/service.py`
-- Modify: `checkpoint_ai/prompt/models.py`
-- Modify: `checkpoint_ai/console/approval_inbox.py`
-- Modify: `checkpoint_ai/api.py`
+- Modify: `loop_harness/evidence/service.py`
+- Modify: `loop_harness/prompt/models.py`
+- Modify: `loop_harness/console/approval_inbox.py`
+- Modify: `loop_harness/api.py`
 - Test: `tests/evidence/test_evidence_to_proposal.py`
 
 **Implementation steps:**
@@ -287,8 +287,8 @@ cd web && npm run lint
 cd web && npm run build
 cd web && npm run e2e
 python -m unittest discover -s tests -q
-python -m ruff check checkpoint_ai tests scripts
-python -m mypy checkpoint_ai --show-error-codes --no-incremental
+python -m ruff check loop_harness tests scripts
+python -m mypy loop_harness --show-error-codes --no-incremental
 python scripts/ops/final_acceptance.py
 ```
 

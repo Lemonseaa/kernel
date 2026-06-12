@@ -1,1 +1,1 @@
-"""checkpointAI test package."""
+"""Loop Harness test package."""

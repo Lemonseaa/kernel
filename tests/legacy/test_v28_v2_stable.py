@@ -7,20 +7,20 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AdapterRegistry, OPCAgentAdapter
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.loop import AgentLoopEngine, AgentLoopStore, LoopStatus
-from checkpoint_ai.policy import ScenarioPolicy, ScenarioPolicyService
-from checkpoint_ai.prompt import (
+from loop_harness.adapter import AdapterRegistry, OPCAgentAdapter
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.loop import AgentLoopEngine, AgentLoopStore, LoopStatus
+from loop_harness.policy import ScenarioPolicy, ScenarioPolicyService
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStore,
     PromptSlot,
     PromptVersionStore,
 )
-from checkpoint_ai.reporting import ReportGenerator
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
-from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
+from loop_harness.reporting import ReportGenerator
+from loop_harness.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
+from loop_harness.shadow import ShadowResultStore, ShadowRunner
 
 
 class V28V2StableTest(unittest.TestCase):

@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import (
+from loop_harness.adapter import (
     AdapterCapabilities,
     AdapterRegistry,
     AgentAdapter,
@@ -15,21 +15,21 @@ from checkpoint_ai.adapter import (
     AgentRunResult,
     CapabilitySupport,
 )
-from checkpoint_ai.metrics import (
+from loop_harness.metrics import (
     MetricCategory,
     MetricDirection,
     MetricSchema,
     MetricSchemaStore,
 )
-from checkpoint_ai.prompt import (
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptSlot,
     PromptVersionStore,
 )
-from checkpoint_ai.reporting import ReportGenerator
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry
-from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
+from loop_harness.reporting import ReportGenerator
+from loop_harness.scenario import Scenario, ScenarioRegistry
+from loop_harness.shadow import ShadowResultStore, ShadowRunner
 from tests.helpers import project_root
 
 
@@ -186,7 +186,7 @@ class V32ScenarioMetricSchemaTest(unittest.TestCase):
                     "provenance": {"sample_count": 260},
                 },
             )
-            from checkpoint_ai.prompt import PromptProposalStore
+            from loop_harness.prompt import PromptProposalStore
 
             PromptProposalStore(db_path).create(proposal)
             ShadowRunner(
@@ -263,7 +263,7 @@ class _RiskFixtureAdapter(AgentAdapter):
 def _run_cli(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     root = project_root()
     result = subprocess.run(
-        ["./checkpointai", "--db", str(db_path), *args],
+        ["./loopharness", "--db", str(db_path), *args],
         cwd=root,
         capture_output=True,
         text=True,

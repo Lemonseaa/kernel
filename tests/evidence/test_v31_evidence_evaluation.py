@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai.evaluation import (
+from loop_harness.evaluation import (
     EvidenceDecision,
     EvidenceEvaluationEngine,
     RecommendedAction,
 )
-from checkpoint_ai.metrics import ComparisonResult
+from loop_harness.metrics import ComparisonResult
 
 
 class V31EvidenceEvaluationTest(unittest.TestCase):

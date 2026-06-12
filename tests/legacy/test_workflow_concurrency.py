@@ -6,9 +6,9 @@ import threading
 import time
 import unittest
 
-from checkpoint_ai.models import Artifact, Run, Task, TaskState
-from checkpoint_ai.runtime import AgentRegistry, BaseAgent
-from checkpoint_ai.workflow import WorkflowEngine
+from loop_harness.models import Artifact, Run, Task, TaskState
+from loop_harness.runtime import AgentRegistry, BaseAgent
+from loop_harness.workflow import WorkflowEngine
 
 
 class SleepAgent(BaseAgent):

@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 COMMANDS = [
-    [sys.executable, "-m", "ruff", "check", "checkpoint_ai", "tests", "scripts"],
-    [sys.executable, "-m", "mypy", "checkpoint_ai", "--show-error-codes", "--no-incremental"],
-    [sys.executable, "-m", "compileall", "-q", "checkpoint_ai", "tests", "scripts"],
+    [sys.executable, "-m", "ruff", "check", "loop_harness", "tests", "scripts"],
+    [sys.executable, "-m", "mypy", "loop_harness", "--show-error-codes", "--no-incremental"],
+    [sys.executable, "-m", "compileall", "-q", "loop_harness", "tests", "scripts"],
     [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"],
     [sys.executable, "scripts/ops/benchmark.py", "--runs", "20"],
     [sys.executable, "scripts/ops/stress_test.py", "--runs", "50", "--concurrency", "5"],
@@ -36,9 +36,9 @@ def _project_root() -> Path:
 
     current = Path(__file__).resolve()
     for parent in current.parents:
-        if (parent / "pyproject.toml").exists() and (parent / "checkpoint_ai").is_dir():
+        if (parent / "pyproject.toml").exists() and (parent / "loop_harness").is_dir():
             return parent
-    raise RuntimeError("Could not locate checkpointAI project root")
+    raise RuntimeError("Could not locate Loop Harness project root")
 
 
 if __name__ == "__main__":

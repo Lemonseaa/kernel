@@ -6,9 +6,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AdapterRegistry, DummyAdapter
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner
+from loop_harness.adapter import AdapterRegistry, DummyAdapter
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.scenario import Scenario, ScenarioRegistry, ScenarioRunner
 
 
 class V21ScenarioAdapterLogsTest(unittest.TestCase):

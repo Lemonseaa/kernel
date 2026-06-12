@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.events import AuditLogger, Event, EventType
-from checkpoint_ai.observability import MetricsCollector
+from loop_harness.events import AuditLogger, Event, EventType
+from loop_harness.observability import MetricsCollector
 
 
 class ObservabilityTest(unittest.TestCase):

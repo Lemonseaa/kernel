@@ -7,11 +7,11 @@ import time
 import unittest
 from pathlib import Path
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.llm import LLMProvider, LLMRequest
-from checkpoint_ai.models import Task, TaskState
-from checkpoint_ai.runtime import LLMAgent
-from checkpoint_ai.tools import ToolPermission, ToolRegistry
+from loop_harness import LoopHarness
+from loop_harness.llm import LLMProvider, LLMRequest
+from loop_harness.models import Task, TaskState
+from loop_harness.runtime import LLMAgent
+from loop_harness.tools import ToolPermission, ToolRegistry
 
 
 class RiskHardeningTest(unittest.TestCase):
@@ -25,14 +25,14 @@ class RiskHardeningTest(unittest.TestCase):
             return f"seen {len(prompts)}"
 
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            run1 = checkpoint_ai.create_run("run 1")
-            run2 = checkpoint_ai.create_run("run 2")
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            run1 = loop_harness.create_run("run 1")
+            run2 = loop_harness.create_run("run 2")
             task1 = Task(name="agent1", agent_capability="llm.generate", run_id=run1.id, input="说出你的名字")
             task2 = Task(name="agent2", agent_capability="llm.generate", run_id=run2.id, input="说出你的名字")
-            checkpoint_ai.memory.add(run1.id, "memory-agent1", {"output": "Agent1 private context"})
-            checkpoint_ai.memory.add(run2.id, "memory-agent2", {"output": "Agent2 private context"})
-            agent = LLMAgent(provider=checkpoint_ai.llm_provider, memory=checkpoint_ai.memory, transport=transport)
+            loop_harness.memory.add(run1.id, "memory-agent1", {"output": "Agent1 private context"})
+            loop_harness.memory.add(run2.id, "memory-agent2", {"output": "Agent2 private context"})
+            agent = LLMAgent(provider=loop_harness.llm_provider, memory=loop_harness.memory, transport=transport)
 
             agent.execute(task1)
             agent.execute(task2)
@@ -44,14 +44,14 @@ class RiskHardeningTest(unittest.TestCase):
 
     def test_recover_run_rebuilds_tasks_from_sqlite(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
-            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
-            run = checkpoint_ai.create_run("recover")
-            task = checkpoint_ai.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
+            db_path = Path(tmp) / "loop_harness.db"
+            loop_harness = LoopHarness(sqlite_path=db_path)
+            run = loop_harness.create_run("recover")
+            task = loop_harness.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
             task.transition_to(TaskState.RUNNING)
-            checkpoint_ai.store.save_run(run)
+            loop_harness.store.save_run(run)
 
-            recovered = CheckpointAI(sqlite_path=db_path).recover_run(run.id)
+            recovered = LoopHarness(sqlite_path=db_path).recover_run(run.id)
 
             self.assertEqual(recovered.id, run.id)
             self.assertEqual(len(recovered.tasks), 1)
@@ -59,35 +59,35 @@ class RiskHardeningTest(unittest.TestCase):
 
     def test_recovered_run_can_continue_execution(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
-            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
-            run = checkpoint_ai.create_run("recover execute")
-            task = checkpoint_ai.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
+            db_path = Path(tmp) / "loop_harness.db"
+            loop_harness = LoopHarness(sqlite_path=db_path)
+            run = loop_harness.create_run("recover execute")
+            task = loop_harness.create_task(run, name="interrupted", agent_capability="simple.execute", input="resume")
             task.transition_to(TaskState.RUNNING)
-            checkpoint_ai.store.save_run(run)
-            restored_checkpoint_ai = CheckpointAI(sqlite_path=db_path)
+            loop_harness.store.save_run(run)
+            restored_loop_harness = LoopHarness(sqlite_path=db_path)
 
-            result = restored_checkpoint_ai.run(restored_checkpoint_ai.recover_run(run.id))
+            result = restored_loop_harness.run(restored_loop_harness.recover_run(run.id))
 
             self.assertEqual(result.state.value, "succeeded")
             self.assertEqual(result.tasks[0].result, "resume")
 
     def test_resume_run_skips_completed_tasks_and_reruns_failed_tasks(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
-            checkpoint_ai = CheckpointAI(sqlite_path=db_path)
-            run = checkpoint_ai.create_run("resume failed point")
-            completed = checkpoint_ai.create_task(run, name="completed", agent_capability="simple.execute", input="done")
+            db_path = Path(tmp) / "loop_harness.db"
+            loop_harness = LoopHarness(sqlite_path=db_path)
+            run = loop_harness.create_run("resume failed point")
+            completed = loop_harness.create_task(run, name="completed", agent_capability="simple.execute", input="done")
             completed.transition_to(TaskState.RUNNING)
             completed.result = "finished result"
             completed.transition_to(TaskState.SUCCEEDED)
-            failed = checkpoint_ai.create_task(run, name="failed", agent_capability="simple.execute", input="retry me")
+            failed = loop_harness.create_task(run, name="failed", agent_capability="simple.execute", input="retry me")
             failed.transition_to(TaskState.RUNNING)
             failed.error = "old error"
             failed.transition_to(TaskState.FAILED)
-            checkpoint_ai.store.save_run(run)
+            loop_harness.store.save_run(run)
 
-            resumed = CheckpointAI(sqlite_path=db_path).resume_run(run.id, exclude_completed=True)
+            resumed = LoopHarness(sqlite_path=db_path).resume_run(run.id, exclude_completed=True)
 
             self.assertEqual(resumed.tasks[0].state, TaskState.SUCCEEDED)
             self.assertEqual(resumed.tasks[0].result, "finished result")

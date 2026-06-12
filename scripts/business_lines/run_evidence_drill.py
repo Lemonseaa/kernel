@@ -5,14 +5,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from checkpoint_ai.evidence import (
+from loop_harness.evidence import (
     EvidenceBaselineStore,
     EvidenceService,
     EvidenceStore,
     QuantDrillResult,
     QuantDrillRunner,
 )
-from checkpoint_ai.prompt import (
+from loop_harness.prompt import (
     Proposal,
     ProposalKind,
     ProposalPatch,
@@ -24,8 +24,8 @@ from checkpoint_ai.prompt import (
 def main() -> None:
     """Run the evidence drill and print a human-readable summary."""
 
-    parser = argparse.ArgumentParser(description="Run CheckpointAI evidence drill.")
-    parser.add_argument("--db", default="data/checkpointai.db", help="SQLite database path.")
+    parser = argparse.ArgumentParser(description="Run LoopHarness evidence drill.")
+    parser.add_argument("--db", default="data/loopharness.db", help="SQLite database path.")
     parser.add_argument("--candidates", type=int, default=10, help="Number of candidate runs to generate.")
     args = parser.parse_args()
 

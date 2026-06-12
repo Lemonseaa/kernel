@@ -8,11 +8,11 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.api import create_app
-from checkpoint_ai.auth import APIKeyManager
-from checkpoint_ai.console import BackupManager
-from checkpoint_ai.demo import seed_console_demo
+from loop_harness import LoopHarness
+from loop_harness.api import create_app
+from loop_harness.auth import APIKeyManager
+from loop_harness.console import BackupManager
+from loop_harness.demo import seed_console_demo
 
 
 class V511V515ConsoleHardeningTest(unittest.TestCase):
@@ -52,7 +52,7 @@ class V511V515ConsoleHardeningTest(unittest.TestCase):
             shadow_detail = client.get(f"/api/shadows/{shadow_run.json()['id']}", headers=headers)
 
         self.assertEqual(version.status_code, 200)
-        self.assertEqual(version.json()["name"], "CheckpointAI")
+        self.assertEqual(version.json()["name"], "LoopHarness")
         self.assertEqual(auth.status_code, 200)
         self.assertTrue(auth.json()["authenticated"])
         self.assertEqual(latest_report.status_code, 200)
@@ -99,7 +99,7 @@ class V511V515ConsoleHardeningTest(unittest.TestCase):
         manager = APIKeyManager()
         token = manager.generate_token("web")
         app = create_app(
-            checkpoint_ai=CheckpointAI(sqlite_path=db_path),
+            loop_harness=LoopHarness(sqlite_path=db_path),
             auth_manager=manager,
             db_path=db_path,
             backup_dir=backup_dir,

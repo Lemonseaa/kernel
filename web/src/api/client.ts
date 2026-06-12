@@ -37,7 +37,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("checkpointai.token");
+  const token = localStorage.getItem("loopharness.token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -45,11 +45,11 @@ api.interceptors.request.use((config) => {
 });
 
 export function setApiToken(token: string) {
-  localStorage.setItem("checkpointai.token", token);
+  localStorage.setItem("loopharness.token", token);
 }
 
 export function getApiToken() {
-  return localStorage.getItem("checkpointai.token") ?? "";
+  return localStorage.getItem("loopharness.token") ?? "";
 }
 
 export function getApiErrorMessage(error: unknown) {

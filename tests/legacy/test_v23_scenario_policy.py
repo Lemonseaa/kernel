@@ -6,8 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.policy import PolicyLevel, ScenarioPolicy, ScenarioPolicyService
-from checkpoint_ai.prompt import (
+from loop_harness.policy import PolicyLevel, ScenarioPolicy, ScenarioPolicyService
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStatus,

@@ -1,6 +1,6 @@
 # User Profile
 
-This file is the only formal preference source for CheckpointAI agents.
+This file is the only formal preference source for LoopHarness agents.
 
 Human-maintained constraints:
 

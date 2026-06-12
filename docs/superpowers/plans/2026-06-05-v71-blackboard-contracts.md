@@ -13,9 +13,9 @@
 ### Task 1: Observation Model And Store
 
 **Files:**
-- Create: `checkpoint_ai/learning/__init__.py`
-- Create: `checkpoint_ai/learning/models.py`
-- Create: `checkpoint_ai/learning/store.py`
+- Create: `loop_harness/learning/__init__.py`
+- Create: `loop_harness/learning/models.py`
+- Create: `loop_harness/learning/store.py`
 - Test: `tests/test_v71_blackboard_contracts.py`
 
 - [ ] Write failing tests for saving and querying `Observation` by `business_line_id`, `scenario_id`, and `status`.
@@ -26,8 +26,8 @@
 ### Task 2: SafetyFinding And ValidationSummary Stores
 
 **Files:**
-- Modify: `checkpoint_ai/learning/models.py`
-- Modify: `checkpoint_ai/learning/store.py`
+- Modify: `loop_harness/learning/models.py`
+- Modify: `loop_harness/learning/store.py`
 - Test: `tests/test_v71_blackboard_contracts.py`
 
 - [ ] Write failing tests for `SafetyFindingStore` and `ValidationSummaryStore`.
@@ -38,8 +38,8 @@
 ### Task 3: Loop State Contract
 
 **Files:**
-- Modify: `checkpoint_ai/learning/models.py`
-- Modify: `checkpoint_ai/learning/store.py`
+- Modify: `loop_harness/learning/models.py`
+- Modify: `loop_harness/learning/store.py`
 - Test: `tests/test_v71_blackboard_contracts.py`
 
 - [ ] Write failing tests proving `LearningLoopState` moves through explicit statuses.
@@ -52,8 +52,8 @@
 **Commands:**
 - `python -m unittest tests/test_v71_blackboard_contracts.py -v`
 - `python -m unittest discover -s tests -v`
-- `python -m ruff check checkpoint_ai tests scripts examples`
-- `python -m mypy checkpoint_ai --show-error-codes --no-incremental`
+- `python -m ruff check loop_harness tests scripts examples`
+- `python -m mypy loop_harness --show-error-codes --no-incremental`
 
 - [ ] Run all commands.
 - [ ] Fix failures before moving to V7.2.

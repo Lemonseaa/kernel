@@ -17,5 +17,5 @@ python scripts/ops/final_acceptance.py
 Run an evidence drill for the console:
 
 ```bash
-python scripts/business_lines/run_evidence_drill.py --db data/checkpointai.db --candidates 10
+python scripts/business_lines/run_evidence_drill.py --db data/loopharness.db --candidates 10
 ```

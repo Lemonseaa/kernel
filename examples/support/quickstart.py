@@ -7,18 +7,18 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.models import TaskSpec
+from loop_harness import LoopHarness
+from loop_harness.models import TaskSpec
 
 
 async def main() -> None:
     """Create a business line and run a simple task."""
 
-    # 1. Initialize checkpoint_ai
-    checkpoint_ai = CheckpointAI()
+    # 1. Initialize loop_harness
+    loop_harness = LoopHarness()
 
     # 2. Create a business line
-    bl = checkpoint_ai.create_business_line('content_business')
+    bl = loop_harness.create_business_line('content_business')
     print(f"Created business line: {bl.name} ({bl.id})")
 
     # 3. Create and run a task
@@ -26,7 +26,7 @@ async def main() -> None:
         description='写一篇500字的文章介绍AI在内容创作中的应用'
     )
 
-    run = await checkpoint_ai.run(
+    run = await loop_harness.run(
         run=bl.id,
         tasks=[task_spec]
     )

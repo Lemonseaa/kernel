@@ -8,17 +8,17 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.api import create_app
-from checkpoint_ai.auth import APIKeyManager
-from checkpoint_ai.console import BackupManager, CostEvent, CostEventStore
-from checkpoint_ai.prompt import (
+from loop_harness import LoopHarness
+from loop_harness.api import create_app
+from loop_harness.auth import APIKeyManager
+from loop_harness.console import BackupManager, CostEvent, CostEventStore
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStore,
     PromptSlot,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioStore
+from loop_harness.scenario import Scenario, ScenarioStore
 
 
 class V58WebApiTest(unittest.TestCase):
@@ -178,14 +178,14 @@ class V58WebApiTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "web.db"
             app = create_app(
-                checkpoint_ai=CheckpointAI(sqlite_path=db_path),
+                loop_harness=LoopHarness(sqlite_path=db_path),
                 auth_manager=APIKeyManager(),
                 db_path=db_path,
                 force_fallback=True,
             )
 
         paths = {route["path"] for route in app.routes}
-        self.assertFalse(hasattr(app, "checkpoint_ai"))
+        self.assertFalse(hasattr(app, "loop_harness"))
         self.assertIn("/api/console/snapshot", paths)
         self.assertIn("/api/evidence/runs", paths)
         self.assertIn("/api/evidence/runs/{run_id}", paths)
@@ -198,7 +198,7 @@ class V58WebApiTest(unittest.TestCase):
         manager = APIKeyManager()
         token = manager.generate_token("web")
         app = create_app(
-            checkpoint_ai=CheckpointAI(sqlite_path=db_path),
+            loop_harness=LoopHarness(sqlite_path=db_path),
             auth_manager=manager,
             db_path=db_path,
             backup_dir=backup_dir,

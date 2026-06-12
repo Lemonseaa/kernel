@@ -7,10 +7,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.evaluation import EvaluationGate, EvaluationRunner, ReadabilityEvaluator
-from checkpoint_ai.models import Artifact, Task, TaskSpec, TaskState
-from checkpoint_ai.runtime import BaseAgent
+from loop_harness import LoopHarness
+from loop_harness.evaluation import EvaluationGate, EvaluationRunner, ReadabilityEvaluator
+from loop_harness.models import Artifact, Task, TaskSpec, TaskState
+from loop_harness.runtime import BaseAgent
 
 
 class DraftAgent(BaseAgent):
@@ -53,11 +53,11 @@ class EvaluationTest(unittest.TestCase):
     def test_workflow_marks_task_evaluation_failed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             DraftAgent.draft = "短"
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            checkpoint_ai.agent_registry.register_agent_class(DraftAgent)
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            loop_harness.agent_registry.register_agent_class(DraftAgent)
 
-            async def run_checkpoint_ai() -> object:
-                return await checkpoint_ai.run(
+            async def run_loop_harness() -> object:
+                return await loop_harness.run(
                     "质量门禁测试",
                     [
                         TaskSpec(
@@ -70,7 +70,7 @@ class EvaluationTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_checkpoint_ai())
+            run = asyncio.run(run_loop_harness())
             task = run.tasks[0]
 
             self.assertEqual(run.state.value, "failed")
@@ -81,10 +81,10 @@ class EvaluationTest(unittest.TestCase):
     def test_evaluation_failure_feedback_is_saved_to_business_line_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             DraftAgent.draft = "短"
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            checkpoint_ai.agent_registry.register_agent_class(DraftAgent)
-            run = checkpoint_ai.create_run("质量反馈测试", business_line_id="bl-a")
-            task = checkpoint_ai.create_task(run, "写一篇内容", "content.write")
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            loop_harness.agent_registry.register_agent_class(DraftAgent)
+            run = loop_harness.create_run("质量反馈测试", business_line_id="bl-a")
+            task = loop_harness.create_task(run, "写一篇内容", "content.write")
             task.metadata.update(
                 {
                     "evaluation_required": True,
@@ -93,8 +93,8 @@ class EvaluationTest(unittest.TestCase):
                 }
             )
 
-            checkpoint_ai.run(run)
-            feedback_text = checkpoint_ai.memory.build_business_line_prompt_context(
+            loop_harness.run(run)
+            feedback_text = loop_harness.memory.build_business_line_prompt_context(
                 "bl-a",
                 kind="evaluation_feedback",
             )
@@ -113,11 +113,11 @@ class EvaluationTest(unittest.TestCase):
                 "每一步都有明确分数，低于阈值就要求改写。 #AI #内容"
                 + "这个内容质量检查流程可以复用到选题、写作、审核和分发环节。" * 8
             )
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            checkpoint_ai.agent_registry.register_agent_class(DraftAgent)
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            loop_harness.agent_registry.register_agent_class(DraftAgent)
 
-            async def run_checkpoint_ai() -> object:
-                return await checkpoint_ai.run(
+            async def run_loop_harness() -> object:
+                return await loop_harness.run(
                     "质量门禁通过测试",
                     [
                         TaskSpec(
@@ -130,7 +130,7 @@ class EvaluationTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_checkpoint_ai())
+            run = asyncio.run(run_loop_harness())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertEqual(run.tasks[0].state, TaskState.SUCCEEDED)

@@ -6,9 +6,9 @@ security audit.
 ## Final Validation Commands
 
 ```bash
-python -m ruff check checkpoint_ai tests scripts
-python -m mypy checkpoint_ai --show-error-codes --no-incremental
-python -m compileall -q checkpoint_ai tests scripts
+python -m ruff check loop_harness tests scripts
+python -m mypy loop_harness --show-error-codes --no-incremental
+python -m compileall -q loop_harness tests scripts
 python -m unittest discover -s tests -v
 python scripts/ops/benchmark.py --runs 20
 python scripts/ops/stress_test.py --runs 50 --concurrency 5

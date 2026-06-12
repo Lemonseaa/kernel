@@ -7,18 +7,18 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AgentRunRequest, AgentRunResult
-from checkpoint_ai.console import ConsoleReadModel
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.loop import AgentLoopStore, LoopRun, LoopStatus
-from checkpoint_ai.prompt import (
+from loop_harness.adapter import AgentRunRequest, AgentRunResult
+from loop_harness.console import ConsoleReadModel
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.loop import AgentLoopStore, LoopRun, LoopStatus
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStatus,
     PromptProposalStore,
     PromptSlot,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioStatus, ScenarioStore
+from loop_harness.scenario import Scenario, ScenarioStatus, ScenarioStore
 from tests.helpers import project_root
 
 
@@ -142,7 +142,7 @@ class V51ConsoleReadModelTest(unittest.TestCase):
     def _run(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         root = project_root()
         result = subprocess.run(
-            ["./checkpointai", "--db", str(db_path), *args],
+            ["./loopharness", "--db", str(db_path), *args],
             cwd=root,
             capture_output=True,
             text=True,

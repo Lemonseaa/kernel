@@ -15,26 +15,26 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from checkpoint_ai.adapter import AdapterRegistry, QuantResearchDemoAdapter
-from checkpoint_ai.evaluation import EvidenceEvaluation, EvidenceEvaluationEngine
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.loop import AgentLoopEngine, AgentLoopStore, LoopRun
-from checkpoint_ai.metrics import ComparisonResult, MetricSchemaRegistry, MetricSchemaStore
-from checkpoint_ai.policy import ScenarioPolicy, ScenarioPolicyService
-from checkpoint_ai.prompt import (
+from loop_harness.adapter import AdapterRegistry, QuantResearchDemoAdapter
+from loop_harness.evaluation import EvidenceEvaluation, EvidenceEvaluationEngine
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.loop import AgentLoopEngine, AgentLoopStore, LoopRun
+from loop_harness.metrics import ComparisonResult, MetricSchemaRegistry, MetricSchemaStore
+from loop_harness.policy import ScenarioPolicy, ScenarioPolicyService
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStore,
     PromptSlot,
     PromptVersionStore,
 )
-from checkpoint_ai.recommendation import (
+from loop_harness.recommendation import (
     VersionRecommendation,
     VersionRecommendationStore,
     VersionRecommender,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
-from checkpoint_ai.shadow import ShadowResult, ShadowResultStore, ShadowRunner
+from loop_harness.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
+from loop_harness.shadow import ShadowResult, ShadowResultStore, ShadowRunner
 
 
 @dataclass(frozen=True)

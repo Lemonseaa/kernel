@@ -1,6 +1,6 @@
 # V5 Stable Acceptance
 
-V5 Stable 的定义：CheckpointAI 已经有一个可操作的控制台，能让人处理审批、触发 run、查看报告、跑 shadow、管理备份。它不是代码编辑器，也不是 workflow builder。
+V5 Stable 的定义：LoopHarness 已经有一个可操作的控制台，能让人处理审批、触发 run、查看报告、跑 shadow、管理备份。它不是代码编辑器，也不是 workflow builder。
 
 ## 必须通过
 
@@ -8,8 +8,8 @@ V5 Stable 的定义：CheckpointAI 已经有一个可操作的控制台，能让
 
 ```bash
 python -m unittest discover -s tests -v
-python -m ruff check checkpoint_ai tests scripts examples
-python -m mypy checkpoint_ai --show-error-codes --no-incremental
+python -m ruff check loop_harness tests scripts examples
+python -m mypy loop_harness --show-error-codes --no-incremental
 ```
 
 前端：

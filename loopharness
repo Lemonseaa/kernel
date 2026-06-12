@@ -1,0 +1,8 @@
+#!/usr/bin/env python
+"""Executable wrapper for loop_harness.cli."""
+
+from loop_harness.cli import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

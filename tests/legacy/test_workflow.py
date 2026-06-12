@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai.control import HumanApprovalGate, PolicyDecision, PolicyEngine
-from checkpoint_ai.events import EventBus, EventType
-from checkpoint_ai.models import Artifact, Run, Task, TaskState
-from checkpoint_ai.runtime import AgentRegistry, BaseAgent
-from checkpoint_ai.tools import EchoTool, ToolPermission, ToolRegistry
-from checkpoint_ai.workflow import TaskExecutor, WorkflowEngine
+from loop_harness.control import HumanApprovalGate, PolicyDecision, PolicyEngine
+from loop_harness.events import EventBus, EventType
+from loop_harness.models import Artifact, Run, Task, TaskState
+from loop_harness.runtime import AgentRegistry, BaseAgent
+from loop_harness.tools import EchoTool, ToolPermission, ToolRegistry
+from loop_harness.workflow import TaskExecutor, WorkflowEngine
 
 
 class EchoAgent(BaseAgent):

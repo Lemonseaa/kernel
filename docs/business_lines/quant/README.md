@@ -16,7 +16,7 @@ historical data
 ## Current Drill
 
 ```bash
-checkpointai evidence quant-drill --candidates 30 --comparisons 5
+loopharness evidence quant-drill --candidates 30 --comparisons 5
 ```
 
 This is a deterministic semi-real drill. It validates the evidence chain; it is not a live trading signal.

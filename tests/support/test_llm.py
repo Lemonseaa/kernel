@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.config import CheckpointAIConfig
-from checkpoint_ai.llm import LLMRequest, MiniMaxProvider, OpenAIProvider, ProviderRegistry
-from checkpoint_ai.models import Task
-from checkpoint_ai.runtime import LLMAgent
+from loop_harness import LoopHarness
+from loop_harness.config import LoopHarnessConfig
+from loop_harness.llm import LLMRequest, MiniMaxProvider, OpenAIProvider, ProviderRegistry
+from loop_harness.models import Task
+from loop_harness.runtime import LLMAgent
 
 
 class LLMProviderTest(unittest.TestCase):
@@ -42,8 +42,8 @@ class LLMProviderTest(unittest.TestCase):
         self.assertEqual(artifact.content["agent"], "llm")
         self.assertEqual(artifact.content["provider"], "minimax")
 
-    def test_checkpoint_ai_config_builds_default_provider(self) -> None:
-        config = CheckpointAIConfig(
+    def test_loop_harness_config_builds_default_provider(self) -> None:
+        config = LoopHarnessConfig(
             providers={"minimax": {"api_key": "test-key", "model": "MiniMax-M2.7-highspeed"}},
             default_provider="minimax",
         )
@@ -53,13 +53,13 @@ class LLMProviderTest(unittest.TestCase):
         self.assertEqual(provider.name, "minimax")
         self.assertEqual(provider.model, "MiniMax-M2.7-highspeed")
 
-    def test_checkpoint_ai_accepts_configured_default_provider(self) -> None:
-        config = CheckpointAIConfig(
+    def test_loop_harness_accepts_configured_default_provider(self) -> None:
+        config = LoopHarnessConfig(
             providers={"openai": {"api_key": "test-key", "model": "gpt-test"}},
             default_provider="openai",
         )
 
-        checkpoint_ai = CheckpointAI(config=config)
+        loop_harness = LoopHarness(config=config)
 
-        self.assertEqual(checkpoint_ai.llm_provider.name, "openai")
-        self.assertEqual(checkpoint_ai.provider_registry.default().model, "gpt-test")
+        self.assertEqual(loop_harness.llm_provider.name, "openai")
+        self.assertEqual(loop_harness.provider_registry.default().model, "gpt-test")

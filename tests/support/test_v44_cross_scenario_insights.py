@@ -7,13 +7,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.insights import (
+from loop_harness.insights import (
     CrossScenarioInsightDecision,
     CrossScenarioInsightGenerator,
     CrossScenarioInsightStore,
     ScenarioInsightInput,
 )
-from checkpoint_ai.reporting import ReportGenerator
+from loop_harness.reporting import ReportGenerator
 from tests.helpers import project_root
 
 
@@ -149,7 +149,7 @@ class V44CrossScenarioInsightTest(unittest.TestCase):
 def _run_cli(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     root = project_root()
     result = subprocess.run(
-        ["./checkpointai", "--db", str(db_path), *args],
+        ["./loopharness", "--db", str(db_path), *args],
         cwd=root,
         capture_output=True,
         text=True,

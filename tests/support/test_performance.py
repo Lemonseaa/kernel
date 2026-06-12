@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai.events import EventBus
-from checkpoint_ai.observability import PerformanceMonitor
+from loop_harness.events import EventBus
+from loop_harness.observability import PerformanceMonitor
 
 
 class PerformanceMonitorTest(unittest.TestCase):

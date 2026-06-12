@@ -1,7 +1,7 @@
 [project]
-name = "checkpointai"
+name = "loop-harness"
 version = "1.0.0"
-description = "CheckpointAI - external workflow evidence harness."
+description = "Loop Harness - external workflow evidence harness."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Non-Commercial; commercial use requires authorization" }
@@ -17,7 +17,7 @@ keywords = [
     "ai-agents",
     "shadow-testing",
     "human-in-the-loop",
-    "checkpointAI",
+    "loop-harness",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -51,14 +51,14 @@ all = [
 ]
 
 [project.scripts]
-checkpointai = "checkpoint_ai.cli:main"
+loopharness = "loop_harness.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["checkpoint_ai"]
+packages = ["loop_harness"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

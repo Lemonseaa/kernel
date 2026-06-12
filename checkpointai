@@ -1,8 +1,0 @@
-#!/usr/bin/env python
-"""Executable wrapper for checkpoint_ai.cli."""
-
-from checkpoint_ai.cli import main
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

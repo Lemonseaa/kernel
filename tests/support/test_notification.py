@@ -6,10 +6,10 @@ import io
 import unittest
 from contextlib import redirect_stdout
 
-from checkpoint_ai.cli import main
-from checkpoint_ai.control import HumanApprovalGate, PolicyEngine
-from checkpoint_ai.models import Task
-from checkpoint_ai.notification import (
+from loop_harness.cli import main
+from loop_harness.control import HumanApprovalGate, PolicyEngine
+from loop_harness.models import Task
+from loop_harness.notification import (
     NotificationChannel,
     NotificationDelivery,
     NotificationManager,
@@ -36,7 +36,7 @@ class RecordingChannel(NotificationChannel):
 
 
 class NotificationTest(unittest.TestCase):
-    """Validate notification channels and checkpoint_ai integrations."""
+    """Validate notification channels and loop_harness integrations."""
 
     def test_notification_manager_sends_to_registered_channels(self) -> None:
         manager = NotificationManager()

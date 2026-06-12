@@ -6,22 +6,22 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from checkpoint_ai.adapter import AgentRunResult
-from checkpoint_ai.agent_config import (
+from loop_harness.adapter import AgentRunResult
+from loop_harness.agent_config import (
     AgentConfig,
     AgentConfigStore,
     AgentRole,
     AgentRuntimeContextBuilder,
 )
-from checkpoint_ai.api import create_app
-from checkpoint_ai.config_version import ConfigBranchStore, ConfigVersionService, ConfigVersionStore
-from checkpoint_ai.decision import DecisionKind, DecisionLogStore, DecisionRecord
-from checkpoint_ai.external_agents import (
+from loop_harness.api import create_app
+from loop_harness.config_version import ConfigBranchStore, ConfigVersionService, ConfigVersionStore
+from loop_harness.decision import DecisionKind, DecisionLogStore, DecisionRecord
+from loop_harness.external_agents import (
     DummyExternalAgentAdapter,
     ExternalAgentConnection,
     ExternalAgentConnectionStore,
 )
-from checkpoint_ai.learning import (
+from loop_harness.learning import (
     ConflictDetector,
     DecisionObserver,
     LearningLoopService,
@@ -42,13 +42,13 @@ from checkpoint_ai.learning import (
     ValidationSummaryStore,
     Validator,
 )
-from checkpoint_ai.logs import SummaryLogStore
-from checkpoint_ai.shadow.comparison import MetricComparator, RunKind
-from checkpoint_ai.user_profile import UserProfileStore
+from loop_harness.logs import SummaryLogStore
+from loop_harness.shadow.comparison import MetricComparator, RunKind
+from loop_harness.user_profile import UserProfileStore
 
 
 def _db(tmp: str) -> Path:
-    return Path(tmp) / "checkpointai.db"
+    return Path(tmp) / "loopharness.db"
 
 
 def test_v71_blackboard_stores_require_scope_and_persist() -> None:
@@ -254,7 +254,7 @@ def test_v77_agent_config_external_adapter_and_user_profile_boundaries() -> None
 
     with TemporaryDirectory() as tmp:
         root = Path(tmp)
-        db = root / "checkpointai.db"
+        db = root / "loopharness.db"
         profile_store = UserProfileStore(root / "user", db)
         profile_store.save_formal_profile("偏好：保守、可解释、不要自动实盘。", actor="human", reason="initial")
         profile_store.save_suggested_notes("Hermes建议：更偏好低回撤。", actor="hermes")

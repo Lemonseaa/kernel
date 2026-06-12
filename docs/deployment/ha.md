@@ -1,6 +1,6 @@
 # High Availability
 
-CheckpointAI no longer ships an internal HA manager.
+LoopHarness no longer ships an internal HA manager.
 
 HA is an external deployment responsibility because the product direction is an Evidence Harness, not a durable workflow platform.
 
@@ -17,7 +17,7 @@ Temporal only if durable orchestration becomes a real requirement
 
 ## Current Docker Shape
 
-`docker-compose.yml` runs one CheckpointAI service with a restart policy and health check.
+`docker-compose.yml` runs one LoopHarness service with a restart policy and health check.
 
 ```bash
 docker compose up -d
@@ -27,5 +27,5 @@ python scripts/ops/health_check.py
 
 ## Boundary
 
-Do not rebuild primary leases, leader election, or cross-region failover inside CheckpointAI unless the Evidence Harness path proves it needs durable workflow execution.
+Do not rebuild primary leases, leader election, or cross-region failover inside LoopHarness unless the Evidence Harness path proves it needs durable workflow execution.
 

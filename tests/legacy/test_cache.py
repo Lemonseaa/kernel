@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai.cache import LLMResponseCache
-from checkpoint_ai.llm import LLMRequest, LLMResponse, MiniMaxProvider
+from loop_harness.cache import LLMResponseCache
+from loop_harness.llm import LLMRequest, LLMResponse, MiniMaxProvider
 
 
 class ResponseCacheTest(unittest.TestCase):

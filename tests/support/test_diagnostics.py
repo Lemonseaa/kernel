@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.diagnostics import HealthChecker
-from checkpoint_ai.llm import LLMRequest, MiniMaxProvider
-from checkpoint_ai.models import RunState
+from loop_harness import LoopHarness
+from loop_harness.diagnostics import HealthChecker
+from loop_harness.llm import LLMRequest, MiniMaxProvider
+from loop_harness.models import RunState
 
 
 class FailingProvider(MiniMaxProvider):
@@ -24,10 +24,10 @@ class FailingProvider(MiniMaxProvider):
 class DiagnosticsTest(unittest.TestCase):
     """Validate health checker reports actionable status."""
 
-    def test_health_checker_reports_healthy_default_checkpoint_ai(self) -> None:
+    def test_health_checker_reports_healthy_default_loop_harness(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            checker = HealthChecker(checkpoint_ai=checkpoint_ai)
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            checker = HealthChecker(loop_harness=loop_harness)
 
             report = checker.generate_diagnostic_report()
 
@@ -37,9 +37,9 @@ class DiagnosticsTest(unittest.TestCase):
 
     def test_health_checker_reports_provider_failure_with_recommendation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            checkpoint_ai.llm_provider = FailingProvider()
-            checker = HealthChecker(checkpoint_ai=checkpoint_ai)
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            loop_harness.llm_provider = FailingProvider()
+            checker = HealthChecker(loop_harness=loop_harness)
 
             report = checker.generate_diagnostic_report()
 
@@ -51,12 +51,12 @@ class DiagnosticsTest(unittest.TestCase):
 
     def test_health_checker_detects_failed_recent_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            run = checkpoint_ai.create_run("failed run")
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            run = loop_harness.create_run("failed run")
             run.state = RunState.FAILED
-            checkpoint_ai.store.save_run(run)
+            loop_harness.store.save_run(run)
 
-            report = HealthChecker(checkpoint_ai=checkpoint_ai).generate_diagnostic_report()
+            report = HealthChecker(loop_harness=loop_harness).generate_diagnostic_report()
 
             failed_check = next(check for check in report.checks if check.component == "recent_runs")
             self.assertEqual(failed_check.status, "warning")

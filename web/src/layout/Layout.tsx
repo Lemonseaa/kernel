@@ -50,7 +50,7 @@ export function Layout() {
     <div className="min-h-screen bg-[#eef2f7]">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-border bg-white px-4 py-5 md:block">
         <div className="mb-6">
-          <div className="text-lg font-semibold text-ink">CheckpointAI</div>
+          <div className="text-lg font-semibold text-ink">Loop Harness</div>
           <div className="text-xs text-muted">Control Console</div>
         </div>
         <nav className="space-y-1">
@@ -89,7 +89,7 @@ export function Layout() {
         <header className="sticky top-0 z-10 border-b border-border bg-white/95 px-4 py-3 backdrop-blur md:px-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center gap-3">
-              <span className="md:hidden text-base font-semibold text-ink">CheckpointAI</span>
+              <span className="md:hidden text-base font-semibold text-ink">Loop Harness</span>
               {token ? (
                 <StatusBadge
                   value={health.data?.overall_status ?? (health.isError ? "unhealthy" : "checking")}
@@ -104,7 +104,7 @@ export function Layout() {
                 value={token}
                 onChange={(event) => setToken(event.target.value)}
                 className="h-9 w-full rounded-md border border-border bg-white px-3 text-sm text-ink outline-none focus:border-accent lg:w-96"
-                placeholder="Bearer token from checkpointai auth"
+                placeholder="Bearer token from loopharness auth"
                 type="password"
               />
             </label>

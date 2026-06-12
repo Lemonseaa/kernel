@@ -1,6 +1,6 @@
 # Business Lines
 
-Business lines are where CheckpointAI proves value in concrete domains.
+Business lines are where LoopHarness proves value in concrete domains.
 
 They are not the core framework. They are applications of the core evidence harness.
 

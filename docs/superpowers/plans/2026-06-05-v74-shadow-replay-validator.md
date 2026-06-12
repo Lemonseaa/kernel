@@ -13,8 +13,8 @@
 ### Task 1: ShadowReplayJob Model
 
 **Files:**
-- Modify: `checkpoint_ai/learning/models.py`
-- Modify: `checkpoint_ai/learning/store.py`
+- Modify: `loop_harness/learning/models.py`
+- Modify: `loop_harness/learning/store.py`
 - Test: `tests/test_v74_shadow_replay_validator.py`
 
 - [ ] Write failing tests for creating, listing, and completing `ShadowReplayJob`.
@@ -25,7 +25,7 @@
 ### Task 2: ShadowReplayScheduler
 
 **Files:**
-- Create: `checkpoint_ai/learning/scheduler.py`
+- Create: `loop_harness/learning/scheduler.py`
 - Test: `tests/test_v74_shadow_replay_validator.py`
 
 - [ ] Write failing test that a ranked candidate creates a pending shadow job.
@@ -36,7 +36,7 @@
 ### Task 3: Validator
 
 **Files:**
-- Create: `checkpoint_ai/learning/validator.py`
+- Create: `loop_harness/learning/validator.py`
 - Test: `tests/test_v74_shadow_replay_validator.py`
 
 - [ ] Write failing test where improved business metrics create a positive `ValidationSummary`.
@@ -47,7 +47,7 @@
 ### Task 4: Report Integration
 
 **Files:**
-- Modify: `checkpoint_ai/reporting.py`
+- Modify: `loop_harness/reporting.py`
 - Test: `tests/test_v74_shadow_replay_validator.py`
 
 - [ ] Write failing test that proposal report includes latest validation summary.
@@ -59,8 +59,8 @@
 **Commands:**
 - `python -m unittest tests/test_v74_shadow_replay_validator.py -v`
 - `python -m unittest discover -s tests -v`
-- `python -m ruff check checkpoint_ai tests scripts examples`
-- `python -m mypy checkpoint_ai --show-error-codes --no-incremental`
+- `python -m ruff check loop_harness tests scripts examples`
+- `python -m mypy loop_harness --show-error-codes --no-incremental`
 
 - [ ] Run all commands.
 - [ ] Fix failures before moving to V7.5.

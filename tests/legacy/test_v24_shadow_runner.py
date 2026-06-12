@@ -6,16 +6,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AdapterRegistry, DummyAdapter
-from checkpoint_ai.prompt import (
+from loop_harness.adapter import AdapterRegistry, DummyAdapter
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStore,
     PromptSlot,
     PromptVersionStore,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry
-from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
+from loop_harness.scenario import Scenario, ScenarioRegistry
+from loop_harness.shadow import ShadowResultStore, ShadowRunner
 
 
 class V24ShadowRunnerTest(unittest.TestCase):
@@ -82,7 +82,7 @@ class V24ShadowRunnerTest(unittest.TestCase):
         self.assertEqual(stored.status, "failed")
 
     def test_policy_service_uses_shadow_result_boolean(self) -> None:
-        from checkpoint_ai.policy import ScenarioPolicy, ScenarioPolicyService
+        from loop_harness.policy import ScenarioPolicy, ScenarioPolicyService
 
         with tempfile.TemporaryDirectory() as tmp:
             runner, version_store, proposal = self._build_runner(tmp)

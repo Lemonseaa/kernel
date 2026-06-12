@@ -79,15 +79,15 @@
 
 ### Verification
 
-Run from `/Users/lemonsea/Desktop/mas/checkpointAI`:
+Run from `/Users/lemonsea/Desktop/mas/loop-harness`:
 
 ```bash
 cd web && npm run lint
 cd web && npm run build
 cd web && npm run e2e
 python -m unittest discover -s tests -q
-python -m ruff check checkpoint_ai tests scripts
-python -m mypy checkpoint_ai --show-error-codes --no-incremental
+python -m ruff check loop_harness tests scripts
+python -m mypy loop_harness --show-error-codes --no-incremental
 python scripts/ops/final_acceptance.py
 ```
 

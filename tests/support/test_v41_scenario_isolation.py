@@ -7,16 +7,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AgentRunRequest, AgentRunResult
-from checkpoint_ai.isolation import ScenarioIsolationAuditor, ScenarioScope
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.optimization import ParameterSuggestion, ParameterSuggestionStore
-from checkpoint_ai.recommendation import (
+from loop_harness.adapter import AgentRunRequest, AgentRunResult
+from loop_harness.isolation import ScenarioIsolationAuditor, ScenarioScope
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.optimization import ParameterSuggestion, ParameterSuggestionStore
+from loop_harness.recommendation import (
     RecommendationDecision,
     VersionRecommendation,
     VersionRecommendationStore,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioStatus, ScenarioStore
+from loop_harness.scenario import Scenario, ScenarioStatus, ScenarioStore
 from tests.helpers import project_root
 
 
@@ -134,7 +134,7 @@ class V41ScenarioIsolationTest(unittest.TestCase):
 def _run_cli(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     root = project_root()
     result = subprocess.run(
-        ["./checkpointai", "--db", str(db_path), *args],
+        ["./loopharness", "--db", str(db_path), *args],
         cwd=root,
         capture_output=True,
         text=True,

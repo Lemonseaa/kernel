@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai.models import Agent
-from checkpoint_ai.runtime import AgentRegistry
+from loop_harness.models import Agent
+from loop_harness.runtime import AgentRegistry
 
 
 class RuntimeTest(unittest.TestCase):

@@ -13,8 +13,8 @@
 ### Task 1: Proposal Candidate Model
 
 **Files:**
-- Modify: `checkpoint_ai/learning/models.py`
-- Modify: `checkpoint_ai/learning/store.py`
+- Modify: `loop_harness/learning/models.py`
+- Modify: `loop_harness/learning/store.py`
 - Test: `tests/test_v73_proposer_hive_ranking.py`
 
 - [ ] Write failing tests for `ProposalCandidate` persistence and scenario filtering.
@@ -25,7 +25,7 @@
 ### Task 2: PromptProposer
 
 **Files:**
-- Create: `checkpoint_ai/learning/proposers.py`
+- Create: `loop_harness/learning/proposers.py`
 - Test: `tests/test_v73_proposer_hive_ranking.py`
 
 - [ ] Write failing test where an observation about output clarity creates one prompt-slot patch candidate.
@@ -36,7 +36,7 @@
 ### Task 3: ParameterProposer
 
 **Files:**
-- Modify: `checkpoint_ai/learning/proposers.py`
+- Modify: `loop_harness/learning/proposers.py`
 - Test: `tests/test_v73_proposer_hive_ranking.py`
 
 - [ ] Write failing test where a metric observation creates a bounded parameter patch candidate.
@@ -47,7 +47,7 @@
 ### Task 4: ConflictDetector And ProposalRanker
 
 **Files:**
-- Create: `checkpoint_ai/learning/ranking.py`
+- Create: `loop_harness/learning/ranking.py`
 - Test: `tests/test_v73_proposer_hive_ranking.py`
 
 - [ ] Write failing tests for same-target conflict detection.
@@ -61,8 +61,8 @@
 **Commands:**
 - `python -m unittest tests/test_v73_proposer_hive_ranking.py -v`
 - `python -m unittest discover -s tests -v`
-- `python -m ruff check checkpoint_ai tests scripts examples`
-- `python -m mypy checkpoint_ai --show-error-codes --no-incremental`
+- `python -m ruff check loop_harness tests scripts examples`
+- `python -m mypy loop_harness --show-error-codes --no-incremental`
 
 - [ ] Run all commands.
 - [ ] Fix failures before moving to V7.4.

@@ -9,8 +9,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AgentRunRequest, OPCAgentAdapter
-from checkpoint_ai.logs import RawLogStore
+from loop_harness.adapter import AgentRunRequest, OPCAgentAdapter
+from loop_harness.logs import RawLogStore
 from tests.helpers import project_root
 
 
@@ -115,7 +115,7 @@ class V27OPCAgentAdapterTest(unittest.TestCase):
         script.write_text(
             "import json, os, sys\n"
             "request = json.loads(sys.stdin.read())\n"
-            "env_request = json.loads(os.environ['CHECKPOINT_AI_REQUEST_JSON'])\n"
+            "env_request = json.loads(os.environ['LOOP_HARNESS_REQUEST_JSON'])\n"
             "assert request['task'] == env_request['task']\n"
             "topic = request['context'].get('topic', 'unknown')\n"
             "print(json.dumps({\n"
@@ -132,7 +132,7 @@ class V27OPCAgentAdapterTest(unittest.TestCase):
     def _run(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         root = project_root()
         result = subprocess.run(
-            ["./checkpointai", "--db", str(db_path), *args],
+            ["./loopharness", "--db", str(db_path), *args],
             cwd=root,
             capture_output=True,
             text=True,

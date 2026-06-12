@@ -7,16 +7,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.metrics import ComparisonResult
-from checkpoint_ai.recommendation import (
+from loop_harness.metrics import ComparisonResult
+from loop_harness.recommendation import (
     RecommendationDecision,
     RecommendationStatus,
     VersionRecommendation,
     VersionRecommendationStore,
     VersionRecommender,
 )
-from checkpoint_ai.reporting import ReportGenerator
-from checkpoint_ai.shadow import ShadowResult, ShadowResultStore
+from loop_harness.reporting import ReportGenerator
+from loop_harness.shadow import ShadowResult, ShadowResultStore
 from tests.helpers import project_root
 
 
@@ -212,7 +212,7 @@ def _shadow(proposal_id: str, comparison: ComparisonResult) -> ShadowResult:
 def _run_cli(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     root = project_root()
     result = subprocess.run(
-        ["./checkpointai", "--db", str(db_path), *args],
+        ["./loopharness", "--db", str(db_path), *args],
         cwd=root,
         capture_output=True,
         text=True,

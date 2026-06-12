@@ -20,7 +20,7 @@ Hermes = 总结助手
 第一版：
 
 ```text
-checkpointAI/
+Loop Harness/
 └── user/
     ├── USER_PROFILE.md
     └── SUGGESTED_PROFILE_NOTES.md

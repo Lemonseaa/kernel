@@ -13,9 +13,9 @@
 ### Task 1: ConfigVersion And ConfigBranch Models
 
 **Files:**
-- Create: `checkpoint_ai/config_version/__init__.py`
-- Create: `checkpoint_ai/config_version/models.py`
-- Create: `checkpoint_ai/config_version/store.py`
+- Create: `loop_harness/config_version/__init__.py`
+- Create: `loop_harness/config_version/models.py`
+- Create: `loop_harness/config_version/store.py`
 - Test: `tests/test_v76_config_version_branching.py`
 
 - [ ] Write failing tests for saving config versions and branches.
@@ -26,7 +26,7 @@
 ### Task 2: Lock / Branch / Switch / Rollback Service
 
 **Files:**
-- Create: `checkpoint_ai/config_version/service.py`
+- Create: `loop_harness/config_version/service.py`
 - Test: `tests/test_v76_config_version_branching.py`
 
 - [ ] Write failing tests for lock, branch, switch, rollback.
@@ -38,7 +38,7 @@
 ### Task 3: API Endpoints
 
 **Files:**
-- Modify: `checkpoint_ai/api.py`
+- Modify: `loop_harness/api.py`
 - Test: `tests/test_v76_config_version_branching.py`
 
 - [ ] Write failing FastAPI tests for `/api/config/versions`, `/lock`, `/branch`, `/switch`, `/rollback`.
@@ -65,8 +65,8 @@
 **Commands:**
 - `python -m unittest tests/test_v76_config_version_branching.py -v`
 - `python -m unittest discover -s tests -v`
-- `python -m ruff check checkpoint_ai tests scripts examples`
-- `python -m mypy checkpoint_ai --show-error-codes --no-incremental`
+- `python -m ruff check loop_harness tests scripts examples`
+- `python -m mypy loop_harness --show-error-codes --no-incremental`
 - `npm run lint`
 - `npm run format:check`
 - `npm run build`

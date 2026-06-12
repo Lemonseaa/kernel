@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This file records projects CheckpointAI should learn from.
+This file records projects LoopHarness should learn from.
 
 It separates two categories:
 
@@ -11,10 +11,10 @@ strategic references = learn product/architecture ideas, do not copy code
 replacement wheels   = use mature external tools instead of rebuilding plumbing
 ```
 
-This keeps CheckpointAI focused:
+This keeps LoopHarness focused:
 
 ```text
-CheckpointAI = external workflow evidence harness
+LoopHarness = external workflow evidence harness
 ```
 
 It should not become another Dify, Nexent, Archon, Temporal, Prefect, or LiteLLM.
@@ -23,7 +23,7 @@ It should not become another Dify, Nexent, Archon, Temporal, Prefect, or LiteLLM
 
 ## Strategic References
 
-These projects shape how CheckpointAI thinks, but they are not direct code dependencies.
+These projects shape how LoopHarness thinks, but they are not direct code dependencies.
 
 ### Archon
 
@@ -42,25 +42,25 @@ engineering objects.
 When to learn from it:
 
 ```text
-When CheckpointAI needs stronger workflow contract discipline:
+When LoopHarness needs stronger workflow contract discipline:
 - clear run stages
 - deterministic verification steps
 - approval gates
 - reusable workflow skeletons
 ```
 
-How it maps to CheckpointAI:
+How it maps to LoopHarness:
 
 ```text
 Archon executes structured AI workflows.
-CheckpointAI observes external workflows and judges whether changes improved them.
+LoopHarness observes external workflows and judges whether changes improved them.
 ```
 
 Not:
 
 ```text
 Do not clone Archon as an AI coding workflow platform.
-Do not make CheckpointAI a YAML workflow runner just because Archon uses that shape.
+Do not make LoopHarness a YAML workflow runner just because Archon uses that shape.
 ```
 
 ### ARIS
@@ -73,14 +73,14 @@ research loop methodology with adversarial review and audit trail
 
 What:
 
-ARIS is the most important reference for CheckpointAI's evidence direction. It shows that
+ARIS is the most important reference for LoopHarness's evidence direction. It shows that
 long-running AI systems need independent review, persistent artifacts, explicit claims, and
 auditable reasoning instead of vague "self-improvement".
 
 When to learn from it:
 
 ```text
-When CheckpointAI needs stronger evidence review:
+When LoopHarness needs stronger evidence review:
 - baseline/candidate comparison
 - claim checking
 - adversarial review
@@ -88,17 +88,17 @@ When CheckpointAI needs stronger evidence review:
 - confidence boundaries
 ```
 
-How it maps to CheckpointAI:
+How it maps to LoopHarness:
 
 ```text
 ARIS reviews research experiments.
-CheckpointAI reviews external workflow changes.
+LoopHarness reviews external workflow changes.
 ```
 
 Not:
 
 ```text
-Do not turn CheckpointAI into a paper-writing or academic research tool.
+Do not turn LoopHarness into a paper-writing or academic research tool.
 Borrow the audit loop, not the domain.
 ```
 
@@ -118,7 +118,7 @@ whether work becomes reproducible, verifiable, and safe.
 When to learn from it:
 
 ```text
-When deciding what belongs in CheckpointAI and what should remain outside:
+When deciding what belongs in LoopHarness and what should remain outside:
 - instructions
 - state
 - verification
@@ -126,11 +126,11 @@ When deciding what belongs in CheckpointAI and what should remain outside:
 - lifecycle
 ```
 
-How it maps to CheckpointAI:
+How it maps to LoopHarness:
 
 ```text
 It explains the discipline.
-CheckpointAI implements a narrow part of that discipline: evidence for external workflow changes.
+LoopHarness implements a narrow part of that discipline: evidence for external workflow changes.
 ```
 
 Not:
@@ -163,11 +163,11 @@ When designing UI/product experience:
 - personal knowledge boundaries
 ```
 
-How it maps to CheckpointAI:
+How it maps to LoopHarness:
 
 ```text
 Nexent helps users create and run agents.
-CheckpointAI helps users inspect and improve workflows that may come from Nexent-like systems.
+LoopHarness helps users inspect and improve workflows that may come from Nexent-like systems.
 ```
 
 Not:
@@ -181,7 +181,7 @@ Do not build a full agent marketplace.
 
 ## Replacement Wheels
 
-These projects are candidates for replacing old CheckpointAI plumbing.
+These projects are candidates for replacing old LoopHarness plumbing.
 
 Detailed module mapping lives in:
 
@@ -197,11 +197,11 @@ Replaces:
 internal scheduler / interval jobs / cron-like logic
 ```
 
-CheckpointAI rule:
+LoopHarness rule:
 
 ```text
 Use APScheduler or cron when recurring local jobs are needed.
-Do not expand checkpoint_ai/scheduler as a platform.
+Do not expand loop_harness/scheduler as a platform.
 ```
 
 ### Temporal
@@ -212,11 +212,11 @@ Replaces:
 durable workflow execution / retries / HA failover
 ```
 
-CheckpointAI rule:
+LoopHarness rule:
 
 ```text
 Use Temporal only when durable workflow orchestration is truly needed.
-Do not build HA orchestration inside CheckpointAI.
+Do not build HA orchestration inside LoopHarness.
 ```
 
 ### Prefect
@@ -227,11 +227,11 @@ Replaces:
 data/workflow orchestration for Python pipelines
 ```
 
-CheckpointAI rule:
+LoopHarness rule:
 
 ```text
 Reference or integrate with Prefect for pipeline execution.
-CheckpointAI should stay in the evidence and decision layer.
+LoopHarness should stay in the evidence and decision layer.
 ```
 
 ### LiteLLM
@@ -242,7 +242,7 @@ Replaces:
 full LLM provider platform / broad model routing / provider proxy
 ```
 
-CheckpointAI rule:
+LoopHarness rule:
 
 ```text
 Do not build a model console.
@@ -257,7 +257,7 @@ Replaces:
 custom plugin marketplace / generic tool ecosystem
 ```
 
-CheckpointAI rule:
+LoopHarness rule:
 
 ```text
 Use guarded MCP/tool connectors.
@@ -278,7 +278,7 @@ Is this evidence, comparison, visualization, decision, or rollback?
 If yes:
 
 ```text
-Build it in CheckpointAI.
+Build it in LoopHarness.
 ```
 
 If no:

@@ -1,8 +1,8 @@
 # Core Innovation
 
-This folder contains the parts CheckpointAI should own.
+This folder contains the parts LoopHarness should own.
 
-CheckpointAI's core innovation is not another Agent runtime. It is the evidence layer around external workflows:
+LoopHarness's core innovation is not another Agent runtime. It is the evidence layer around external workflows:
 
 ```text
 External workflow run

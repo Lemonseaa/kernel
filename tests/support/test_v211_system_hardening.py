@@ -6,9 +6,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.policy import ScenarioPolicy
-from checkpoint_ai.scenario import Scenario, ScenarioStore
+from loop_harness import LoopHarness
+from loop_harness.policy import ScenarioPolicy
+from loop_harness.scenario import Scenario, ScenarioStore
 
 
 class V211SystemHardeningTest(unittest.TestCase):
@@ -44,11 +44,11 @@ class V211SystemHardeningTest(unittest.TestCase):
         self.assertEqual([item.id for item in quant], ["quant-research"])
         self.assertEqual(len(all_scenarios), 2)
 
-    def test_checkpoint_ai_exposes_distinct_runtime_and_proposal_policy_engines(self) -> None:
-        checkpoint_ai = CheckpointAI()
+    def test_loop_harness_exposes_distinct_runtime_and_proposal_policy_engines(self) -> None:
+        loop_harness = LoopHarness()
 
-        self.assertTrue(hasattr(checkpoint_ai.policy_engine, "evaluate_action"))
-        self.assertIsInstance(checkpoint_ai.scenario_policy, ScenarioPolicy)
+        self.assertTrue(hasattr(loop_harness.policy_engine, "evaluate_action"))
+        self.assertIsInstance(loop_harness.scenario_policy, ScenarioPolicy)
 
 
 if __name__ == "__main__":

@@ -7,19 +7,19 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AdapterRegistry, AgentRunRequest, QuantResearchDemoAdapter
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.loop import AgentLoopEngine, AgentLoopStore, LoopStatus
-from checkpoint_ai.policy import ScenarioPolicy, ScenarioPolicyService
-from checkpoint_ai.prompt import (
+from loop_harness.adapter import AdapterRegistry, AgentRunRequest, QuantResearchDemoAdapter
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.loop import AgentLoopEngine, AgentLoopStore, LoopStatus
+from loop_harness.policy import ScenarioPolicy, ScenarioPolicyService
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStore,
     PromptSlot,
     PromptVersionStore,
 )
-from checkpoint_ai.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
-from checkpoint_ai.shadow import ShadowResultStore, ShadowRunner
+from loop_harness.scenario import Scenario, ScenarioRegistry, ScenarioRunner, ScenarioStore
+from loop_harness.shadow import ShadowResultStore, ShadowRunner
 from tests.helpers import project_root
 
 
@@ -177,7 +177,7 @@ class V29QuantDemoTest(unittest.TestCase):
     def _run(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         root = project_root()
         result = subprocess.run(
-            ["./checkpointai", "--db", str(db_path), *args],
+            ["./loopharness", "--db", str(db_path), *args],
             cwd=root,
             capture_output=True,
             text=True,

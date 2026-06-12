@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai.control import PolicyDecision, PolicyEngine, PolicyRule, PolicyScope
+from loop_harness.control import PolicyDecision, PolicyEngine, PolicyRule, PolicyScope
 
 
 class RuntimePolicyTest(unittest.TestCase):

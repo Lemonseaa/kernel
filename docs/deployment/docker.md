@@ -3,12 +3,12 @@
 ## Build
 
 ```bash
-cd <your-path>/checkpointAI
+cd <your-path>/loop-harness
 docker-compose build
 ```
 
 The image uses `python:3.11-slim`, installs the project in editable mode, and runs
-`scripts/ops/run_checkpointai_service.py`.
+`scripts/ops/run_loopharness_service.py`.
 
 ## Start
 
@@ -41,11 +41,11 @@ Redis is optional in V1.0. It is not required for SQLite-backed local deployment
 ## Run Tests In Container
 
 ```bash
-docker-compose exec checkpointai python -m unittest discover -s tests -v
+docker-compose exec loopharness python -m unittest discover -s tests -v
 ```
 
 If `exec` fails because the container is unhealthy, inspect logs first:
 
 ```bash
-docker-compose logs checkpointai
+docker-compose logs loopharness
 ```

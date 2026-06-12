@@ -1,10 +1,10 @@
 # Architecture Overview
-# checkpointAI Multi-Agent操作系统 - 完整架构
+# Loop Harness Multi-Agent操作系统 - 完整架构
 
 > Status: historical reference.
 >
-> This document captures the V0/V1 architecture when CheckpointAI was still framed as a general Multi-Agent OS.
-> The current direction is defined in [BLUEPRINT.md](BLUEPRINT.md): CheckpointAI is now an evidence harness for external workflows, not a low-code Workflow Builder, Dify clone, Nexent clone, TradingAgents clone, or generic Agent Runtime.
+> This document captures the V0/V1 architecture when LoopHarness was still framed as a general Multi-Agent OS.
+> The current direction is defined in [BLUEPRINT.md](BLUEPRINT.md): LoopHarness is now an evidence harness for external workflows, not a low-code Workflow Builder, Dify clone, Nexent clone, TradingAgents clone, or generic Agent Runtime.
 > Keep this document for reusable ideas such as isolation, provider abstraction, policy, cost, and observability; do not treat it as the current product roadmap.
 
 **版本：V1**
@@ -24,7 +24,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                          checkpointAI (组织层)                              │
+│                          Loop Harness (组织层)                              │
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │
 │  │BusinessLine │  │BusinessLine │  │BusinessLine │  ...        │
@@ -318,7 +318,7 @@ class BaseAgent(ABC):
         pass
 
 # 注册插件
-checkpoint_ai.plugins.register_agent(MyCustomAgent)
+loop_harness.plugins.register_agent(MyCustomAgent)
 ```
 
 ### 4.3 Tool插件
@@ -367,7 +367,7 @@ class CustomProvider(LLMProvider):
         pass
 
 # 注册
-checkpoint_ai.providers.register("custom", CustomProvider(api_key="..."))
+loop_harness.providers.register("custom", CustomProvider(api_key="..."))
 ```
 
 ### 4.5 Evaluation插件
@@ -393,7 +393,7 @@ class SEOEvaluator(BaseEvaluator):
     name = "seo_quality"
 
 # 注册
-checkpoint_ai.evaluation.register(MyCustomEvaluator)
+loop_harness.evaluation.register(MyCustomEvaluator)
 ```
 
 ### 4.6 Policy插件
@@ -607,19 +607,19 @@ TEMPLATES = {
 
 ```python
 # 从模板创建
-bl = checkpoint_ai.create_business_line(
+bl = loop_harness.create_business_line(
     name="客户A的网站",
     template="website"
 )
 
 # 从空白创建
-bl = checkpoint_ai.create_business_line(
+bl = loop_harness.create_business_line(
     name="新业务",
     template="blank"
 )
 
 # 克隆已有业务线
-bl = checkpoint_ai.create_business_line(
+bl = loop_harness.create_business_line(
     name="基于A业务的B业务",
     clone_from=bl_a.id
 )

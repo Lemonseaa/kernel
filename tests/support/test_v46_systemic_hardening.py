@@ -6,9 +6,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import AgentRunRequest, AgentRunResult, DummyAdapter
-from checkpoint_ai.logs import RawLogStore, SummaryLogStore
-from checkpoint_ai.prompt import (
+from loop_harness.adapter import AgentRunRequest, AgentRunResult, DummyAdapter
+from loop_harness.logs import RawLogStore, SummaryLogStore
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptProposalStore,
@@ -19,8 +19,8 @@ from checkpoint_ai.prompt import (
     ProposalStore,
     ProposalTargetType,
 )
-from checkpoint_ai.reporting import ReportGenerator
-from checkpoint_ai.scenario import (
+from loop_harness.reporting import ReportGenerator
+from loop_harness.scenario import (
     Scenario,
     ScenarioRegistry,
     ScenarioRunner,
@@ -128,7 +128,7 @@ class V46SystemicHardeningTest(unittest.TestCase):
 
     @staticmethod
     def _adapters() -> object:
-        from checkpoint_ai.adapter import AdapterRegistry
+        from loop_harness.adapter import AdapterRegistry
 
         adapters = AdapterRegistry()
         adapters.register(DummyAdapter())

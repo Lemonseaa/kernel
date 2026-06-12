@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.prompt import PromptSlot, PromptVersionStore
+from loop_harness.prompt import PromptSlot, PromptVersionStore
 from tests.helpers import project_root
 
 
@@ -223,7 +223,7 @@ class V26CliReportTest(unittest.TestCase):
     def _run(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
         root = project_root()
         result = subprocess.run(
-            ["./checkpointai", "--db", str(db_path), *args],
+            ["./loopharness", "--db", str(db_path), *args],
             cwd=root,
             capture_output=True,
             text=True,

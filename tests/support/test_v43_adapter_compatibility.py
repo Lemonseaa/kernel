@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.adapter import (
+from loop_harness.adapter import (
     AdapterCompatibilityDecision,
     AdapterCompatibilityEvaluator,
     AdapterCompatibilityInput,
@@ -122,7 +122,7 @@ class V43AdapterCompatibilityTest(unittest.TestCase):
 def _run_cli(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     root = project_root()
     result = subprocess.run(
-        ["./checkpointai", "--db", str(db_path), *args],
+        ["./loopharness", "--db", str(db_path), *args],
         cwd=root,
         capture_output=True,
         text=True,

@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.evidence import EvidenceService, EvidenceStore
+from loop_harness.evidence import EvidenceService, EvidenceStore
 
 
 class EvidenceQualityTest(unittest.TestCase):

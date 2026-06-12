@@ -6,8 +6,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai import EvidenceHarness
-from checkpoint_ai.evidence.models import DecisionRecommendation
+from loop_harness import EvidenceHarness
+from loop_harness.evidence.models import DecisionRecommendation
 
 
 def _payload(run_id: str, sharpe: float) -> dict[str, object]:

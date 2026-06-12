@@ -13,9 +13,9 @@
 ### Task 1: AgentConfig Model And Store
 
 **Files:**
-- Create: `checkpoint_ai/agent_config/__init__.py`
-- Create: `checkpoint_ai/agent_config/models.py`
-- Create: `checkpoint_ai/agent_config/store.py`
+- Create: `loop_harness/agent_config/__init__.py`
+- Create: `loop_harness/agent_config/models.py`
+- Create: `loop_harness/agent_config/store.py`
 - Test: `tests/test_v77_agent_config_external_adapters.py`
 
 - [ ] Write failing tests for saving and listing configs by business line, role, and config version.
@@ -26,9 +26,9 @@
 ### Task 2: ExternalAgentConnection Model
 
 **Files:**
-- Create: `checkpoint_ai/external_agents/__init__.py`
-- Create: `checkpoint_ai/external_agents/models.py`
-- Create: `checkpoint_ai/external_agents/store.py`
+- Create: `loop_harness/external_agents/__init__.py`
+- Create: `loop_harness/external_agents/models.py`
+- Create: `loop_harness/external_agents/store.py`
 - Test: `tests/test_v77_agent_config_external_adapters.py`
 
 - [ ] Write failing tests for registering multiple external systems under one business line.
@@ -40,7 +40,7 @@
 ### Task 3: External Adapter Contract
 
 **Files:**
-- Create: `checkpoint_ai/external_agents/adapter.py`
+- Create: `loop_harness/external_agents/adapter.py`
 - Test: `tests/test_v77_agent_config_external_adapters.py`
 
 - [ ] Write failing tests for adapter method contracts: run_task, run_shadow, get_metrics, get_trace.
@@ -51,7 +51,7 @@
 ### Task 4: API And UI Configuration Surface
 
 **Files:**
-- Modify: `checkpoint_ai/api.py`
+- Modify: `loop_harness/api.py`
 - Modify: `web/src/types/api.ts`
 - Modify: `web/src/api/client.ts`
 - Create: `web/src/features/agents/AgentConfigPage.tsx`
@@ -69,9 +69,9 @@
 **Files:**
 - Create: `user/USER_PROFILE.md`
 - Create: `user/SUGGESTED_PROFILE_NOTES.md`
-- Create: `checkpoint_ai/user_profile/__init__.py`
-- Create: `checkpoint_ai/user_profile/models.py`
-- Create: `checkpoint_ai/user_profile/store.py`
+- Create: `loop_harness/user_profile/__init__.py`
+- Create: `loop_harness/user_profile/models.py`
+- Create: `loop_harness/user_profile/store.py`
 - Test: `tests/test_v77_user_profile.py`
 
 - [ ] Write failing tests proving `USER_PROFILE.md` can be read and versioned.
@@ -84,7 +84,7 @@
 ### Task 6: User Profile UI
 
 **Files:**
-- Modify: `checkpoint_ai/api.py`
+- Modify: `loop_harness/api.py`
 - Modify: `web/src/types/api.ts`
 - Modify: `web/src/api/client.ts`
 - Create: `web/src/features/settings/UserProfilePage.tsx`
@@ -102,8 +102,8 @@
 ### Task 7: Agent Context Injection
 
 **Files:**
-- Modify: `checkpoint_ai/agent_config/models.py`
-- Create: `checkpoint_ai/agent_config/context.py`
+- Modify: `loop_harness/agent_config/models.py`
+- Create: `loop_harness/agent_config/context.py`
 - Test: `tests/test_v77_user_profile.py`
 
 - [ ] Write failing tests proving Agent context includes `USER_PROFILE.md`.
@@ -117,8 +117,8 @@
 - `python -m unittest tests/test_v77_agent_config_external_adapters.py -v`
 - `python -m unittest tests/test_v77_user_profile.py -v`
 - `python -m unittest discover -s tests -v`
-- `python -m ruff check checkpoint_ai tests scripts examples`
-- `python -m mypy checkpoint_ai --show-error-codes --no-incremental`
+- `python -m ruff check loop_harness tests scripts examples`
+- `python -m mypy loop_harness --show-error-codes --no-incremental`
 - `npm run lint`
 - `npm run format:check`
 - `npm run build`

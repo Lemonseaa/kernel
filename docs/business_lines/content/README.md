@@ -14,5 +14,5 @@ It should not be implemented before the quant line proves the evidence loop on r
 
 ## Boundary
 
-CheckpointAI should judge whether content workflow changes improved outcomes. It should not become a full publishing platform.
+LoopHarness should judge whether content workflow changes improved outcomes. It should not become a full publishing platform.
 

@@ -1,13 +1,13 @@
-# CheckpointAI Strategic Reset Plan
+# LoopHarness Strategic Reset Plan
 
 ## Why Reset
 
-CheckpointAI 过去 V1-V7 证明了很多能力，也暴露了一个问题：继续做通用 Agent 平台、Workflow Engine、插件生态、模型操作台，会和成熟项目重复。
+LoopHarness 过去 V1-V7 证明了很多能力，也暴露了一个问题：继续做通用 Agent 平台、Workflow Engine、插件生态、模型操作台，会和成熟项目重复。
 
 新的方向不是推倒重来，而是收缩：
 
 ```text
-CheckpointAI = External Workflow Evidence Harness
+LoopHarness = External Workflow Evidence Harness
 ```
 
 也就是给外部工作流加一层证据、可视化诊断、验证、审批和回滚能力。
@@ -16,7 +16,7 @@ CheckpointAI = External Workflow Evidence Harness
 
 ## New Positioning
 
-CheckpointAI 不再定位为：
+LoopHarness 不再定位为：
 
 ```text
 Multi-Agent OS
@@ -27,7 +27,7 @@ Plugin Marketplace
 TradingAgents / Dify / Nexent 替代品
 ```
 
-CheckpointAI 只做：
+LoopHarness 只做：
 
 ```text
 External Workflow
@@ -132,7 +132,7 @@ adapter 仍被 demo、shadow、V2-V7 测试使用：不冻结删除，标记为 
 
 ## What We Keep
 
-这些是 CheckpointAI 的核心，不是重复造轮子：
+这些是 LoopHarness 的核心，不是重复造轮子：
 
 | Module | Why Keep |
 |---|---|
@@ -226,7 +226,7 @@ Decision Recommendation
 Current implementation:
 
 ```bash
-checkpointai evidence quant-drill --candidates 30 --comparisons 5
+loopharness evidence quant-drill --candidates 30 --comparisons 5
 ```
 
 This command is deterministic and local. It creates:
@@ -292,7 +292,7 @@ data_quality
 
 ## Phase R3: Evidence Review
 
-目标：借鉴 ARIS 的对抗审思路，把 CheckpointAI 从“记录系统”升级为“可信判断系统”。
+目标：借鉴 ARIS 的对抗审思路，把 LoopHarness 从“记录系统”升级为“可信判断系统”。
 
 新增审查层：
 
@@ -360,7 +360,7 @@ Workflow generation assistant
 
 不要一开始大删代码，也不要继续维护重复轮子。
 
-CheckpointAI adopts replacement cleanup:
+LoopHarness adopts replacement cleanup:
 
 ```text
 1. classify old modules
@@ -442,10 +442,10 @@ Implement External Workflow Evidence Adapter + Workflow Visualization data model
 第一轮交付：
 
 ```text
-checkpointai evidence ingest sample_quant_run.json
-checkpointai evidence visualize --run run_a
-checkpointai evidence compare --baseline run_a --candidate run_b
-checkpointai evidence report --run run_b
+loopharness evidence ingest sample_quant_run.json
+loopharness evidence visualize --run run_a
+loopharness evidence compare --baseline run_a --candidate run_b
+loopharness evidence report --run run_b
 ```
 
 如果这个闭环不能让人判断“改动有没有变好”，就先修 Evidence path，不继续扩展其他功能。

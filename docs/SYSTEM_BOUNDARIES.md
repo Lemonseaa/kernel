@@ -4,12 +4,12 @@ This document records the boundaries that matter after V2.10. It exists to preve
 
 ## Policy Layers
 
-CheckpointAI has two policy layers. They are intentionally separate.
+LoopHarness has two policy layers. They are intentionally separate.
 
 | Layer | Module | Scope | Used By |
 |---|---|---|---|
-| Runtime action policy | `checkpoint_ai/control/` | Tool/action risk, human approval, cost events, workflow execution | `CheckpointAI`, `WorkflowEngine`, `HumanApprovalGate` |
-| Proposal policy | `checkpoint_ai/policy/` | Prompt/strategy/deployment proposals before shadow execution | V2 `AgentLoopEngine`, V3 evidence-based recommendation |
+| Runtime action policy | `loop_harness/control/` | Tool/action risk, human approval, cost events, workflow execution | `LoopHarness`, `WorkflowEngine`, `HumanApprovalGate` |
+| Proposal policy | `loop_harness/policy/` | Prompt/strategy/deployment proposals before shadow execution | V2 `AgentLoopEngine`, V3 evidence-based recommendation |
 
 `control.PolicyEngine` is keyword/action based. It answers: "Can this runtime action proceed, or does it need human approval?"
 

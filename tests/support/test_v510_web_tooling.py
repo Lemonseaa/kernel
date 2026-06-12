@@ -11,12 +11,12 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.api import create_app
-from checkpoint_ai.cli import main
-from checkpoint_ai.console import ApprovalInbox, BackupManager, ConsoleReadModel
-from checkpoint_ai.logs import SummaryLogStore
-from checkpoint_ai.scenario import ScenarioStore
+from loop_harness import LoopHarness
+from loop_harness.api import create_app
+from loop_harness.cli import main
+from loop_harness.console import ApprovalInbox, BackupManager, ConsoleReadModel
+from loop_harness.logs import SummaryLogStore
+from loop_harness.scenario import ScenarioStore
 
 
 class V510WebToolingTest(unittest.TestCase):
@@ -28,11 +28,11 @@ class V510WebToolingTest(unittest.TestCase):
         def fake_run(app: str, **kwargs: object) -> None:
             calls.append({"app": app, **kwargs})
 
-        with patch("checkpoint_ai.api._uvicorn_server.run", fake_run):
+        with patch("loop_harness.api._uvicorn_server.run", fake_run):
             status = main(["api", "serve", "--host", "127.0.0.1", "--port", "8123", "--reload"])
 
         self.assertEqual(status, 0)
-        self.assertEqual(calls[0]["app"], "checkpoint_ai.api:create_app")
+        self.assertEqual(calls[0]["app"], "loop_harness.api:create_app")
         self.assertEqual(calls[0]["host"], "127.0.0.1")
         self.assertEqual(calls[0]["port"], 8123)
         self.assertTrue(calls[0]["reload"])
@@ -71,8 +71,8 @@ class V510WebToolingTest(unittest.TestCase):
     def test_api_app_accepts_initial_tokens_from_environment(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "console.db"
-            with patch.dict("os.environ", {"CHECKPOINTAI_API_TOKENS": "dev-token, second-token"}):
-                app = create_app(checkpoint_ai=CheckpointAI(sqlite_path=db_path), db_path=db_path)
+            with patch.dict("os.environ", {"LOOPHARNESS_API_TOKENS": "dev-token, second-token"}):
+                app = create_app(loop_harness=LoopHarness(sqlite_path=db_path), db_path=db_path)
             client = TestClient(app)
 
             response = client.get(

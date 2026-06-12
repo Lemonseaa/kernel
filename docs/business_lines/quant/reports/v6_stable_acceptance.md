@@ -2,7 +2,7 @@
 
 ## Scope
 
-V6 stable means CheckpointAI has a visible, auditable, low-risk autonomy control layer.
+V6 stable means LoopHarness has a visible, auditable, low-risk autonomy control layer.
 
 It does not mean full autonomous trading, publishing, or production deployment.
 
@@ -19,11 +19,11 @@ It does not mean full autonomous trading, publishing, or production deployment.
 ## Verification Commands
 
 ```bash
-cd /Users/lemonsea/Desktop/mas/checkpointAI
+cd /Users/lemonsea/Desktop/mas/loop-harness
 python -m unittest discover -s tests -v
-python -m ruff check checkpoint_ai tests scripts examples
-python -m mypy checkpoint_ai --show-error-codes --no-incremental
-python -m compileall checkpoint_ai
+python -m ruff check loop_harness tests scripts examples
+python -m mypy loop_harness --show-error-codes --no-incremental
+python -m compileall loop_harness
 cd web
 npm run lint
 npm run format:check

@@ -1,13 +1,13 @@
-# Contributing to CheckpointAI
+# Contributing to Loop Harness
 
-Thank you for your interest in contributing to CheckpointAI!
+Thank you for your interest in contributing to Loop Harness!
 
 ## Development Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/Lemonseaa/checkpoint_ai.git
-cd checkpoint_ai
+git clone https://github.com/Lemonseaa/loop_harness.git
+cd loop_harness
 
 # Install in development mode
 pip install -e ".[all]"
@@ -16,10 +16,10 @@ pip install -e ".[all]"
 python -m unittest discover -s tests -v
 
 # Lint
-ruff check checkpoint_ai/
+ruff check loop_harness/
 
 # Type check
-mypy checkpoint_ai/
+mypy loop_harness/
 ```
 
 ## Code Style
@@ -27,7 +27,7 @@ mypy checkpoint_ai/
 - Follow PEP 8
 - Line length: 100 characters
 - Use type hints where possible
-- Run `ruff check checkpoint_ai/` before committing
+- Run `ruff check loop_harness/` before committing
 
 ## Testing
 

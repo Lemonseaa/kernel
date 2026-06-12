@@ -1,4 +1,4 @@
-"""Run a lightweight checkpointAI performance benchmark."""
+"""Run a lightweight Loop Harness performance benchmark."""
 
 from __future__ import annotations
 
@@ -14,17 +14,17 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from checkpoint_ai import CheckpointAI  # noqa: E402
-from checkpoint_ai.models import TaskSpec  # noqa: E402
+from loop_harness import LoopHarness  # noqa: E402
+from loop_harness.models import TaskSpec  # noqa: E402
 
 
 async def _run_once() -> float:
     """Run one small workflow and return duration."""
 
     with TemporaryDirectory() as tmp:
-        checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+        loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
         started_at = time.perf_counter()
-        run = await checkpoint_ai.run("benchmark", [TaskSpec(description="ping")])
+        run = await loop_harness.run("benchmark", [TaskSpec(description="ping")])
         duration = time.perf_counter() - started_at
     if run.state.value != "succeeded":
         raise RuntimeError(f"benchmark run failed: {run.state.value}")

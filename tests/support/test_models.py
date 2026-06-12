@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from checkpoint_ai.models import Agent, AgentState, Artifact, Run, RunState, Task, TaskState
+from loop_harness.models import Agent, AgentState, Artifact, Run, RunState, Task, TaskState
 
 
 class ModelTest(unittest.TestCase):

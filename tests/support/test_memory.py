@@ -7,11 +7,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.memory import ContextManager, PersistentMemory, WorkingMemory
-from checkpoint_ai.models import Task, TaskSpec
-from checkpoint_ai.persistence import SQLiteStore
-from checkpoint_ai.runtime import LLMAgent
+from loop_harness import LoopHarness
+from loop_harness.memory import ContextManager, PersistentMemory, WorkingMemory
+from loop_harness.models import Task, TaskSpec
+from loop_harness.persistence import SQLiteStore
+from loop_harness.runtime import LLMAgent
 
 
 class MemoryContextTest(unittest.TestCase):
@@ -32,7 +32,7 @@ class MemoryContextTest(unittest.TestCase):
 
     def test_persistent_memory_survives_store_reopen(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             memory = PersistentMemory(SQLiteStore(db_path))
 
             memory.add("run-1", "task-1", {"output": "saved"})
@@ -44,7 +44,7 @@ class MemoryContextTest(unittest.TestCase):
 
     def test_context_manager_merges_working_and_persistent_memory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            store = SQLiteStore(Path(tmp) / "checkpoint_ai.db")
+            store = SQLiteStore(Path(tmp) / "loop_harness.db")
             manager = ContextManager(WorkingMemory(), PersistentMemory(store))
 
             manager.add("run-1", "task-1", {"output": "shared"})
@@ -55,7 +55,7 @@ class MemoryContextTest(unittest.TestCase):
 
     def test_business_line_context_survives_runs_and_stays_isolated(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             manager = ContextManager(WorkingMemory(), PersistentMemory(SQLiteStore(db_path)))
 
             manager.add_shared(
@@ -89,11 +89,11 @@ class MemoryContextTest(unittest.TestCase):
 
     def test_llm_agent_includes_memory_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            checkpoint_ai.memory.add("run-1", "task-1", {"output": "previous result"})
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            loop_harness.memory.add("run-1", "task-1", {"output": "previous result"})
             agent = LLMAgent(
-                provider=checkpoint_ai.llm_provider,
-                memory=checkpoint_ai.memory,
+                provider=loop_harness.llm_provider,
+                memory=loop_harness.memory,
                 transport=lambda request: request.prompt,
             )
             task = Task(name="next", agent_capability="llm.generate", input="continue")
@@ -106,8 +106,8 @@ class MemoryContextTest(unittest.TestCase):
 
     def test_llm_agent_includes_business_line_feedback_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
-            checkpoint_ai.memory.add_shared(
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
+            loop_harness.memory.add_shared(
                 business_line_id="bl-a",
                 run_id="old-run",
                 task_id="old-task",
@@ -115,8 +115,8 @@ class MemoryContextTest(unittest.TestCase):
                 kind="evaluation_feedback",
             )
             agent = LLMAgent(
-                provider=checkpoint_ai.llm_provider,
-                memory=checkpoint_ai.memory,
+                provider=loop_harness.llm_provider,
+                memory=loop_harness.memory,
                 transport=lambda request: request.prompt,
             )
             task = Task(
@@ -132,18 +132,18 @@ class MemoryContextTest(unittest.TestCase):
             self.assertIn("避免标题过短", artifact.content["output"])
             self.assertIn("rewrite", artifact.content["output"])
 
-    def test_checkpoint_ai_run_records_task_results_in_context(self) -> None:
+    def test_loop_harness_run_records_task_results_in_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db")
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db")
 
-            async def run_checkpoint_ai() -> object:
-                return await checkpoint_ai.run(
+            async def run_loop_harness() -> object:
+                return await loop_harness.run(
                     "context workflow",
                     [TaskSpec(description="first"), TaskSpec(description="second")],
                 )
 
-            run = asyncio.run(run_checkpoint_ai())
-            context = checkpoint_ai.memory.get_context(run.id)
+            run = asyncio.run(run_loop_harness())
+            context = loop_harness.memory.get_context(run.id)
 
             self.assertEqual(len(context), 2)
             self.assertEqual(context[0]["content"], "first")

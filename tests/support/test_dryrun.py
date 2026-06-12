@@ -9,13 +9,13 @@ import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from checkpoint_ai import CheckpointAI
-from checkpoint_ai.cli import main
-from checkpoint_ai.config import CheckpointAIConfig
-from checkpoint_ai.dryrun import DryRunProvider, DryRunValidator
-from checkpoint_ai.llm import LLMRequest
-from checkpoint_ai.models import TaskSpec
-from checkpoint_ai.tools import FileWriteTool, ToolPermission, ToolRegistry
+from loop_harness import LoopHarness
+from loop_harness.cli import main
+from loop_harness.config import LoopHarnessConfig
+from loop_harness.dryrun import DryRunProvider, DryRunValidator
+from loop_harness.llm import LLMRequest
+from loop_harness.models import TaskSpec
+from loop_harness.tools import FileWriteTool, ToolPermission, ToolRegistry
 
 
 class DryRunTest(unittest.TestCase):
@@ -40,14 +40,14 @@ class DryRunTest(unittest.TestCase):
         self.assertEqual(result["tool"], "dangerous")
         self.assertEqual(result["arguments"]["path"], "real.txt")
 
-    def test_checkpoint_ai_dryrun_does_not_execute_file_write_tool(self) -> None:
+    def test_loop_harness_dryrun_does_not_execute_file_write_tool(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             output_path = Path(tmp) / "out.txt"
-            checkpoint_ai = CheckpointAI(sqlite_path=Path(tmp) / "checkpoint_ai.db", config=CheckpointAIConfig(dry_run=True))
-            checkpoint_ai.tool_registry.register(FileWriteTool(root_dir=tmp))
+            loop_harness = LoopHarness(sqlite_path=Path(tmp) / "loop_harness.db", config=LoopHarnessConfig(dry_run=True))
+            loop_harness.tool_registry.register(FileWriteTool(root_dir=tmp))
 
-            async def run_checkpoint_ai() -> object:
-                return await checkpoint_ai.run(
+            async def run_loop_harness() -> object:
+                return await loop_harness.run(
                     "dryrun file write",
                     [
                         TaskSpec(
@@ -58,21 +58,21 @@ class DryRunTest(unittest.TestCase):
                     ],
                 )
 
-            run = asyncio.run(run_checkpoint_ai())
+            run = asyncio.run(run_loop_harness())
 
             self.assertEqual(run.state.value, "succeeded")
             self.assertFalse(output_path.exists())
             self.assertTrue(run.tasks[0].result["dry_run"])
 
     def test_dryrun_context_temporarily_enables_simulation(self) -> None:
-        checkpoint_ai = CheckpointAI()
+        loop_harness = LoopHarness()
 
-        self.assertFalse(checkpoint_ai.dry_run_enabled)
-        with checkpoint_ai.dry_run():
-            self.assertTrue(checkpoint_ai.dry_run_enabled)
-            self.assertTrue(checkpoint_ai.tool_registry.dry_run)
-        self.assertFalse(checkpoint_ai.dry_run_enabled)
-        self.assertFalse(checkpoint_ai.tool_registry.dry_run)
+        self.assertFalse(loop_harness.dry_run_enabled)
+        with loop_harness.dry_run():
+            self.assertTrue(loop_harness.dry_run_enabled)
+            self.assertTrue(loop_harness.tool_registry.dry_run)
+        self.assertFalse(loop_harness.dry_run_enabled)
+        self.assertFalse(loop_harness.tool_registry.dry_run)
 
     def test_cli_dryrun_command_prints_preview(self) -> None:
         stdout = io.StringIO()

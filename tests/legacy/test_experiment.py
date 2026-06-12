@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.experiment import (
+from loop_harness.experiment import (
     ActionRisk,
     BaselineManager,
     Experiment,
@@ -28,7 +28,7 @@ class ExperimentLedgerTest(unittest.TestCase):
         """The ledger records experiment lifecycle and answers the seven questions."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             ledger = ExperimentLedger(db_path)
             baseline = Experiment(
                 business_line_id="content",
@@ -69,14 +69,14 @@ class ExperimentLedgerTest(unittest.TestCase):
         self.assertIn("有没有变好？", summary)
         self.assertIn(challenger_id, summary)
 
-    def test_checkpointai_experiment_cli_run_demo_list_show_and_compare(self) -> None:
+    def test_loopharness_experiment_cli_run_demo_list_show_and_compare(self) -> None:
         """The CLI exposes demo, list, show, and compare commands."""
 
         root = project_root()
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             demo = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "run-demo"],
+                ["./loopharness", "--db", str(db_path), "experiment", "run-demo"],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -93,21 +93,21 @@ class ExperimentLedgerTest(unittest.TestCase):
             self.assertEqual(len(ids), 2)
 
             list_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "list"],
+                ["./loopharness", "--db", str(db_path), "experiment", "list"],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             show_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "show", ids[1]],
+                ["./loopharness", "--db", str(db_path), "experiment", "show", ids[1]],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             compare_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "compare", ids[0], ids[1]],
+                ["./loopharness", "--db", str(db_path), "experiment", "compare", ids[0], ids[1]],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -125,7 +125,7 @@ class ExperimentLedgerTest(unittest.TestCase):
         """BaselineManager creates, lists, and activates baselines."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             manager = BaselineManager(db_path)
 
             first_id = manager.create({"latency": 100.0}, name="content-v1", business_line_id="content")
@@ -148,7 +148,7 @@ class ExperimentLedgerTest(unittest.TestCase):
         """SimpleComparer compares metrics and marks a stronger experiment as winner."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             manager = BaselineManager(db_path)
             manager.create(
                 {"latency": 100.0, "success_rate": 0.95},
@@ -180,7 +180,7 @@ class ExperimentLedgerTest(unittest.TestCase):
         """ExperimentLedger can turn an experiment result into the active baseline."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             ledger = ExperimentLedger(db_path)
             experiment = Experiment(
                 business_line_id="content",
@@ -201,15 +201,15 @@ class ExperimentLedgerTest(unittest.TestCase):
         self.assertEqual(active.experiment_id, experiment_id)
         self.assertEqual(active.metrics["engagement"], 13.0)
 
-    def test_checkpointai_baseline_cli_create_compare_and_promote(self) -> None:
+    def test_loopharness_baseline_cli_create_compare_and_promote(self) -> None:
         """CLI exposes baseline management and experiment baseline comparison."""
 
         root = project_root()
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             create_result = subprocess.run(
                 [
-                    "./checkpointai",
+                    "./loopharness",
                     "--db",
                     str(db_path),
                     "baseline",
@@ -227,7 +227,7 @@ class ExperimentLedgerTest(unittest.TestCase):
                 check=False,
             )
             demo = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "run-demo"],
+                ["./loopharness", "--db", str(db_path), "experiment", "run-demo"],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -240,21 +240,21 @@ class ExperimentLedgerTest(unittest.TestCase):
             ]
             experiment_id = ids[1]
             compare_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "compare-baseline", experiment_id],
+                ["./loopharness", "--db", str(db_path), "experiment", "compare-baseline", experiment_id],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             promote_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "promote", experiment_id],
+                ["./loopharness", "--db", str(db_path), "experiment", "promote", experiment_id],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             list_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "baseline", "list"],
+                ["./loopharness", "--db", str(db_path), "baseline", "list"],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -308,7 +308,7 @@ class ExperimentLedgerTest(unittest.TestCase):
         """ExperimentLedger can score risk from experiment metadata."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             ledger = ExperimentLedger(db_path)
             experiment = Experiment(
                 business_line_id="ops",
@@ -334,15 +334,15 @@ class ExperimentLedgerTest(unittest.TestCase):
         self.assertAlmostEqual(risk.total, 0.65)
         self.assertTrue(risk.requires_human_review)
 
-    def test_checkpointai_risk_cli_scores_actions_and_experiments(self) -> None:
+    def test_loopharness_risk_cli_scores_actions_and_experiments(self) -> None:
         """CLI exposes action and experiment risk scoring."""
 
         root = project_root()
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             low_result = subprocess.run(
                 [
-                    "./checkpointai",
+                    "./loopharness",
                     "--db",
                     str(db_path),
                     "risk",
@@ -365,7 +365,7 @@ class ExperimentLedgerTest(unittest.TestCase):
             )
             high_result = subprocess.run(
                 [
-                    "./checkpointai",
+                    "./loopharness",
                     "--db",
                     str(db_path),
                     "risk",
@@ -387,7 +387,7 @@ class ExperimentLedgerTest(unittest.TestCase):
                 check=False,
             )
             demo = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "run-demo"],
+                ["./loopharness", "--db", str(db_path), "experiment", "run-demo"],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -399,7 +399,7 @@ class ExperimentLedgerTest(unittest.TestCase):
                 if line.startswith("Experiment ID:")
             ]
             experiment_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "experiment", "risk", ids[1]],
+                ["./loopharness", "--db", str(db_path), "experiment", "risk", ids[1]],
                 cwd=root,
                 capture_output=True,
                 text=True,
@@ -420,7 +420,7 @@ class ExperimentLedgerTest(unittest.TestCase):
         """LoopEngine runs an explainable tick and stores it in SQLite."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             engine = LoopEngine.default(db_path)
 
             tick = engine.tick(reason="manual test tick", business_line_id="content")
@@ -443,7 +443,7 @@ class ExperimentLedgerTest(unittest.TestCase):
         """LoopEngine supports lifecycle controls and event-triggered ticks."""
 
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             engine = LoopEngine.default(db_path)
             completed: list[str] = []
             errors: list[str] = []
@@ -467,42 +467,42 @@ class ExperimentLedgerTest(unittest.TestCase):
         self.assertEqual(len(completed), 2)
         self.assertEqual(errors, [])
 
-    def test_checkpointai_loop_cli_controls_and_reports_ticks(self) -> None:
+    def test_loopharness_loop_cli_controls_and_reports_ticks(self) -> None:
         """CLI exposes loop lifecycle and tick inspection commands."""
 
         root = project_root()
         with tempfile.TemporaryDirectory() as tmp:
-            db_path = Path(tmp) / "checkpoint_ai.db"
+            db_path = Path(tmp) / "loop_harness.db"
             start_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "loop", "start"],
+                ["./loopharness", "--db", str(db_path), "loop", "start"],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             status_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "loop", "status"],
+                ["./loopharness", "--db", str(db_path), "loop", "status"],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             history_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "loop", "history", "--limit", "5"],
+                ["./loopharness", "--db", str(db_path), "loop", "history", "--limit", "5"],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             last_tick_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "loop", "last-tick"],
+                ["./loopharness", "--db", str(db_path), "loop", "last-tick"],
                 cwd=root,
                 capture_output=True,
                 text=True,
                 check=False,
             )
             stop_result = subprocess.run(
-                ["./checkpointai", "--db", str(db_path), "loop", "stop"],
+                ["./loopharness", "--db", str(db_path), "loop", "stop"],
                 cwd=root,
                 capture_output=True,
                 text=True,

@@ -1,6 +1,6 @@
 # Borrowed Wheels
 
-This folder records what CheckpointAI should reuse, learn from, or avoid rebuilding.
+This folder records what LoopHarness should reuse, learn from, or avoid rebuilding.
 
 The rule is strict:
 

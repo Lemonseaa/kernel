@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.optimization import (
+from loop_harness.optimization import (
     OptimizationDirection,
     ParameterBounds,
     ParameterObservation,
@@ -146,7 +146,7 @@ class V34BayesianOptimizationTest(unittest.TestCase):
 def _run_cli(db_path: Path, *args: str) -> subprocess.CompletedProcess[str]:
     root = project_root()
     result = subprocess.run(
-        ["./checkpointai", "--db", str(db_path), *args],
+        ["./loopharness", "--db", str(db_path), *args],
         cwd=root,
         capture_output=True,
         text=True,

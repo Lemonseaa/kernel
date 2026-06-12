@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add the first observer hive so CheckpointAI can automatically detect opportunities and anomalies from existing data.
+**Goal:** Add the first observer hive so LoopHarness can automatically detect opportunities and anomalies from existing data.
 
 **Architecture:** Implement narrow observer classes that read existing stores and write `Observation` records. Aggregation is deterministic code: dedupe, rank, filter noise, and emit top observations.
 
@@ -13,7 +13,7 @@
 ### Task 1: Observer Base Contract
 
 **Files:**
-- Create: `checkpoint_ai/learning/observers.py`
+- Create: `loop_harness/learning/observers.py`
 - Test: `tests/test_v72_observer_hive.py`
 
 - [ ] Write failing tests for `Observer` protocol and deterministic `ObserverResult`.
@@ -24,7 +24,7 @@
 ### Task 2: MetricObserver
 
 **Files:**
-- Modify: `checkpoint_ai/learning/observers.py`
+- Modify: `loop_harness/learning/observers.py`
 - Test: `tests/test_v72_observer_hive.py`
 
 - [ ] Write failing test where repeated failed or declining metric runs create one high-severity observation.
@@ -35,7 +35,7 @@
 ### Task 3: DecisionObserver
 
 **Files:**
-- Modify: `checkpoint_ai/learning/observers.py`
+- Modify: `loop_harness/learning/observers.py`
 - Test: `tests/test_v72_observer_hive.py`
 
 - [ ] Write failing test where repeated operator rejects create an observation about policy/prompt mismatch.
@@ -46,7 +46,7 @@
 ### Task 4: ObservationAggregator
 
 **Files:**
-- Create: `checkpoint_ai/learning/aggregation.py`
+- Create: `loop_harness/learning/aggregation.py`
 - Test: `tests/test_v72_observer_hive.py`
 
 - [ ] Write failing tests for dedupe, severity ordering, and top-N filtering.
@@ -59,8 +59,8 @@
 **Commands:**
 - `python -m unittest tests/test_v72_observer_hive.py -v`
 - `python -m unittest discover -s tests -v`
-- `python -m ruff check checkpoint_ai tests scripts examples`
-- `python -m mypy checkpoint_ai --show-error-codes --no-incremental`
+- `python -m ruff check loop_harness tests scripts examples`
+- `python -m mypy loop_harness --show-error-codes --no-incremental`
 
 - [ ] Run all commands.
 - [ ] Fix failures before moving to V7.3.

@@ -8,8 +8,8 @@ from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
 
-from checkpoint_ai.evidence import EvidenceService, EvidenceStore
-from checkpoint_ai.evidence.quant_drill import QuantDrillRunner
+from loop_harness.evidence import EvidenceService, EvidenceStore
+from loop_harness.evidence.quant_drill import QuantDrillRunner
 
 
 class R2QuantDrillTest(unittest.TestCase):
@@ -37,7 +37,7 @@ class R2QuantDrillTest(unittest.TestCase):
 
     def test_quant_drill_cli_outputs_human_relevant_summary(self) -> None:
         """CLI users should see whether the evidence is enough for paper trading."""
-        from checkpoint_ai.cli import main
+        from loop_harness.cli import main
 
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "evidence.db"

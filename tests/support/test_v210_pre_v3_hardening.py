@@ -6,14 +6,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from checkpoint_ai.metrics import (
+from loop_harness.metrics import (
     MetricCategory,
     MetricDirection,
     MetricSchema,
     MetricSchemaRegistry,
 )
-from checkpoint_ai.policy import PolicyLevel, ScenarioPolicy
-from checkpoint_ai.prompt import (
+from loop_harness.policy import PolicyLevel, ScenarioPolicy
+from loop_harness.prompt import (
     PromptPatch,
     PromptProposal,
     PromptSlot,
@@ -24,7 +24,7 @@ from checkpoint_ai.prompt import (
     ProposalStore,
     ProposalTargetType,
 )
-from checkpoint_ai.shadow import MetricComparator, RunKind
+from loop_harness.shadow import MetricComparator, RunKind
 
 
 class V210PreV3HardeningTest(unittest.TestCase):

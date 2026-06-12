@@ -4,7 +4,7 @@
 > Status: historical research notes.
 >
 > This document is a source of reusable ideas, not the current roadmap. The current source of truth is [BLUEPRINT.md](BLUEPRINT.md).
-> Use these notes only when they support CheckpointAI's current scope: experiment ledger, evidence gate, shadow/replay, patch/versioning, context control, and approval workflow.
+> Use these notes only when they support LoopHarness's current scope: experiment ledger, evidence gate, shadow/replay, patch/versioning, context control, and approval workflow.
 
 **原则：创新来自实际需求，不能盲目借鉴**
 
@@ -68,7 +68,7 @@
 - 有：同一类型业务应该有可复用的工作流
 
 **OPC如何迁移：**
-- CheckpointAI应该能保存"工作流模板"
+- LoopHarness应该能保存"工作流模板"
 - 新任务可以基于模板创建
 
 **结论：** 适用，模板系统
@@ -166,13 +166,13 @@
 **原始痛点：** 不同语言的数据结构不同，跨语言通信容易出错
 
 **OPC场景有没有？**
-- 无：CheckpointAI是纯Python，不需要跨语言
+- 无：LoopHarness是纯Python，不需要跨语言
 
 **OPC如何迁移：**
 - Pydantic已经做了类型验证
 - Message/Task模型已经是强类型
 
-**结论：** 不需要迁移，CheckpointAI已有
+**结论：** 不需要迁移，LoopHarness已有
 
 #### 2. Self-improving Agent
 

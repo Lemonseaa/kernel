@@ -2,14 +2,14 @@
 
 ## Purpose
 
-CheckpointAI is now focused on the External Workflow Evidence Harness.
+LoopHarness is now focused on the External Workflow Evidence Harness.
 
 This matrix prevents destructive cleanup. Each old module is classified before deletion:
 
 ```text
 replace  = use a mature external tool instead
 rewrite  = keep the concept, rebuild a thin Evidence Harness version
-keep     = core CheckpointAI evidence capability
+keep     = core LoopHarness evidence capability
 isolate  = support module; keep temporarily, do not expand
 legacy   = historical compatibility only
 ```
@@ -29,20 +29,20 @@ These modules are part of the new direction.
 
 | Module | Decision | Reason |
 |---|---|---|
-| `checkpoint_ai/evidence/` | keep | New external workflow evidence adapter, visualization data, reports |
-| `checkpoint_ai/metrics/` | keep | Metric direction/category/weight/threshold are core to evidence judgment |
-| `checkpoint_ai/evaluation/evidence.py` | keep | Evidence decision engine |
-| `checkpoint_ai/shadow/comparison.py` | keep | Baseline vs candidate comparison logic |
-| `checkpoint_ai/decision/` | keep | DecisionLog remains core for approve/reject/rollback audit |
-| `checkpoint_ai/experiment/` | keep | Experiment Ledger concepts remain useful, but future writes should be evidence-oriented |
-| `checkpoint_ai/policy/` | keep | Proposal/evidence policy remains useful |
-| `checkpoint_ai/control/` | isolate | Runtime policy legacy exists; avoid new evidence dependency unless needed |
+| `loop_harness/evidence/` | keep | New external workflow evidence adapter, visualization data, reports |
+| `loop_harness/metrics/` | keep | Metric direction/category/weight/threshold are core to evidence judgment |
+| `loop_harness/evaluation/evidence.py` | keep | Evidence decision engine |
+| `loop_harness/shadow/comparison.py` | keep | Baseline vs candidate comparison logic |
+| `loop_harness/decision/` | keep | DecisionLog remains core for approve/reject/rollback audit |
+| `loop_harness/experiment/` | keep | Experiment Ledger concepts remain useful, but future writes should be evidence-oriented |
+| `loop_harness/policy/` | keep | Proposal/evidence policy remains useful |
+| `loop_harness/control/` | isolate | Runtime policy legacy exists; avoid new evidence dependency unless needed |
 
 ---
 
 ## Direct Replacement Candidates
 
-These are mature elsewhere. CheckpointAI should not compete with them.
+These are mature elsewhere. LoopHarness should not compete with them.
 
 Strategic references such as Archon, ARIS, learn-harness-engineering, and Nexent
 are documented separately in:
@@ -55,21 +55,21 @@ This file is only for module cleanup and replacement decisions.
 
 | Module | External Wheel | Decision | Cleanup Timing |
 |---|---|---|---|
-| `checkpoint_ai/workflow/` | LangGraph / Temporal / Prefect / Archon | replace | frozen in Batch 2 |
-| `checkpoint_ai/runtime/` | CrewAI / LangGraph / external agent runtimes | replace | frozen in Batch 2 |
-| `checkpoint_ai/plugins/` | MCP / Dify plugins / external tool directories | replaced | deleted in Batch 1 |
-| `checkpoint_ai/scheduler/` | cron / APScheduler / external orchestrators | replaced | deleted in Batch 1 |
-| `checkpoint_ai/ha/` | deployment platform / Docker / cloud infra | replaced | deleted in Batch 1 |
-| `checkpoint_ai/templates/` | external workflow templates / examples | replaced | deleted in Batch 1 |
-| `checkpoint_ai/alerts/` | EventBus signals / external notification routing | replaced | deleted in Batch 1.5 |
-| `checkpoint_ai/tools/` | MCP / external tools / domain scripts | replace | keep only thin adapters used by evidence drills |
+| `loop_harness/workflow/` | LangGraph / Temporal / Prefect / Archon | replace | frozen in Batch 2 |
+| `loop_harness/runtime/` | CrewAI / LangGraph / external agent runtimes | replace | frozen in Batch 2 |
+| `loop_harness/plugins/` | MCP / Dify plugins / external tool directories | replaced | deleted in Batch 1 |
+| `loop_harness/scheduler/` | cron / APScheduler / external orchestrators | replaced | deleted in Batch 1 |
+| `loop_harness/ha/` | deployment platform / Docker / cloud infra | replaced | deleted in Batch 1 |
+| `loop_harness/templates/` | external workflow templates / examples | replaced | deleted in Batch 1 |
+| `loop_harness/alerts/` | EventBus signals / external notification routing | replaced | deleted in Batch 1.5 |
+| `loop_harness/tools/` | MCP / external tools / domain scripts | replace | keep only thin adapters used by evidence drills |
 
 ### Replacement Projects Checked
 
 | Area | Candidate | What it replaces | Decision |
 |---|---|---|---|
 | Scheduling | [APScheduler](https://github.com/agronholm/apscheduler) | internal recurring jobs / cron-like scheduling | prefer external scheduler when recurring runs are needed |
-| Durable workflow | [Temporal](https://github.com/temporalio/temporal) | HA workflow execution / durable retries / failover | do not rebuild; use only if CheckpointAI needs durable orchestration |
+| Durable workflow | [Temporal](https://github.com/temporalio/temporal) | HA workflow execution / durable retries / failover | do not rebuild; use only if LoopHarness needs durable orchestration |
 | Python workflow orchestration | [Prefect](https://github.com/PrefectHQ/prefect) | data/workflow orchestration layer | reference or integrate later; do not clone |
 | LLM provider platform | [LiteLLM](https://github.com/BerriAI/litellm) | broad provider routing, cost tracking, fallback, proxy | do not build a full model console unless evidence harness needs a thin adapter |
 | Tool ecosystem | [Model Context Protocol servers](https://github.com/modelcontextprotocol/servers) | plugin marketplace / tool registry ecosystem | prefer guarded MCP integration over custom plugin platform |
@@ -90,14 +90,14 @@ The concepts are useful, but old implementations should not drive the new archit
 
 | Module | New Shape | Decision |
 |---|---|---|
-| `checkpoint_ai/adapter/` | `EvidenceAdapter` connectors that export run JSON | rewrite |
-| `checkpoint_ai/external_agents/` | External workflow source registry, not agent platform | freeze then rewrite as needed |
-| `checkpoint_ai/prompt/` | Candidate config/prompt patch evidence, not prompt platform | evidence_support |
-| `checkpoint_ai/recommendation/` | Evidence recommendation derived from reports | evidence_support |
-| `checkpoint_ai/optimization/` | Candidate suggestion after evidence review, not autonomous optimizer | isolate |
-| `checkpoint_ai/learning/` | ARIS-style review/audit loop, not autonomous self-improvement loop | rewrite |
-| `checkpoint_ai/autonomy/` | Conservative queue for approved evidence actions only | isolate |
-| `checkpoint_ai/logs/` | Workflow trace/event evidence logs | evidence_support |
+| `loop_harness/adapter/` | `EvidenceAdapter` connectors that export run JSON | rewrite |
+| `loop_harness/external_agents/` | External workflow source registry, not agent platform | freeze then rewrite as needed |
+| `loop_harness/prompt/` | Candidate config/prompt patch evidence, not prompt platform | evidence_support |
+| `loop_harness/recommendation/` | Evidence recommendation derived from reports | evidence_support |
+| `loop_harness/optimization/` | Candidate suggestion after evidence review, not autonomous optimizer | isolate |
+| `loop_harness/learning/` | ARIS-style review/audit loop, not autonomous self-improvement loop | rewrite |
+| `loop_harness/autonomy/` | Conservative queue for approved evidence actions only | isolate |
+| `loop_harness/logs/` | Workflow trace/event evidence logs | evidence_support |
 
 ---
 
@@ -107,20 +107,20 @@ Keep these for now. They support the current package or CLI, but should not expa
 
 | Module | Decision | Boundary |
 |---|---|---|
-| `checkpoint_ai/config.py` | isolate | env/config only |
-| `checkpoint_ai/auth/` | isolate | API auth only |
-| `checkpoint_ai/control/` | isolate | runtime approval compatibility only; proposal decisions belong in scenario policy and evidence review |
-| `checkpoint_ai/events/` | evidence_support | local audit/event plumbing only |
-| `checkpoint_ai/experiment/` | evidence_support | evidence ledger and baseline accounting; historical loop engine is compatibility only |
-| `checkpoint_ai/loop/` | evidence_support | bounded one-shot evidence loop only; no autonomous infinite loop |
-| `checkpoint_ai/observability/` | evidence_support | cost/performance signals for evidence reports |
-| `checkpoint_ai/llm/` | isolate | minimal provider abstraction; do not become LiteLLM clone |
-| `checkpoint_ai/console/` | evidence_support | human decision console only |
-| `checkpoint_ai/api.py` | isolate | only expose evidence/decision endpoints when needed |
-| `checkpoint_ai/persistence/` | evidence_support | storage utilities only |
-| `checkpoint_ai/notification/` | isolate | only notify human-actionable decisions |
-| `checkpoint_ai/diagnostics/` | evidence_support | actionable health checks |
-| `checkpoint_ai/tools/` | isolate | compatibility tools only; real integrations should use guarded external connectors |
+| `loop_harness/config.py` | isolate | env/config only |
+| `loop_harness/auth/` | isolate | API auth only |
+| `loop_harness/control/` | isolate | runtime approval compatibility only; proposal decisions belong in scenario policy and evidence review |
+| `loop_harness/events/` | evidence_support | local audit/event plumbing only |
+| `loop_harness/experiment/` | evidence_support | evidence ledger and baseline accounting; historical loop engine is compatibility only |
+| `loop_harness/loop/` | evidence_support | bounded one-shot evidence loop only; no autonomous infinite loop |
+| `loop_harness/observability/` | evidence_support | cost/performance signals for evidence reports |
+| `loop_harness/llm/` | isolate | minimal provider abstraction; do not become LiteLLM clone |
+| `loop_harness/console/` | evidence_support | human decision console only |
+| `loop_harness/api.py` | isolate | only expose evidence/decision endpoints when needed |
+| `loop_harness/persistence/` | evidence_support | storage utilities only |
+| `loop_harness/notification/` | isolate | only notify human-actionable decisions |
+| `loop_harness/diagnostics/` | evidence_support | actionable health checks |
+| `loop_harness/tools/` | isolate | compatibility tools only; real integrations should use guarded external connectors |
 
 ---
 
@@ -130,11 +130,11 @@ These may survive if they help evidence scoping, but should be simplified.
 
 | Module | Decision | Notes |
 |---|---|---|
-| `checkpoint_ai/businessline/` | isolate | Useful as top-level business/domain boundary, but not platform tenant system |
-| `checkpoint_ai/scenario/` | evidence_support | Main evidence scope for runs, metrics, prompts, reports, decisions |
-| `checkpoint_ai/isolation/` | evidence_support | Keep only if it protects evidence scope |
-| `checkpoint_ai/user_profile/` | keep | Human methodology/profile boundaries are differentiating |
-| `checkpoint_ai/memory/` | isolate | Do not use as vague self-evolution memory |
+| `loop_harness/businessline/` | isolate | Useful as top-level business/domain boundary, but not platform tenant system |
+| `loop_harness/scenario/` | evidence_support | Main evidence scope for runs, metrics, prompts, reports, decisions |
+| `loop_harness/isolation/` | evidence_support | Keep only if it protects evidence scope |
+| `loop_harness/user_profile/` | keep | Human methodology/profile boundaries are differentiating |
+| `loop_harness/memory/` | isolate | Do not use as vague self-evolution memory |
 
 ---
 
@@ -220,7 +220,7 @@ Do not delete runtime/workflow/external_agents until their legacy tests are
 moved to tests/legacy or the compatibility surface is intentionally removed.
 
 Do not delete adapter until the current demo/shadow paths are replaced by
-workflow-run JSON ingestion through checkpoint_ai/evidence.
+workflow-run JSON ingestion through loop_harness/evidence.
 ```
 
 ### Batch 3: Rewrite old optimization layer
@@ -321,14 +321,14 @@ memory        isolate: legacy runtime context; prefer explicit evidence logs
 
 ## Import Boundary
 
-`checkpoint_ai/evidence/` must stay thin.
+`loop_harness/evidence/` must stay thin.
 
 Allowed dependencies:
 
 ```text
-checkpoint_ai.metrics
-checkpoint_ai.evaluation.evidence
-checkpoint_ai.shadow.comparison
+loop_harness.metrics
+loop_harness.evaluation.evidence
+loop_harness.shadow.comparison
 standard library
 pydantic
 sqlite3

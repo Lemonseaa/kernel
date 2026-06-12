@@ -11,9 +11,9 @@ examples/evidence/
 Contains external workflow run JSON examples used by the Evidence Harness.
 
 ```bash
-checkpointai evidence ingest examples/evidence/quant_baseline_run.json
-checkpointai evidence ingest examples/evidence/quant_candidate_run.json
-checkpointai evidence compare --baseline quant_baseline_001 --candidate quant_candidate_001
+loopharness evidence ingest examples/evidence/quant_baseline_run.json
+loopharness evidence ingest examples/evidence/quant_candidate_run.json
+loopharness evidence compare --baseline quant_baseline_001 --candidate quant_candidate_001
 ```
 
 ## Support Examples

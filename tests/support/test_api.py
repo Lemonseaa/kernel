@@ -6,7 +6,7 @@ import subprocess
 import sys
 import unittest
 
-from checkpoint_ai.api import create_app
+from loop_harness.api import create_app
 from tests.helpers import project_root
 
 
@@ -16,7 +16,7 @@ class ApiHealthTest(unittest.TestCase):
     def test_create_app_returns_fastapi_or_fallback_app(self) -> None:
         app = create_app()
 
-        self.assertTrue(hasattr(app, "routes") or hasattr(app, "checkpoint_ai"))
+        self.assertTrue(hasattr(app, "routes") or hasattr(app, "loop_harness"))
 
     def test_health_check_script_exits_successfully(self) -> None:
         root = project_root()

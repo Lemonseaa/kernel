@@ -1,5 +1,5 @@
 # Business Line Architecture
-# 多业务线checkpointAI系统的架构设计
+# 多业务线Loop Harness系统的架构设计
 
 > Status: historical reference.
 >
@@ -16,7 +16,7 @@
 
 ### 1.1 什么是BusinessLine
 
-BusinessLine（业务线）是checkpointAI系统的第一等公民。
+BusinessLine（业务线）是Loop Harness系统的第一等公民。
 
 不是"加一个tenant_id字段"，是重新组织系统的核心抽象层次。
 
@@ -34,7 +34,7 @@ BusinessLine（业务线）是checkpointAI系统的第一等公民。
 
 ### 1.3 为什么需要BusinessLine
 
-checkpointAI的场景：
+Loop Harness的场景：
 - 同时运营多条业务线（网站/内容/电商/客服...）
 - 每条业务线有不同的Agent配置
 - 每条业务线有不同的评估标准
@@ -48,7 +48,7 @@ checkpointAI的场景：
 ### 2.1 完整层次结构
 
 ```
-checkpointAI (组织层)
+Loop Harness (组织层)
 │
 ├── Shared Infrastructure (共享基础设施)
 │   ├── LLM Providers (MiniMax / OpenAI / ...)
@@ -99,7 +99,7 @@ checkpointAI (组织层)
 
 | 层次 | 职责 | 隔离性 |
 |---|---|---|
-| checkpointAI层 | 组织管理、全局监控、跨业务线协调 | N/A |
+| Loop Harness层 | 组织管理、全局监控、跨业务线协调 | N/A |
 | Shared层 | 基础资源、Provider、工具、全局策略 | 共享，但可配置 |
 | BusinessLine层 | 业务执行、Agent、模板、评估 | 完全隔离 |
 | Hub层 | 跨业务线编排、统一入口 | 协调层 |
@@ -195,7 +195,7 @@ class ResourceLimits(BaseModel):
 
 ```python
 # 方式1：从模板创建
-bl = checkpoint_ai.create_business_line(
+bl = loop_harness.create_business_line(
     name="个人网站业务",
     template="website",  # 预设模板
     config=BusinessLineConfig(
@@ -204,14 +204,14 @@ bl = checkpoint_ai.create_business_line(
 )
 
 # 方式2：从已有业务线克隆
-bl = checkpoint_ai.create_business_line(
+bl = loop_harness.create_business_line(
     name="网站业务v2",
     clone_from="business_line_id",  # 克隆配置
     config={...}
 )
 
 # 方式3：空白创建
-bl = checkpoint_ai.create_business_line(
+bl = loop_harness.create_business_line(
     name="新业务",
     template=None,  # 空白
 )
@@ -242,14 +242,14 @@ Shared层资源可跨BusinessLine使用：
 
 ```python
 # Shared层的Provider
-checkpoint_ai.shared.providers  # 所有Provider
+loop_harness.shared.providers  # 所有Provider
 
 # Shared层的Base Tools
-checkpoint_ai.shared.tools  # 文件读写、Shell等基础工具
+loop_harness.shared.tools  # 文件读写、Shell等基础工具
 
 # BusinessLine可引用Shared资源
-bl.add_tool(checkpoint_ai.shared.tools["file_write"])
-bl.add_tool(checkpoint_ai.shared.tools["http_request"])
+bl.add_tool(loop_harness.shared.tools["file_write"])
+bl.add_tool(loop_harness.shared.tools["http_request"])
 ```
 
 ---
@@ -315,7 +315,7 @@ template_website = BusinessLineTemplate(
 )
 
 # 使用模板创建
-bl = checkpoint_ai.create_business_line(name="客户A的网站", template="website")
+bl = loop_harness.create_business_line(name="客户A的网站", template="website")
 ```
 
 ---
@@ -391,7 +391,7 @@ Hub资源调度
 User (用户)
     │
     ▼
-checkpointAI Admin (系统管理员)
+Loop Harness Admin (系统管理员)
     │ - 管理所有BusinessLine
     │ - 创建/删除BusinessLine
     │ - 修改Shared层配置
@@ -511,7 +511,7 @@ BusinessLine A                    Hub                     BusinessLine B
 - 新增 BusinessLine 模型
 - 新增 BusinessLineRegistry
 - Agent/Context/Run 加 business_line_id
-- CheckpointAI 加 create_business_line()
+- LoopHarness 加 create_business_line()
 - BusinessLine 有独立的 Registry 和 Context
 ```
 
@@ -544,11 +544,11 @@ BusinessLine A                    Hub                     BusinessLine B
 
 ## 10. 核心接口
 
-### 10.1 CheckpointAI层接口
+### 10.1 LoopHarness层接口
 
 ```python
-class CheckpointAI:
-    """checkpointAI CheckpointAI"""
+class LoopHarness:
+    """Loop Harness LoopHarness"""
     
     # BusinessLine管理
     def create_business_line(
@@ -619,7 +619,7 @@ class BusinessLine:
 
 ### 11.2 为什么共享层是显式的
 
-因为在checkpointAI场景下：
+因为在Loop Harness场景下：
 - 有些资源（Provider）是所有业务线共用的
 - 有些资源（业务专属Agent）是业务线私有的
 - 必须显式区分，否则权限无法管理

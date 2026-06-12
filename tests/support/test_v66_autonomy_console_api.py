@@ -8,10 +8,10 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from checkpoint_ai.api import create_app
-from checkpoint_ai.auth import APIKeyManager
-from checkpoint_ai.autonomy import AutonomyActionStatus, AutonomyActionStore
-from checkpoint_ai.decision import DecisionKind, DecisionLogStore
+from loop_harness.api import create_app
+from loop_harness.auth import APIKeyManager
+from loop_harness.autonomy import AutonomyActionStatus, AutonomyActionStore
+from loop_harness.decision import DecisionKind, DecisionLogStore
 
 
 class V66AutonomyConsoleApiTest(unittest.TestCase):

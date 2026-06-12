@@ -13,7 +13,7 @@
 ### Task 1: Guardrail Rules
 
 **Files:**
-- Create: `checkpoint_ai/learning/safety.py`
+- Create: `loop_harness/learning/safety.py`
 - Test: `tests/test_v75_safety_dynamic_balance.py`
 
 - [ ] Write failing tests for parameter range, max patch magnitude, and blocked target rules.
@@ -24,7 +24,7 @@
 ### Task 2: Cooldown Rules
 
 **Files:**
-- Modify: `checkpoint_ai/learning/safety.py`
+- Modify: `loop_harness/learning/safety.py`
 - Test: `tests/test_v75_safety_dynamic_balance.py`
 
 - [ ] Write failing test where same target cannot be changed again before N validations or T hours.
@@ -35,7 +35,7 @@
 ### Task 3: Budget Rules
 
 **Files:**
-- Modify: `checkpoint_ai/learning/safety.py`
+- Modify: `loop_harness/learning/safety.py`
 - Test: `tests/test_v75_safety_dynamic_balance.py`
 
 - [ ] Write failing test where daily proposal/shadow budget blocks more attempts.
@@ -46,7 +46,7 @@
 ### Task 4: Regression Detection
 
 **Files:**
-- Modify: `checkpoint_ai/learning/safety.py`
+- Modify: `loop_harness/learning/safety.py`
 - Test: `tests/test_v75_safety_dynamic_balance.py`
 
 - [ ] Write failing test where post-change metrics degrade beyond threshold.
@@ -57,8 +57,8 @@
 ### Task 5: SafetyMonitor Summary
 
 **Files:**
-- Modify: `checkpoint_ai/learning/safety.py`
-- Modify: `checkpoint_ai/reporting.py`
+- Modify: `loop_harness/learning/safety.py`
+- Modify: `loop_harness/reporting.py`
 - Test: `tests/test_v75_safety_dynamic_balance.py`
 
 - [ ] Write failing test that SafetyMonitor aggregates findings for one proposal.
@@ -71,8 +71,8 @@
 **Commands:**
 - `python -m unittest tests/test_v75_safety_dynamic_balance.py -v`
 - `python -m unittest discover -s tests -v`
-- `python -m ruff check checkpoint_ai tests scripts examples`
-- `python -m mypy checkpoint_ai --show-error-codes --no-incremental`
+- `python -m ruff check loop_harness tests scripts examples`
+- `python -m mypy loop_harness --show-error-codes --no-incremental`
 
 - [ ] Run all commands.
 - [ ] Fix failures before moving to V7.6.
